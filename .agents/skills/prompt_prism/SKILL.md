@@ -14,6 +14,7 @@ Use this skill whenever you or the user need to:
 - **Quantify the exact performance impact ($\Delta$)** of each prompt component with statistical confidence ($p$-values, $t$-statistics, effect sizes).
 - **Screen 5 to 23 candidate prompt factors** in a fraction of the cost ($90\%$ to $98\%$ cheaper than full factorial testing) using **Fractional Factorial ($2^{k-p}$)** or **Plackett-Burman** orthogonal designs.
 - **Isolate true factor effects from dataset noise** using **Randomized Complete Block Design (RCBD)**.
+- **Evaluate with Golden Datasets or Reference-Free LLM-as-a-Judge** (via DeepEval integration with `JudgeCache`).
 - **Generate the mathematically winning prompt** and produce publication-grade ANOVA tables, Pareto charts, and diagnostic reports.
 
 ---
@@ -74,24 +75,58 @@ factors = [
 ---
 
 ### Step 2: Prepare Benchmark Dataset & Evaluation Metrics
-Prepare a representative test dataset (typically 10 to 50 items) with ground-truth targets:
+Prepare a representative test dataset (typically 10 to 50 items) and select an evaluation mode:
 
 ```python
-from prompt_prism import ExactMatch, F1Score, JSONValidation, deepeval_metric, JudgeCache
+from prompt_prism import (
+    ExactMatch,
+    F1Score,
+    JSONValidation,
+    KeyValuesExtractionOverlap,
+    deepeval_metric,
+    JudgeCache,
+)
 
-# Benchmark sample cases
-dataset = [
-    {"id": 1, "text": "...", "target": "..."},
-    {"id": 2, "text": "...", "target": "..."},
+# -------------------------------------------------------------------------
+# Paradigm A: Golden Dataset Evaluation (Reference-Based Ground Truth)
+# -------------------------------------------------------------------------
+golden_dataset = [
+    {
+        "id": "item_01",
+        "input": "Explain the refund window.",
+        "target": "30 calendar days from delivery.",  # <-- Golden Target
+        "policy_context": "Clause 4: Items may be returned within 30 calendar days.",
+    },
+    {
+        "id": "item_02",
+        "input": "Is there a restocking fee?",
+        "target": "A 10% restocking fee applies to opened electronics.",
+        "policy_context": "Clause 9: Opened electronics incur a 10% restocking fee.",
+    },
 ]
 
-# Option A: Deterministic Metrics Suite (Free & Fast)
-metrics = [ExactMatch(), F1Score(), JSONValidation()]
+# 1. Deterministic Metrics (Fast & Zero API Cost)
+deterministic_metrics = [ExactMatch(), F1Score(), JSONValidation()]
 
-# Option B: LLM-as-a-Judge (DeepEval integration with JudgeCache)
+# 2. DeepEval Reference-Based Metric (Semantic Ground Truth Alignment)
 judge_cache = JudgeCache(db_path="judge_cache.db")
+factual_geval = deepeval_metric(
+    "g_eval",
+    name="factual_accuracy",
+    criteria="Determine whether actual output factually aligns with expected golden target.",
+    evaluation_steps=[
+        "Check that key policy rules, numbers, and deadlines match expected target.",
+        "Penalize contradictory or fabricated statements.",
+    ],
+    cache=judge_cache,
+)
+
+# -------------------------------------------------------------------------
+# Paradigm B: Reference-Free Evaluation (No Golden Dataset Required)
+# -------------------------------------------------------------------------
+# For subjective qualities, conversational tone, or unlabeled streaming logs:
 relevancy_metric = deepeval_metric("answer_relevancy", threshold=0.7, cache=judge_cache)
-g_eval_metric = deepeval_metric("g_eval", criteria="Tone is helpful and professional", cache=judge_cache)
+faithfulness_metric = deepeval_metric("faithfulness", cache=judge_cache)
 ```
 
 ---
@@ -103,11 +138,11 @@ from prompt_prism import Experiment
 
 exp = Experiment.from_factors(
     factors=factors,
-    design="2(5-1)V",  # Or let it auto-select with max_runs=16
+    design="2(5-1)V",  # 16 runs instead of 32 (50% savings, unaliased main effects)
     system_prompt="Execute the task adhering strictly to guidelines.",
-    data_template="Input data:\n{{ text }}",
-    metrics=metrics,
-    target_metric="f1_score",
+    data_template="Policy Context:\n{{ policy_context }}\n\nUser Question:\n{{ input }}",
+    metrics=[factual_geval, relevancy_metric],
+    target_metric="factual_accuracy",
     title="Production Prompt Optimization DoE",
 )
 ```
@@ -119,17 +154,20 @@ Connect **ANY** LLM provider (OpenAI, Anthropic, Gemini, Vertex, local models, o
 
 ```python
 def call_llm(prompt: str) -> str:
-    # Call your preferred LLM provider here
-    # response = openai_client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": prompt}])
+    # Example OpenAI / Gemini integration:
+    # response = client.chat.completions.create(model="gpt-4o", messages=[{"role": "user", "content": prompt}])
     # return response.choices[0].message.content
-    return "Predicted output"
+    return "Model prediction"
+
+# Pre-flight estimate of judge calls
+print(f"Estimated judge calls: {exp.estimate_judge_calls(golden_dataset)}")
 
 # Run experiment (automatically parallelized and cached)
 results = exp.run(
-    dataset=dataset,
+    dataset=golden_dataset,
     client=call_llm,
     max_workers=4,
-    cache_db="prompt_cache.db",  # Optional SQLite cache to avoid redundant API cost
+    cache_db="prompt_cache.db",  # LLM response cache
 )
 ```
 
@@ -141,7 +179,7 @@ Always run analysis with **RCBD blocking on `sample_id`** to factor out dataset 
 
 ```python
 report = exp.analyze(
-    block_by="sample_id",  # RCBD blocking
+    block_by="sample_id",  # RCBD blocking isolates test item difficulty
     include_interactions=True,
     alpha=0.05,
 )
@@ -171,64 +209,78 @@ winning_template = exp.get_optimal_prompt_template()
 # 3. Render sample prompt for production
 production_prompt = exp.composer.compose_text(
     run_config=exp.design.runs[0].model_copy(update={"factor_levels": opt.optimal_factor_levels}),
-    data={"text": "New sample input"},
+    data={"input": "Can I return an item?", "policy_context": "Clause 4: 30 days return window."},
 )
 print("Winning Prompt:\n", production_prompt)
 ```
 
 ---
 
-### Step 7: Screen $\to$ Confirm Loop (If using Resolution III)
+### Step 7: Autonomous Self-Healing & Prompt Improvement Loops
 
-If the initial experiment was a **Resolution III screening design** ($2^{7-4}_{\text{III}}$, $2^{11-7}_{\text{III}}$, or Plackett-Burman), suggest and run a confirmation design over the surviving factors before shipping to production:
+Agents can run continuous self-healing loops using PromptPrism:
 
-```python
-# Automatically generates an unaliased Resolution V confirmation design
-confirmation_design = exp.suggest_confirmation_design(max_runs=16)
-print("Confirmation Plan:", confirmation_design.plan_id)
 ```
-
----
-
-## 📊 Visualizations & Plotting
-
-Export publication-grade diagnostic plots:
-
-```python
-from prompt_prism import plot_main_effects, plot_pareto_effects, plot_interaction_effects
-
-# Main Effects Plot (shows mean performance per factor level)
-plot_main_effects(report.anova_result, save_path="main_effects.png")
-
-# Pareto Chart of Standardized Effects (highlights significant factors vs t-critical)
-plot_pareto_effects(report.anova_result, save_path="pareto_effects.png")
-
-# 2-Factor Interaction Plots
-plot_interaction_effects(report.anova_result, save_path="interactions.png")
+                          ┌────────────────────────────┐
+                          │   Production Error Log /   │
+                          │   Failure Case Cluster     │
+                          └─────────────┬──────────────┘
+                                        │
+                                        ▼
+                          ┌────────────────────────────┐
+                          │  Formulate Candidate Fix   │
+                          │  Factors (A, B, C, D, E)   │
+                          └─────────────┬──────────────┘
+                                        │
+                                        ▼
+                          ┌────────────────────────────┐
+                          │  Run 2^(k-p) Orthogonal    │
+                          │  Tournament on Failures    │
+                          └─────────────┬──────────────┘
+                                        │
+                                        ▼
+                          ┌────────────────────────────┐
+                          │  RCBD ANOVA Analysis       │
+                          │  Filter: p < 0.05, Δ > 0   │
+                          └─────────────┬──────────────┘
+                                        │
+                        ┌───────────────┴───────────────┐
+                        ▼                               ▼
+            🟢 Lock in Significant Fixes      🔴 Purge Placebo / Harmful
+            (Proven positive Δ)               (p > 0.05 or Δ < 0)
 ```
 
 ---
 
 ## 💻 CLI Commands Quick Reference
 
+PromptPrism provides a CLI tool (`prompt-prism` or `prism`):
+
 ```bash
 # 1. List available orthogonal designs for k factors
-prompt-prism list-designs --factors 7
+prism list-designs --factors 7
 
-# 2. Generate and export a Design Matrix to CSV
-prompt-prism design --factors 5 --runs 16 --output design_matrix.csv
+# 2. Inspect defining relation and alias confounding map for any plan
+prism alias --plan "2(7-3)IV"
 
-# 3. Analyze pre-computed experimental results CSV
-prompt-prism analyze --data experiment_results.csv --target f1_score --output-report report.md
+# 3. List all evaluation metrics & DeepEval judge capabilities
+prism list-metrics
+
+# 4. Generate and export a Design Matrix to CSV / JSON
+prism design --factors 5 --runs 16 --output design_matrix.csv
+
+# 5. Run ANOVA on pre-computed experimental results CSV
+prism analyze --data experiment_results.csv --target f1_score --block-by sample_id --output-report report.md
 ```
 
 ---
 
 ## 🚨 Critical Methodological Rules for Agents
 
-1. **Always Block on `sample_id`**: Never treat $(N \times M)$ trials as independent unblocked observations. Always pass `block_by="sample_id"` to avoid pseudoreplication.
+1. **Always Block on `sample_id`**: Never treat $(N \times M)$ trials as independent unblocked observations. Always pass `block_by="sample_id"` to eliminate item-level difficulty variance.
 2. **Respect Design Resolution**:
-   - **Res III**: Treat significant factors as *candidates*. Always advise running a confirmation design.
+   - **Res III**: Treat significant factors as *candidates*. Always run a confirmation design before shipping.
    - **Res IV**: Main effects are clean, but 2-way interactions are aliased.
    - **Res V+**: Both main effects and 2-way interactions are unaliased and safe for direct production decisions.
 3. **Drop Neutral Factors**: If a factor has $p > 0.05$, recommend level 0 (omit) to optimize token efficiency and latency.
+4. **Use `JudgeCache` for LLM Judges**: Always attach a `JudgeCache` when using `deepeval_metric` to avoid redundant API costs on repeated ANOVA analyses.
