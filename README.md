@@ -56,8 +56,8 @@ Plackett-Burman Screening (11 factors): 12 runs  🚀 (-99.4% cost!)
 
 ```bash
 # Clone and install
-git clone https://github.com/robsanmx/DOE.git
-cd DOE
+git clone https://github.com/robsanmx/prompt_doe.git
+cd prompt_doe
 pip install -e .
 
 # With visualization dependencies
