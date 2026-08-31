@@ -5,12 +5,12 @@ Tests for Visualization and Reporting modules.
 import numpy as np
 import pandas as pd
 import pytest
-from prompt_doe.analysis.anova import ANOVAEngine
-from prompt_doe.analysis.effects import EffectAnalyzer
-from prompt_doe.analysis.optimizer import OptimalPromptFinder
-from prompt_doe.design.generators import FractionalFactorialGenerator
-from prompt_doe.reporting.reporter import AnalysisReport
-from prompt_doe.visualization.plots import (
+from prompt_prism.analysis.anova import ANOVAEngine
+from prompt_prism.analysis.effects import EffectAnalyzer
+from prompt_prism.analysis.optimizer import OptimalPromptFinder
+from prompt_prism.design.generators import FractionalFactorialGenerator
+from prompt_prism.reporting.reporter import AnalysisReport
+from prompt_prism.visualization.plots import (
     generate_ascii_pareto,
     plot_interaction_effects,
     plot_main_effects,

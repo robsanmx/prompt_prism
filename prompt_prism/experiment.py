@@ -37,7 +37,7 @@ class Experiment:
         max_runs: Optional[int] = None,
         evaluator: Optional[Union[Evaluator, Sequence[Metric]]] = None,
         target_metric: str = "f1_score",
-        title: str = "Prompt DoE Experiment",
+        title: str = "PromptPrism Experiment",
     ):
         self.factors = FactorSet(factors) if isinstance(factors, (list, tuple)) else factors
         self.template = template
@@ -73,7 +73,7 @@ class Experiment:
         data_template: Optional[str] = None,
         metrics: Optional[Sequence[Metric]] = None,
         target_metric: str = "f1_score",
-        title: str = "Prompt DoE Experiment",
+        title: str = "PromptPrism Experiment",
     ) -> Experiment:
         """
         Create an Experiment directly from a list of Factors and templates.

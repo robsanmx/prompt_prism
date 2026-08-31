@@ -4,14 +4,14 @@ Tests for Runner, Cache, and Client modules.
 
 import time
 import pytest
-from prompt_doe.core.factors import Factor, FactorSet
-from prompt_doe.core.models import DesignMatrix, RunConfig
-from prompt_doe.design.generators import FractionalFactorialGenerator
-from prompt_doe.evaluation.metrics import ExactMatch
-from prompt_doe.runner.cache import ResponseCache
-from prompt_doe.runner.client import CallableLLM, LLMResponse, MockLLM
-from prompt_doe.runner.runner import ExperimentRunner
-from prompt_doe.template.composer import PromptComposer, PromptTemplate
+from prompt_prism.core.factors import Factor, FactorSet
+from prompt_prism.core.models import DesignMatrix, RunConfig
+from prompt_prism.design.generators import FractionalFactorialGenerator
+from prompt_prism.evaluation.metrics import ExactMatch
+from prompt_prism.runner.cache import ResponseCache
+from prompt_prism.runner.client import CallableLLM, LLMResponse, MockLLM
+from prompt_prism.runner.runner import ExperimentRunner
+from prompt_prism.template.composer import PromptComposer, PromptTemplate
 
 
 def test_response_cache_memory():

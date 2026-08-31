@@ -2,8 +2,8 @@
 Unit tests for evaluation metrics.
 """
 
-from prompt_doe.evaluation.evaluator import Evaluator
-from prompt_doe.evaluation.metrics import (
+from prompt_prism.evaluation.evaluator import Evaluator
+from prompt_prism.evaluation.metrics import (
     CustomMetric,
     ExactMatch,
     F1Score,

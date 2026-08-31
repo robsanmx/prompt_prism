@@ -1,11 +1,11 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="prompt_doe",
+    name="prompt_prism",
     version="1.0.0",
     description="Universal framework for LLM Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA",
-    author="Prompt DoE Team",
-    packages=find_packages(include=["prompt_doe*"]),
+    author="PromptPrism Team",
+    packages=find_packages(include=["prompt_prism*"]),
     python_requires=">=3.8",
     install_requires=[
         "pandas>=1.0.0",
@@ -23,7 +23,8 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "prompt-doe = prompt_doe.cli.main:main",
+            "prompt-prism = prompt_prism.cli.main:main",
+            "prism = prompt_prism.cli.main:main",
         ],
     },
 )

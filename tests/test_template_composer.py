@@ -2,9 +2,9 @@
 Unit tests for PromptSection, PromptTemplate, and PromptComposer.
 """
 
-from prompt_doe.core.factors import Factor, FactorSet
-from prompt_doe.core.models import RunConfig
-from prompt_doe.template.composer import PromptComposer, PromptSection, PromptTemplate
+from prompt_prism.core.factors import Factor, FactorSet
+from prompt_prism.core.models import RunConfig
+from prompt_prism.template.composer import PromptComposer, PromptSection, PromptTemplate
 
 
 def test_prompt_section_render():

@@ -1,15 +1,17 @@
-# 🔬 Prompt DoE: Design of Experiments & ANOVA for Prompt Engineering
+# 💎 PromptPrism: Statistical Prompt Optimization & Factorial Analysis for LLMs
+
+> *Separate your prompt into its true factors — like light through a prism.*
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests: Passing](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
 [![Coverage: 82%+](https://img.shields.io/badge/coverage-82%25-green.svg)]()
 
-**`prompt_doe`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to understand, quantify, and optimize LLM prompts with minimal cost and zero guesswork.
+**`prompt_prism`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to isolate, quantify, and optimize LLM prompts with 90%+ cost reduction and zero guesswork.
 
 ---
 
-## 💡 Why Prompt DoE?
+## 💡 Why PromptPrism?
 
 In Prompt Engineering, a prompt is composed of multiple candidate factors:
 - 🎭 **Persona / Role** (e.g. Expert vs None)
@@ -23,7 +25,7 @@ In Prompt Engineering, a prompt is composed of multiple candidate factors:
 Testing $k = 10$ binary prompt factors via Full Factorial requires **$2^{10} = 1,024$ prompt variants**. Across a 50-item benchmark dataset, that means **$51,200$ LLM calls** costing hundreds of dollars and hours of latency.
 
 ### The Fractional Factorial Solution
-Using **$2^{10-6}_{\text{III}}$ Fractional Factorial Design**, `prompt_doe` tests all 10 factors in **just 16 runs** ($98.4\%$ cost reduction!), while ANOVA mathematically isolates the true individual effect ($\Delta$), standard error, $t$-statistic, and $p$-value for every single factor.
+Using **$2^{10-6}_{\text{III}}$ Fractional Factorial Design**, `prompt_prism` tests all 10 factors in **just 16 runs** ($98.4\%$ cost reduction!), while ANOVA mathematically isolates the true individual effect ($\Delta$), standard error, $t$-statistic, and $p$-value for every single factor.
 
 ```
 Full Factorial (10 factors):             1,024 runs  💸 ($$$)
@@ -49,8 +51,8 @@ Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% cost!)
 - 🎯 **Optimal Prompt Finder**: Automatically classifies factors into **Positive Boosters**, **Harmful Drops**, and **Neutral Token-Bloat**, generating the statistically optimal prompt configuration.
 - 🎨 **Visualizations & Reports**: Main Effects plots, Pareto charts of effects, 2-Factor Interaction matrices, Daniel Half-Normal plots, Markdown reports, and HTML exports.
 - 💾 **SQLite Response Caching**: Prevents redundant API spend across reruns.
-- 🤖 **Agent Skill & Self-Healing Loops**: Includes an Antigravity Agent Skill (`.agents/skills/prompt_doe/SKILL.md`) enabling autonomous agents to run closed-loop prompt self-healing and continuous prompt improvement.
-- 💻 **CLI Interface**: `prompt-doe list-designs`, `prompt-doe design`, and `prompt-doe analyze`.
+- 🤖 **Agent Skill & Self-Healing Loops**: Includes an Antigravity Agent Skill (`.agents/skills/prompt_prism/SKILL.md`) enabling autonomous agents to run closed-loop prompt self-healing and continuous prompt improvement.
+- 💻 **CLI Interface**: `prompt-prism list-designs`, `prompt-prism design`, and `prompt-prism analyze`.
 
 ---
 
@@ -58,8 +60,8 @@ Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% cost!)
 
 ```bash
 # Clone and install
-git clone https://github.com/robsanmx/prompt_doe.git
-cd prompt_doe
+git clone https://github.com/robsanmx/prompt_prism.git
+cd prompt_prism
 pip install -e .
 
 # With visualization dependencies
@@ -71,7 +73,7 @@ pip install -e ".[viz]"
 ## ⚡ Quickstart: 5-Minute Example
 
 ```python
-from prompt_doe import Experiment, Factor, ExactMatch, F1Score
+from prompt_prism import Experiment, Factor, ExactMatch, F1Score
 
 # 1. Define Prompt Factors
 factors = [
@@ -141,7 +143,7 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 
 ## 🤖 Agent Skill & Self-Healing Loops
 
-`prompt_doe` includes a built-in agent skill at `.agents/skills/prompt_doe/SKILL.md`. AI coding assistants and autonomous agents can use this skill to run closed-loop **Self-Healing & Prompt Improvement Loops**:
+`prompt_prism` includes a built-in agent skill at `.agents/skills/prompt_prism/SKILL.md`. AI coding assistants and autonomous agents can use this skill to run closed-loop **Self-Healing & Prompt Improvement Loops**:
 
 1. **Failure Diagnosis**: Cluster production errors or edge-case failures.
 2. **Hypothesis Synthesis**: Propose candidate fix factors ($A, B, C, \dots$).
@@ -153,11 +155,11 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 
 ## 🛠️ CLI Usage
 
-`prompt_doe` includes a command-line interface `prompt-doe`:
+`prompt_prism` includes a command-line interface `prompt-prism`:
 
 ### 1. List Available Standard DoE Plans
 ```bash
-prompt-doe list-designs --factors 7
+prompt-prism list-designs --factors 7
 ```
 ```
 Plan ID         Factors  Runs   Resolution   Generators
@@ -170,12 +172,12 @@ Plan ID         Factors  Runs   Resolution   Generators
 
 ### 2. Generate a Design Matrix CSV
 ```bash
-prompt-doe design --factors 5 --runs 16 --output design_matrix.csv
+prompt-prism design --factors 5 --runs 16 --output design_matrix.csv
 ```
 
 ### 3. Run ANOVA on Results CSV
 ```bash
-prompt-doe analyze --data experiment_results.csv --target f1_score --output-report report.md
+prompt-prism analyze --data experiment_results.csv --target f1_score --output-report report.md
 ```
 
 ---
@@ -183,7 +185,7 @@ prompt-doe analyze --data experiment_results.csv --target f1_score --output-repo
 ## 🏛️ Architecture
 
 ```
-prompt_doe/
+prompt_prism/
 ├── core/                  # Core abstractions: Factor, Level, FactorSet, DesignMatrix, RunConfig, Trial
 ├── design/                # DoE Engine: FractionalFactorial (2^(k-p)), Plackett-Burman, FullFactorial, Aliasing
 ├── template/              # Prompt Composition: Modular Sections, Jinja2, Chat Messages
@@ -192,7 +194,7 @@ prompt_doe/
 ├── analysis/              # Statistics: Main Effects, Interactions, OLS, ANOVA (Type I/II/III), Optimizer
 ├── visualization/         # Plotting: Main Effects, Pareto Chart, Interactions, ASCII Charts
 ├── reporting/             # Reports: Automated Markdown, HTML, and JSON generators
-├── cli/                   # Command Line Tool: prompt-doe
+├── cli/                   # Command Line Tool: prompt-prism
 └── ...
 ```
 

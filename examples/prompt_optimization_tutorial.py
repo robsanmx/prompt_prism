@@ -3,7 +3,7 @@ End-to-End Tutorial: Optimizing an E-commerce Extraction Prompt using Fractional
 """
 
 import pandas as pd
-from prompt_doe import (
+from prompt_prism import (
     ExactMatch,
     Experiment,
     F1Score,

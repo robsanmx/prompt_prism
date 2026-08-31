@@ -1,5 +1,5 @@
 """
-prompt_doe: Design of Experiments (DoE) & ANOVA for Prompt Engineering and Optimization.
+prompt_prism: Design of Experiments (DoE) & ANOVA for Prompt Engineering and Optimization.
 
 A universal, statistically rigorous framework for optimizing LLM prompts using
 Fractional Factorial Designs (2^(k-p)), Plackett-Burman screening, and ANOVA.

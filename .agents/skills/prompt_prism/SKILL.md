@@ -1,5 +1,5 @@
 ---
-name: prompt_doe
+name: prompt_prism
 description: >-
   Universal framework for optimizing and improving LLM prompts using Fractional Factorial
   Design of Experiments (DoE) and ANOVA. Use whenever the user wants to test multiple prompt
@@ -7,7 +7,7 @@ description: >-
   eliminate prompt guesswork, or find the mathematically optimal prompt recipe.
 ---
 
-# 🔬 Prompt DoE: Design of Experiments & ANOVA for Prompt Engineering
+# 🔬 PromptPrism: Design of Experiments & ANOVA for Prompt Engineering
 
 Use this skill whenever you or the user need to:
 - **Systematically optimize an LLM prompt** across multiple design factors (persona, few-shot examples, chain-of-thought, output schemas, guardrails, constraints).
@@ -35,7 +35,7 @@ Use this skill whenever you or the user need to:
 Formulate binary ($0 = \text{Off/Baseline}, 1 = \text{On/Variant}$) or multi-level candidate factors:
 
 ```python
-from prompt_doe import Factor, FactorSet
+from prompt_prism import Factor, FactorSet
 
 factors = [
     Factor.binary(
@@ -77,7 +77,7 @@ factors = [
 Prepare a representative test dataset (typically 10 to 50 items) with ground-truth targets:
 
 ```python
-from prompt_doe import ExactMatch, F1Score, JSONValidation, KeyValuesExtractionOverlap
+from prompt_prism import ExactMatch, F1Score, JSONValidation, KeyValuesExtractionOverlap
 
 # Benchmark sample cases
 dataset = [
@@ -94,7 +94,7 @@ metrics = [ExactMatch(), F1Score(), JSONValidation()]
 ### Step 3: Initialize the Experiment Orchestrator
 
 ```python
-from prompt_doe import Experiment
+from prompt_prism import Experiment
 
 exp = Experiment.from_factors(
     factors=factors,
@@ -190,7 +190,7 @@ print("Confirmation Plan:", confirmation_design.plan_id)
 Export publication-grade diagnostic plots:
 
 ```python
-from prompt_doe import plot_main_effects, plot_pareto_effects, plot_interaction_effects
+from prompt_prism import plot_main_effects, plot_pareto_effects, plot_interaction_effects
 
 # Main Effects Plot (shows mean performance per factor level)
 plot_main_effects(report.anova_result, save_path="main_effects.png")
@@ -208,13 +208,13 @@ plot_interaction_effects(report.anova_result, save_path="interactions.png")
 
 ```bash
 # 1. List available orthogonal designs for k factors
-prompt-doe list-designs --factors 7
+prompt-prism list-designs --factors 7
 
 # 2. Generate and export a Design Matrix to CSV
-prompt-doe design --factors 5 --runs 16 --output design_matrix.csv
+prompt-prism design --factors 5 --runs 16 --output design_matrix.csv
 
 # 3. Analyze pre-computed experimental results CSV
-prompt-doe analyze --data experiment_results.csv --target f1_score --output-report report.md
+prompt-prism analyze --data experiment_results.csv --target f1_score --output-report report.md
 ```
 
 ---

@@ -1,12 +1,12 @@
 """
-End-to-End Integration test for complete Prompt DoE Experiment workflow.
+End-to-End Integration test for complete PromptPrism Experiment workflow.
 """
 
 import pandas as pd
-from prompt_doe.core.factors import Factor
-from prompt_doe.evaluation.metrics import ExactMatch, F1Score
-from prompt_doe.experiment import Experiment
-from prompt_doe.runner.client import MockLLM
+from prompt_prism.core.factors import Factor
+from prompt_prism.evaluation.metrics import ExactMatch, F1Score
+from prompt_prism.experiment import Experiment
+from prompt_prism.runner.client import MockLLM
 
 
 def test_full_experiment_e2e(tmp_path):
@@ -48,7 +48,7 @@ def test_full_experiment_e2e(tmp_path):
         data_template="Offer: {{ title }}\nDescription: {{ description }}",
         metrics=[ExactMatch(), F1Score()],
         target_metric="exact_match",
-        title="Sneakers Attribute Extraction Prompt DoE",
+        title="Sneakers Attribute Extraction PromptPrism",
     )
 
     # 5. Run Experiment
@@ -79,7 +79,7 @@ def test_full_experiment_e2e(tmp_path):
 
     assert md_path.exists()
     assert html_path.exists()
-    assert "# Sneakers Attribute Extraction Prompt DoE" in md_path.read_text()
+    assert "# Sneakers Attribute Extraction PromptPrism" in md_path.read_text()
 
     # 9. Get Configured Optimal Template
     opt_template = exp.get_optimal_prompt_template()

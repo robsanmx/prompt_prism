@@ -4,9 +4,9 @@ Design Property Tests: Orthogonality, balance, and resolution verification for a
 
 import numpy as np
 import pytest
-from prompt_doe.design.aliasing import AliasStructure
-from prompt_doe.design.catalog import CATALOG_DESIGNS, get_catalog_entry
-from prompt_doe.design.generators import (
+from prompt_prism.design.aliasing import AliasStructure
+from prompt_prism.design.catalog import CATALOG_DESIGNS, get_catalog_entry
+from prompt_prism.design.generators import (
     FractionalFactorialGenerator,
     PB_GENERATING_VECTORS,
     PlackettBurmanGenerator,

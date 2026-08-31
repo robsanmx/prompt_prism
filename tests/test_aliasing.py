@@ -2,7 +2,7 @@
 Unit tests for AliasStructure and confounding analysis.
 """
 
-from prompt_doe.design.aliasing import AliasStructure, multiply_words
+from prompt_prism.design.aliasing import AliasStructure, multiply_words
 
 
 def test_multiply_words():

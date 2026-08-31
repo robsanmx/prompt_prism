@@ -1,5 +1,5 @@
 """
-Command-Line Interface (CLI) for prompt-doe.
+Command-Line Interface (CLI) for prompt-prism.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from ..visualization.plots import generate_ascii_pareto
 
 def main():
     parser = argparse.ArgumentParser(
-        prog="prompt-doe",
+        prog="prompt-prism",
         description="Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")

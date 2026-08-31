@@ -2,7 +2,7 @@
 Tutorial: Optimizing a Retrieval-Augmented Generation (RAG) Prompt with Fractional Factorial DoE.
 """
 
-from prompt_doe import (
+from prompt_prism import (
     ExactMatch,
     Experiment,
     F1Score,

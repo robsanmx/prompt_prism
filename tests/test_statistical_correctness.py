@@ -6,9 +6,9 @@ import numpy as np
 import pandas as pd
 import pytest
 from statsmodels.stats.multitest import multipletests
-from prompt_doe.analysis.anova import ANOVAEngine
-from prompt_doe.analysis.effects import EffectAnalyzer
-from prompt_doe.design.generators import FractionalFactorialGenerator
+from prompt_prism.analysis.anova import ANOVAEngine
+from prompt_prism.analysis.effects import EffectAnalyzer
+from prompt_prism.design.generators import FractionalFactorialGenerator
 
 
 def test_recovers_known_effect():

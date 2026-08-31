@@ -4,13 +4,13 @@ Unit tests for Fractional Factorial, Plackett-Burman, and Full Factorial Design 
 
 import numpy as np
 import pytest
-from prompt_doe.design.catalog import CATALOG_DESIGNS, list_available_plans
-from prompt_doe.design.generators import (
+from prompt_prism.design.catalog import CATALOG_DESIGNS, list_available_plans
+from prompt_prism.design.generators import (
     FractionalFactorialGenerator,
     FullFactorialGenerator,
     PlackettBurmanGenerator,
 )
-from prompt_doe.design.recommender import recommend_design
+from prompt_prism.design.recommender import recommend_design
 
 
 def test_catalog_plans_exist():
