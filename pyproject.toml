@@ -1,0 +1,72 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompt_doe"
+version = "1.0.0"
+description = "Universal framework for LLM Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA"
+readme = "README.md"
+requires-python = ">=3.8"
+keywords = ["prompt-engineering", "design-of-experiments", "doe", "fractional-factorial", "anova", "llm", "prompt-optimization"]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "pandas>=1.0.0",
+    "numpy>=1.20.0",
+    "scipy>=1.7.0",
+    "statsmodels>=0.13.0",
+    "pydantic>=2.0.0",
+    "jinja2>=3.0.0",
+    "tabulate>=0.8.0",
+]
+
+[project.optional-dependencies]
+viz = [
+    "matplotlib>=3.3.0",
+]
+dev = [
+    "pytest>=6.0.0",
+    "pytest-cov>=2.10.0",
+    "black>=22.0.0",
+    "isort>=5.0.0",
+    "flake8>=3.9.0",
+]
+cloud = [
+    "google-cloud-aiplatform>=1.0.0",
+    "vertexai>=1.0.0",
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "litellm>=1.0.0",
+]
+
+[project.scripts]
+prompt-doe = "prompt_doe.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["prompt_doe*"]
+
+[tool.black]
+line-length = 88
+targets = ["prompt_doe", "tests"]
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+lines_after_imports = 2
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=prompt_doe --cov-report=term-missing"
