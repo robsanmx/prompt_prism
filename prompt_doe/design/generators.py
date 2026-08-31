@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import itertools
 import re
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 import pandas as pd
 
@@ -21,7 +21,7 @@ PB_GENERATING_VECTORS: Dict[int, List[int]] = {
     12: [1, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1],  # 11 factors
     16: [1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1],  # 15 factors
     20: [1, 1, -1, -1, 1, 1, 1, 1, -1, 1, -1, 1, -1, -1, -1, -1, 1, 1, -1],  # 19 factors
-    24: [1, 1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, -1, 1, -1, -1, -1],  # 23 factors
+    24: [1, 1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, -1, -1, -1],  # 23 factors (corrected orthogonal)
 }
 
 
@@ -43,24 +43,43 @@ class FractionalFactorialGenerator:
     """
 
     @classmethod
-    def from_plan_id(cls, plan_id: str, factor_names: Optional[Sequence[str]] = None) -> DesignMatrix:
-        """Create a DesignMatrix from a standard catalog plan ID."""
+    def from_plan_id(
+        cls,
+        plan_id: str,
+        factor_names: Optional[Sequence[str]] = None,
+    ) -> DesignMatrix:
+        """
+        Generate design matrix from a standard catalog plan ID (e.g. '2(5-1)V', '2(7-4)III').
+        """
         entry = get_catalog_entry(plan_id)
         if not entry:
-            raise ValueError(f"Plan ID '{plan_id}' not found in catalog. Available: {list(CATALOG_DESIGNS.keys())}")
+            raise ValueError(
+                f"Unknown plan_id '{plan_id}'. Use list_available_plans() to see supported designs."
+            )
 
         num_factors = entry["num_factors"]
         base_factors = entry["base_factors"]
         generators = entry["generators"]
-        factor_ids = list(entry["factors"])
+        factor_letters = list(entry["factors"])
+
+        names = list(factor_names) if factor_names else [f"Factor_{f}" for f in factor_letters]
+        if len(names) < num_factors:
+            names.extend([f"Factor_{factor_letters[i]}" for i in range(len(names), num_factors)])
 
         return cls.create(
             base_factors=base_factors,
             generators=generators,
-            all_factor_ids=factor_ids,
-            factor_names=factor_names,
+            all_factors=factor_letters,
+            factor_names=names,
             plan_id=entry["plan_id"],
             resolution=entry["resolution"],
+            metadata={
+                "base_factors": base_factors,
+                "fraction": entry["fraction"],
+                "num_runs": entry["runs"],
+                "num_factors": num_factors,
+                "identity": entry.get("identity", ""),
+            },
         )
 
     @classmethod
@@ -68,186 +87,65 @@ class FractionalFactorialGenerator:
         cls,
         base_factors: Sequence[str],
         generators: Sequence[str],
-        all_factor_ids: Optional[Sequence[str]] = None,
+        all_factors: Optional[Sequence[str]] = None,
         factor_names: Optional[Sequence[str]] = None,
-        plan_id: str = "custom_fractional",
+        plan_id: str = "custom",
         resolution: Optional[int] = None,
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> DesignMatrix:
         """
-        Construct fractional factorial design matrix from base factors and generator expressions.
-        
-        Args:
-            base_factors: e.g. ['A', 'B', 'C', 'D'] (q = 4, so 2^4 = 16 runs)
-            generators: e.g. ['E=ABC', 'F=BCD']
-            all_factor_ids: Ordered list of all factor IDs.
-            factor_names: Optional human-readable factor names mapped 1:1 to factor_ids.
-            plan_id: Identifier name.
-            resolution: Resolution level.
+        Construct fractional factorial design matrix from base factors and generator equations.
         """
         q = len(base_factors)
-        num_runs = 2**q
+        num_runs = 2 ** q
 
-        # Generate base factor combinations in standard Yates / binary order (0 and 1)
-        base_cols: Dict[str, np.ndarray] = {}
-        for i, b_factor in enumerate(base_factors):
-            # Frequency repeats: 2^i
-            col = np.array([int((r >> i) & 1) for r in range(num_runs)])
-            base_cols[b_factor] = col
+        # Step 1: Generate Full Factorial grid for base factors in {0, 1}
+        grid = list(itertools.product([0, 1], repeat=q))
+        df_base = pd.DataFrame(grid, columns=list(base_factors))
 
-        # Build full table
-        all_cols: Dict[str, np.ndarray] = dict(base_cols)
-
-        # Compute generated columns via XOR (GF(2) arithmetic)
-        gen_formulas = []
+        # Step 2: Compute generated factors using modulo-2 arithmetic (XOR in {0,1} space)
+        df_full = df_base.copy()
         for gen in generators:
             target, sources = parse_generator(gen)
-            gen_formulas.append(f"{target}={''.join(sources)}")
-            # XOR all sources
-            res_col = np.zeros(num_runs, dtype=int)
-            for s in sources:
-                if s not in all_cols:
-                    raise ValueError(f"Generator '{gen}' references undefined source factor '{s}'")
-                res_col = res_col ^ all_cols[s]
-            all_cols[target] = res_col
+            # Modulo 2 sum of binary columns
+            df_full[target] = df_full[sources].sum(axis=1) % 2
 
-        # Determine final ordered factor IDs
-        if all_factor_ids is None:
-            ordered_ids = list(base_factors) + [parse_generator(g)[0] for g in generators]
+        # Step 3: Align column order
+        if all_factors:
+            col_order = [f for f in all_factors if f in df_full.columns]
         else:
-            ordered_ids = list(all_factor_ids)
+            col_order = list(df_full.columns)
 
-        # Build runs
+        df_final = df_full[col_order]
+
+        # Step 4: Build RunConfig objects
+        factor_names_list = list(factor_names) if factor_names else [f"Factor_{c}" for c in col_order]
         runs: List[RunConfig] = []
-        name_map = {}
-        if factor_names and len(factor_names) == len(ordered_ids):
-            name_map = dict(zip(ordered_ids, factor_names))
-
-        for r_idx in range(num_runs):
-            f_levels: Dict[str, int] = {}
-            f_names: Dict[str, int] = {}
-            for fid in ordered_ids:
-                val = int(all_cols[fid][r_idx])
-                f_levels[fid] = val
-                if fid in name_map:
-                    f_names[name_map[fid]] = val
-
+        for idx, row in df_final.iterrows():
+            levels = {col: int(row[col]) for col in col_order}
+            combination_str = "".join(str(levels[col]) for col in col_order)
             runs.append(
                 RunConfig(
-                    run_id=r_idx + 1,
-                    factor_levels=f_levels,
-                    factor_names=f_names,
-                    metadata={"plan_id": plan_id},
+                    run_id=idx + 1,
+                    factor_levels=levels,
+                    combination_string=combination_str,
                 )
             )
 
         return DesignMatrix(
             plan_id=plan_id,
-            factor_ids=ordered_ids,
-            runs=runs,
+            factor_ids=col_order,
+            factor_names=factor_names_list[:len(col_order)],
             resolution=resolution,
-            generators=gen_formulas,
-            metadata={
-                "base_factors": list(base_factors),
-                "fraction": len(generators),
-                "num_runs": num_runs,
-                "num_factors": len(ordered_ids),
-            },
+            runs=runs,
+            generators=list(generators),
+            metadata=metadata or {},
         )
 
 
 class PlackettBurmanGenerator:
     """
-    Generates Plackett-Burman screening designs for N = 8, 12, 16, 20, 24 runs.
-    """
-
-    @classmethod
-    def create(
-        cls,
-        num_factors: int,
-        factor_names: Optional[Sequence[str]] = None,
-        factor_ids: Optional[Sequence[str]] = None,
-        runs: Optional[int] = None,
-    ) -> DesignMatrix:
-        """
-        Create a Plackett-Burman design for screening num_factors.
-        
-        Args:
-            num_factors: Number of factors to screen (e.g. 7, 10, 11).
-            factor_names: Optional names of factors.
-            factor_ids: Optional IDs (A, B, C...).
-            runs: Optional explicit run count (must be multiple of 4: 8, 12, 16, 20, 24).
-        """
-        # Find smallest available PB run size >= num_factors + 1
-        available_sizes = sorted(PB_GENERATING_VECTORS.keys())
-        if runs is not None:
-            if runs not in PB_GENERATING_VECTORS:
-                raise ValueError(f"Plackett-Burman run size {runs} not supported. Available: {available_sizes}")
-            target_runs = runs
-        else:
-            valid_sizes = [s for s in available_sizes if s >= num_factors + 1]
-            if not valid_sizes:
-                raise ValueError(f"Plackett-Burman supports up to {max(available_sizes)-1} factors (requested {num_factors})")
-            target_runs = valid_sizes[0]
-
-        # Generate matrix
-        first_row = PB_GENERATING_VECTORS[target_runs]
-        k = len(first_row)
-        
-        # Cyclic permutation of first row
-        matrix_pm = []
-        for i in range(k):
-            row = first_row[-i:] + first_row[:-i] if i > 0 else list(first_row)
-            matrix_pm.append(row)
-        # Final row of all -1
-        matrix_pm.append([-1] * k)
-
-        matrix = np.array(matrix_pm)  # shape (target_runs, k)
-        # Convert -1/+1 to 0/1: -1 -> 0, +1 -> 1
-        matrix_01 = np.where(matrix == 1, 1, 0)
-
-        # Slice to requested number of factors
-        matrix_01 = matrix_01[:, :num_factors]
-
-        # Assign factor IDs
-        if factor_ids is None:
-            alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
-            f_ids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(num_factors)]
-        else:
-            f_ids = list(factor_ids)[:num_factors]
-
-        name_map = {}
-        if factor_names and len(factor_names) == len(f_ids):
-            name_map = dict(zip(f_ids, factor_names))
-
-        run_configs: List[RunConfig] = []
-        for r_idx in range(target_runs):
-            f_levels = {f_ids[c]: int(matrix_01[r_idx, c]) for c in range(num_factors)}
-            f_names = {name_map[f_ids[c]]: int(matrix_01[r_idx, c]) for c in range(num_factors) if f_ids[c] in name_map}
-            run_configs.append(
-                RunConfig(
-                    run_id=r_idx + 1,
-                    factor_levels=f_levels,
-                    factor_names=f_names,
-                    metadata={"design_type": "Plackett-Burman", "runs": target_runs},
-                )
-            )
-
-        return DesignMatrix(
-            plan_id=f"PB-{target_runs}(k={num_factors})",
-            factor_ids=f_ids,
-            runs=run_configs,
-            resolution=3,  # PB designs are Resolution III screening designs
-            metadata={
-                "design_type": "Plackett-Burman",
-                "num_factors": num_factors,
-                "num_runs": target_runs,
-            },
-        )
-
-
-class FullFactorialGenerator:
-    """
-    Generates Full Factorial designs (all 2^k combinations or multi-level grids).
+    Generates orthogonal Plackett-Burman screening design matrices.
     """
 
     @classmethod
@@ -256,56 +154,130 @@ class FullFactorialGenerator:
         num_factors: Optional[int] = None,
         factor_ids: Optional[Sequence[str]] = None,
         factor_names: Optional[Sequence[str]] = None,
-        levels_per_factor: Optional[Union[int, Sequence[int]]] = None,
+        runs: Optional[int] = None,
     ) -> DesignMatrix:
         """
-        Create a Full Factorial design.
-        
-        Args:
-            num_factors: Number of factors.
-            factor_ids: List of factor IDs (e.g. ['A', 'B', 'C']).
-            factor_names: Optional factor names.
-            levels_per_factor: Levels per factor (default 2 for binary design).
+        Build Plackett-Burman design matrix for up to N-1 factors.
         """
-        if factor_ids is None:
-            if num_factors is None:
-                raise ValueError("Either factor_ids or num_factors must be provided")
+        # Determine number of runs N in {8, 12, 16, 20, 24}
+        if runs is not None:
+            if runs not in PB_GENERATING_VECTORS:
+                valid_runs = sorted(PB_GENERATING_VECTORS.keys())
+                raise ValueError(f"Unsupported runs={runs} for Plackett-Burman. Choose from {valid_runs}.")
+            n_runs = runs
+        else:
+            k = num_factors or (len(factor_ids) if factor_ids else 7)
+            candidates = [n for n in sorted(PB_GENERATING_VECTORS.keys()) if n - 1 >= k]
+            if not candidates:
+                raise ValueError(f"Plackett-Burman supports up to 23 factors. Requested: {k}")
+            n_runs = candidates[0]
+
+        base_vec = PB_GENERATING_VECTORS[n_runs]
+        max_factors = n_runs - 1
+
+        # Cyclic permutations of first row
+        rows: List[List[int]] = []
+        k = max_factors
+        for i in range(k):
+            # Cyclic shift right by i positions
+            shift = (k - i) % k
+            row = base_vec[shift:] + base_vec[:shift]
+            rows.append(row)
+
+        # Last row is all -1
+        rows.append([-1] * k)
+
+        # Convert {-1, +1} to {0, 1} (where -1 -> 0, +1 -> 1)
+        matrix_binary = np.where(np.array(rows) == 1, 1, 0)
+
+        # Determine factors to keep
+        if factor_ids:
+            k_keep = min(len(factor_ids), max_factors)
+            fids = list(factor_ids)[:k_keep]
+        elif num_factors:
+            k_keep = min(num_factors, max_factors)
             alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
-            factor_ids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(num_factors)]
+            fids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(k_keep)]
         else:
-            factor_ids = list(factor_ids)
-            num_factors = len(factor_ids)
+            k_keep = max_factors
+            alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
+            fids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(k_keep)]
 
-        if levels_per_factor is None:
-            level_ranges = [range(2) for _ in range(num_factors)]
-        elif isinstance(levels_per_factor, int):
-            level_ranges = [range(levels_per_factor) for _ in range(num_factors)]
-        else:
-            level_ranges = [range(n) for n in levels_per_factor]
+        fnames = list(factor_names)[:k_keep] if factor_names else [f"Factor_{fid}" for fid in fids]
 
-        combinations = list(itertools.product(*level_ranges))
-
-        name_map = {}
-        if factor_names and len(factor_names) == len(factor_ids):
-            name_map = dict(zip(factor_ids, factor_names))
-
-        runs: List[RunConfig] = []
-        for r_idx, comb in enumerate(combinations):
-            f_levels = {fid: int(val) for fid, val in zip(factor_ids, comb)}
-            f_names = {name_map[fid]: int(val) for fid, val in zip(factor_ids, comb) if fid in name_map}
-            runs.append(
+        runs_list: List[RunConfig] = []
+        for idx in range(n_runs):
+            levels = {fids[j]: int(matrix_binary[idx, j]) for j in range(k_keep)}
+            combination_str = "".join(str(levels[fid]) for fid in fids)
+            runs_list.append(
                 RunConfig(
-                    run_id=r_idx + 1,
-                    factor_levels=f_levels,
-                    factor_names=f_names,
-                    metadata={"design_type": "FullFactorial"},
+                    run_id=idx + 1,
+                    factor_levels=levels,
+                    combination_string=combination_str,
                 )
             )
 
         return DesignMatrix(
-            plan_id=f"Full-2^{num_factors}" if levels_per_factor in (None, 2) else f"Full-Grid({len(combinations)}runs)",
-            factor_ids=factor_ids,
-            runs=runs,
-            resolution=99,  # Full factorial has no confounding
-            metadata={"design_type": "FullFactorial", "num_factors": num_factors, "num_runs": len(runs)},
+            plan_id=f"PB-{n_runs}",
+            factor_ids=fids,
+            factor_names=fnames,
+            resolution=3,  # Plackett-Burman designs are Resolution III screening designs
+            runs=runs_list,
+            metadata={"num_runs": n_runs, "max_factors": max_factors, "design_type": "Plackett-Burman"},
+        )
+
+
+class FullFactorialGenerator:
+    """
+    Generates Full Factorial design matrices.
+    """
+
+    @classmethod
+    def create(
+        cls,
+        num_factors: Optional[int] = None,
+        factor_ids: Optional[Sequence[str]] = None,
+        factor_names: Optional[Sequence[str]] = None,
+        levels_per_factor: Optional[Sequence[int]] = None,
+    ) -> DesignMatrix:
+        """
+        Create full factorial grid across all factor levels.
+        """
+        if factor_ids:
+            fids = list(factor_ids)
+        elif num_factors:
+            alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
+            fids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(num_factors)]
+        else:
+            raise ValueError("Must provide either num_factors or factor_ids.")
+
+        k = len(fids)
+        fnames = list(factor_names)[:k] if factor_names else [f"Factor_{fid}" for fid in fids]
+
+        if levels_per_factor:
+            level_ranges = [list(range(num_lvls)) for num_lvls in levels_per_factor]
+        else:
+            level_ranges = [[0, 1] for _ in range(k)]
+
+        grid = list(itertools.product(*level_ranges))
+
+        runs_list: List[RunConfig] = []
+        for idx, combination in enumerate(grid):
+            levels = {fids[j]: int(combination[j]) for j in range(k)}
+            comb_str = "".join(str(v) for v in combination)
+            runs_list.append(
+                RunConfig(
+                    run_id=idx + 1,
+                    factor_levels=levels,
+                    combination_string=comb_str,
+                )
+            )
+
+        return DesignMatrix(
+            plan_id=f"FullFactorial-2^{k}" if not levels_per_factor else f"FullFactorial-{len(grid)}runs",
+            factor_ids=fids,
+            factor_names=fnames,
+            resolution=8,  # Full factorial has no confounding
+            runs=runs_list,
+            metadata={"num_runs": len(grid), "num_factors": k, "design_type": "FullFactorial"},
         )

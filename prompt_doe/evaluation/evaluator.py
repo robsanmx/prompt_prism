@@ -50,14 +50,17 @@ class Evaluator:
         prediction: Any,
         target: Any,
         input_data: Optional[Dict[str, Any]] = None,
+        context: Optional[Dict[str, Any]] = None,
+        **kwargs,
     ) -> Dict[str, float]:
         """Compute all configured metrics for a single prediction."""
+        ctx = context if context is not None else input_data
         scores = {}
         for m in self.metrics:
             try:
-                score = m.compute(prediction=prediction, target=target, input_data=input_data)
+                score = m.compute(prediction=prediction, target=target, input_data=ctx)
                 scores[m.name] = float(score)
-            except Exception as e:
+            except Exception:
                 scores[m.name] = 0.0
         return scores
 

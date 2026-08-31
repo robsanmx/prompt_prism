@@ -11,6 +11,7 @@ from .analysis.anova import ANOVAEngine, ANOVAResult
 from .analysis.optimizer import OptimalPromptFinder, OptimalPromptRecommendation
 from .core.factors import Factor, FactorSet, FactorType, Level
 from .core.models import DesignMatrix, ExperimentResults, RunConfig
+from .design.aliasing import AliasStructure
 from .design.catalog import CATALOG_DESIGNS
 from .design.generators import FractionalFactorialGenerator, FullFactorialGenerator, PlackettBurmanGenerator
 from .design.recommender import recommend_design
@@ -132,11 +133,12 @@ class Experiment:
         self,
         results: Optional[ExperimentResults] = None,
         target_metric: Optional[str] = None,
+        block_by: Optional[str] = "sample_id",
         include_interactions: bool = False,
         alpha: float = 0.05,
     ) -> AnalysisReport:
         """
-        Perform ANOVA and Main Effects analysis on the experiment results.
+        Perform ANOVA and Main Effects analysis on the experiment results using RCBD blocking.
         """
         exp_res = results or self.last_results
         if exp_res is None:
@@ -149,11 +151,54 @@ class Experiment:
             experiment_results=exp_res,
             target_metric=metric_name,
             factor_name_map=name_map,
+            block_col=block_by,
             include_interactions=include_interactions,
             alpha=alpha,
             title=f"{self.title} - ANOVA Analysis ({metric_name})",
         )
         return self.last_report
+
+    def suggest_confirmation_design(
+        self,
+        report: Optional[AnalysisReport] = None,
+        max_runs: Optional[int] = 16,
+    ) -> DesignMatrix:
+        """
+        Given a screening experiment result, suggests an unaliased Resolution V or Full Factorial
+        confirmation design over the surviving/candidate factors.
+        """
+        rep = report or self.last_report
+        if rep is None:
+            rep = self.analyze()
+
+        opt = rep.optimal_recommendation
+        if not opt:
+            raise ValueError("No optimal recommendation available in report.")
+
+        # Identify candidate factors that had non-zero/significant effects
+        candidate_fids = set()
+        for d in opt.significant_positive_drivers:
+            candidate_fids.add(d.factor_id)
+        for d in opt.harmful_negative_factors:
+            candidate_fids.add(d.factor_id)
+
+        # If too few, include top neutral factors
+        if len(candidate_fids) < 3 and rep.anova_result:
+            for eff in rep.anova_result.main_effects:
+                candidate_fids.add(eff.factor_id)
+                if len(candidate_fids) >= 3:
+                    break
+
+        surviving_factors = [self.factors[fid] for fid in candidate_fids if fid in self.factors.ids]
+        if not surviving_factors:
+            surviving_factors = list(self.factors)
+
+        # Recommends Resolution V or Full Factorial
+        return recommend_design(
+            factors=surviving_factors,
+            max_runs=max_runs,
+            min_resolution=5,
+        )
 
     def get_optimal_prompt_template(
         self,

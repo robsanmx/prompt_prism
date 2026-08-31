@@ -4,21 +4,9 @@ Standard Catalog of 2-Level Fractional Factorial Designs (Box-Hunter / Montgomer
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+import warnings
+from typing import Any, Dict, List, Optional
 
-
-# Format of each catalog entry:
-# {
-#   "plan_id": "2(5-1)V",
-#   "factors": "ABCDE",
-#   "num_factors": 5,
-#   "fraction": 1,
-#   "resolution": 5,
-#   "runs": 16,
-#   "base_factors": ["A", "B", "C", "D"],
-#   "generators": ["E=ABCD"],
-#   "identity": "I = ABCDE",
-# }
 
 CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
     "2(3-1)III": {
@@ -142,17 +130,6 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "generators": ["D=AB", "E=AC", "F=BC", "G=ABC"],
         "identity": "I = ABD = ACE = BCF = ABCG = ...",
     },
-    "2(8-1)VIII": {
-        "plan_id": "2(8-1)VIII",
-        "factors": "ABCDEFGH",
-        "num_factors": 8,
-        "fraction": 1,
-        "resolution": 8,
-        "runs": 128,
-        "base_factors": ["A", "B", "C", "D", "E", "F", "G"],
-        "generators": ["H=ABCDEFG"],
-        "identity": "I = ABCDEFGH",
-    },
     "2(8-2)V": {
         "plan_id": "2(8-2)V",
         "factors": "ABCDEFGH",
@@ -172,8 +149,8 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "resolution": 4,
         "runs": 32,
         "base_factors": ["A", "B", "C", "D", "E"],
-        "generators": ["F=ABC", "G=ABD", "H=BCDE"],
-        "identity": "I = ABCF = ABDG = BCDEH = ...",
+        "generators": ["F=BCDE", "G=ACDE", "H=ABDE"],
+        "identity": "I = BCDEF = ACDEG = ABDEH = ...",
     },
     "2(8-4)IV": {
         "plan_id": "2(8-4)IV",
@@ -183,8 +160,8 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "resolution": 4,
         "runs": 16,
         "base_factors": ["A", "B", "C", "D"],
-        "generators": ["E=BCD", "F=ACD", "G=ABC", "H=ABD"],
-        "identity": "I = BCDE = ACDF = ABCG = ABDH = ...",
+        "generators": ["E=BCD", "F=ACD", "G=ABD", "H=ABC"],
+        "identity": "I = BCDE = ACDF = ABDG = ABCH = ...",
     },
     "2(9-2)VI": {
         "plan_id": "2(9-2)VI",
@@ -194,8 +171,8 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "resolution": 6,
         "runs": 128,
         "base_factors": ["A", "B", "C", "D", "E", "F", "G"],
-        "generators": ["H=ACDFG", "J=BCEFG"],
-        "identity": "I = ACDFGH = BCEFGJ = ABDEHJ",
+        "generators": ["H=ABCDE", "J=ACDFG"],
+        "identity": "I = ABCDEH = ACDFGJ = BEFGHJ",
     },
     "2(9-3)IV": {
         "plan_id": "2(9-3)IV",
@@ -238,8 +215,8 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "resolution": 5,
         "runs": 128,
         "base_factors": ["A", "B", "C", "D", "E", "F", "G"],
-        "generators": ["H=ABCD", "J=ACDE", "K=ACDF"],
-        "identity": "I = ABCDH = ACDEJ = ACDFK = ...",
+        "generators": ["H=ABCD", "J=ABEF", "K=ACEG"],
+        "identity": "I = ABCDH = ABEFJ = ACEGK = CDEFHJ = BDEGHK = BCFGJK = ADFGHJK",
     },
     "2(10-4)IV": {
         "plan_id": "2(10-4)IV",
@@ -274,12 +251,12 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "generators": ["E=ABC", "F=BCD", "G=ACD", "H=ABD", "J=ABCD", "K=AB"],
         "identity": "I = ABCE = BCDF = ACDG = ABDH = ABCDJ = ABK = ...",
     },
-    "2(11-4)VI": {
-        "plan_id": "2(11-4)VI",
+    "2(11-4)V": {
+        "plan_id": "2(11-4)V",
         "factors": "ABCDEFGHJKL",
         "num_factors": 11,
         "fraction": 4,
-        "resolution": 6,
+        "resolution": 5,
         "runs": 128,
         "base_factors": ["A", "B", "C", "D", "E", "F", "G"],
         "generators": ["H=ABCG", "J=BCDE", "K=ACDF", "L=ABCDEFG"],
@@ -337,8 +314,14 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
 
 def get_catalog_entry(plan_id: str) -> Optional[Dict[str, Any]]:
     """Retrieve catalog metadata for a specific plan ID."""
-    # Normalize common variations (e.g. 2(5-1)V vs 2^(5-1))
     norm_id = plan_id.replace("^", "").strip()
+    if norm_id == "2(11-4)VI":
+        warnings.warn(
+            "Plan ID '2(11-4)VI' is deprecated and has been corrected to '2(11-4)V' (true Resolution V).",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        return CATALOG_DESIGNS.get("2(11-4)V")
     return CATALOG_DESIGNS.get(norm_id)
 
 

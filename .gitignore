@@ -64,3 +64,4 @@ reports/
 *.html
 *.db
 *.sqlite
+graphify-out/

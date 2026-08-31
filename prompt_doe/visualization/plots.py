@@ -165,8 +165,8 @@ def plot_interaction_effects(
         c = idx % cols
         ax = axes[r][c]
 
-        f1, f2 = inter.factor_pair
-        n1, n2 = inter.factor_names
+        f1, f2 = inter.factor_1, inter.factor_2
+        n1, n2 = inter.factor_1_name or f1, inter.factor_2_name or f2
 
         # Line for f2 = 0
         y_f2_0 = [inter.mean_00, inter.mean_10]

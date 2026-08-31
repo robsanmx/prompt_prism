@@ -5,7 +5,7 @@ Alias and Confounding Structure Analyzer for Fractional Factorial Designs.
 from __future__ import annotations
 
 import itertools
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 
 def multiply_words(w1: str, w2: str) -> str:
@@ -50,68 +50,71 @@ class AliasStructure:
 
         all_words: Set[str] = set()
         p = len(self.basic_words)
-        # All non-empty subsets of basic words
         for r in range(1, p + 1):
-            for subset in itertools.combinations(self.basic_words, r):
-                prod = subset[0]
-                for w in subset[1:]:
-                    prod = multiply_words(prod, w)
-                if prod:
-                    all_words.add(prod)
+            for combo in itertools.combinations(self.basic_words, r):
+                current = combo[0]
+                for next_w in combo[1:]:
+                    current = multiply_words(current, next_w)
+                if current:
+                    all_words.add(current)
 
-        return sorted(list(all_words), key=lambda x: (len(x), x))
+        return sorted(list(all_words), key=lambda w: (len(w), w))
 
     def _compute_resolution(self) -> int:
-        """Resolution is the length of the shortest word in the defining relation."""
+        """
+        Resolution is the length of the shortest word in the defining relation.
+        If no generators, resolution is treated as 8 (Full Factorial).
+        """
         if not self.defining_relation:
-            return 99  # No confounding (Full factorial)
+            return 8
         return min(len(w) for w in self.defining_relation)
 
     def get_aliases_for_term(self, term: str, max_order: int = 3) -> List[str]:
         """
-        Find all terms confounded/aliased with the given term.
-        Example: term='A' in Res IV design -> ['BCE', 'DEF', ...]
+        Find all aliased terms for a given factor or interaction (e.g. 'A' or 'AB').
         """
-        aliases = []
+        term_clean = "".join(sorted(list(term.replace(" ", ""))))
+        aliases: Set[str] = set()
+
         for word in self.defining_relation:
-            alias = multiply_words(term, word)
-            if alias and len(alias) <= max_order:
-                aliases.append(alias)
-        return sorted(aliases, key=lambda x: (len(x), x))
+            alias = multiply_words(term_clean, word)
+            if alias and alias != term_clean and len(alias) <= max_order:
+                aliases.add(alias)
+
+        return sorted(list(aliases), key=lambda a: (len(a), a))
 
     def get_all_aliases(self, factors: Sequence[str], max_order: int = 2) -> Dict[str, List[str]]:
         """
-        Get alias structure for all main effects and 2-factor interactions.
+        Map each main factor and 2-factor interaction to its alias chain.
         """
         result: Dict[str, List[str]] = {}
-        # Main effects
         for f in factors:
             aliases = self.get_aliases_for_term(f, max_order=max_order)
-            result[f] = aliases
+            if aliases:
+                result[f] = aliases
 
-        # 2-factor interactions
-        for f1, f2 in itertools.combinations(factors, 2):
-            term = "".join(sorted([f1, f2]))
-            aliases = self.get_aliases_for_term(term, max_order=max_order)
-            result[term] = aliases
+        if max_order >= 2:
+            for f1, f2 in itertools.combinations(factors, 2):
+                pair = f1 + f2
+                aliases = self.get_aliases_for_term(pair, max_order=max_order)
+                if aliases:
+                    result[pair] = aliases
 
         return result
 
     def summary(self) -> str:
         """Format a human-readable summary of the alias structure and resolution."""
+        res_roman = {3: "III", 4: "IV", 5: "V", 6: "VI", 7: "VII", 8: "Full/VIII"}.get(
+            self.resolution, str(self.resolution)
+        )
         lines = [
-            f"Design Resolution: {self.resolution} ({self.resolution_name})",
-            f"Defining Relation: I = " + " = ".join(self.defining_relation) if self.defining_relation else "I (No fractional confounding)",
+            f"Design Resolution: {self.resolution} (Res {res_roman})",
+            f"Defining Relation: I = {' = '.join(self.defining_relation) if self.defining_relation else 'None'}",
         ]
         if self.resolution == 3:
-            lines.append("Note: In Resolution III, main effects are aliased with 2-factor interactions.")
+            lines.append("⚠️ WARNING: Resolution III design — Main effects are confounded with 2-factor interactions.")
         elif self.resolution == 4:
-            lines.append("Note: In Resolution IV, main effects are clean of 2-factor interactions; 2-factor interactions are aliased with each other.")
+            lines.append("ℹ️ Resolution IV design — Main effects are unaliased with 2-factor interactions, but 2-factor interactions are aliased with each other.")
         elif self.resolution >= 5:
-            lines.append("Note: In Resolution V+, main effects and 2-factor interactions are unaliased with other main effects or 2-factor interactions.")
+            lines.append("✅ Resolution V+ design — Main effects and 2-factor interactions are unaliased with each other.")
         return "\n".join(lines)
-
-    @property
-    def resolution_name(self) -> str:
-        res_map = {3: "Res III", 4: "Res IV", 5: "Res V", 6: "Res VI", 7: "Res VII", 8: "Res VIII", 99: "Full Factorial"}
-        return res_map.get(self.resolution, f"Res {self.resolution}")
