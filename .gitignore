@@ -65,3 +65,6 @@ reports/
 *.db
 *.sqlite
 graphify-out/
+
+# Local planning docs (not tracked)
+tasks/
