@@ -145,36 +145,72 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 
 ## 🤖 LLM-as-a-Judge & DeepEval Integration
 
-To evaluate subjective qualities (answer relevancy, hallucination, tone, reasoning) without labeled datasets, install the `deepeval` extra:
+`prompt_prism` integrates with **DeepEval** to evaluate complex, semantic, and subjective qualities using LLM judges. It supports two evaluation paradigms:
 
 ```bash
 pip install prompt-prism[deepeval]
 ```
 
+### 1. 🎯 Reference-Based Evaluation (WITH Golden Datasets)
+When you have ground-truth expected answers, DeepEval evaluates semantic equivalence, factual agreement, and retrieval recall against the golden targets:
+
 ```python
 from prompt_prism import Experiment, Factor, deepeval_metric, JudgeCache
 
-# 1. Setup Judge Cache to prevent redundant judging API calls
+# Setup SQLite Judge Cache to prevent repeated API calls
 judge_cache = JudgeCache(db_path="judge_cache.db")
 
-# 2. Define LLM-as-a-Judge metrics
-relevancy = deepeval_metric("answer_relevancy", threshold=0.7, cache=judge_cache)
-g_eval_custom = deepeval_metric(
+# A. Golden Dataset with reference targets
+golden_dataset = [
+    {
+        "id": "case_01",
+        "input": "Explain why the customer was charged a $50 late fee.",
+        "target": "The payment was received on Nov 18, 3 days after the Nov 15 deadline.",  # <-- GOLDEN TARGET
+    }
+]
+
+# B. G-Eval: Evaluates factual agreement against the Golden Target
+factual_geval = deepeval_metric(
     "g_eval",
-    criteria="Evaluate if the tone is professional, concise, and helpful.",
+    name="factual_accuracy",
+    criteria="Determine whether the actual output factually agrees with the expected golden target.",
+    evaluation_steps=[
+        "Check if all key facts from the expected output are preserved in the actual output.",
+        "Penalize if the actual output contradicts the expected target or fabricates facts.",
+    ],
     cache=judge_cache,
 )
 
-# 3. Use directly as target metric in Experiment
+# C. Contextual Recall: Measures how much of the golden target was retrieved in context
+context_recall = deepeval_metric("contextual_recall", cache=judge_cache)
+```
+
+### 2. 🔍 Reference-Free Evaluation (WITHOUT Golden Datasets)
+When evaluating open-ended queries or streaming logs without ground-truth labels:
+
+```python
+# Answer Relevancy: Checks if the output directly answers the user prompt
+relevancy = deepeval_metric("answer_relevancy", threshold=0.7, cache=judge_cache)
+
+# Faithfulness & Hallucination: Verifies grounding against retrieved documents
+faithfulness = deepeval_metric("faithfulness", cache=judge_cache)
+hallucination = deepeval_metric("hallucination", cache=judge_cache)
+```
+
+### 3. Run Factorial Experiment with Judge Metrics
+
+```python
 exp = Experiment.from_factors(
     factors=factors,
     design="2(5-1)V",
-    metrics=[relevancy, g_eval_custom],
-    target_metric="deepeval_answer_relevancy",
+    metrics=[factual_geval, relevancy],
+    target_metric="factual_accuracy",
 )
+results = exp.run(dataset=golden_dataset, client=my_llm)
+report = exp.analyze(block_by="sample_id")
 ```
 
-> **💡 Best Practice:** Always set `temperature=0` on your LLM judge model and enable `JudgeCache` so that repeated ANOVA runs do not incur unnecessary judge API costs.
+> **💡 Best Practice:** Always set `temperature=0` on your LLM judge model and pass `cache=JudgeCache(...)` so that repeated ANOVA runs do not incur unnecessary judge API costs.
 
 ---
 

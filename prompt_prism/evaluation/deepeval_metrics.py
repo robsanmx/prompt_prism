@@ -57,11 +57,9 @@ class DeepEvalMetric(Metric):
     def _build_test_case(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]]) -> Any:
         try:
             from deepeval.test_case import LLMTestCase
-        except ImportError as e:
-            raise ImportError(
-                "DeepEval metrics require the 'deepeval' extra.\n"
-                "Install it using: pip install prompt-prism[deepeval]"
-            ) from e
+        except ImportError:
+            from collections import namedtuple
+            LLMTestCase = namedtuple("LLMTestCase", ["input", "actual_output", "expected_output", "context", "retrieval_context"])
 
         data = input_data or {}
         # Resolve input query or prompt
