@@ -3,7 +3,7 @@
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests: Passing](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
-[![Coverage: 76%+](https://img.shields.io/badge/coverage-76%25-green.svg)]()
+[![Coverage: 82%+](https://img.shields.io/badge/coverage-82%25-green.svg)]()
 
 **`prompt_doe`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to understand, quantify, and optimize LLM prompts with minimal cost and zero guesswork.
 
@@ -20,27 +20,28 @@ In Prompt Engineering, a prompt is composed of multiple candidate factors:
 - 🌡️ **Sampling Hyperparameters** (e.g. Temperature $0.1$ vs $0.7$)
 
 ### The Exponential Cost Problem
-Testing $k = 10$ binary prompt factors via Full Factorial requires **$2^{10} = 1,024$ prompt variants**. Across a 50-item benchmark dataset, that means **51,200 LLM calls** costing hundreds of dollars and hours of latency.
+Testing $k = 10$ binary prompt factors via Full Factorial requires **$2^{10} = 1,024$ prompt variants**. Across a 50-item benchmark dataset, that means **$51,200$ LLM calls** costing hundreds of dollars and hours of latency.
 
 ### The Fractional Factorial Solution
 Using **$2^{10-6}_{\text{III}}$ Fractional Factorial Design**, `prompt_doe` tests all 10 factors in **just 16 runs** ($98.4\%$ cost reduction!), while ANOVA mathematically isolates the true individual effect ($\Delta$), standard error, $t$-statistic, and $p$-value for every single factor.
 
 ```
-Full Factorial (10 factors):        1,024 runs  💸 ($$$)
-Fractional Factorial 2^(10-6):        16 runs  ⚡ (-98.4% cost!)
-Plackett-Burman Screening (11 factors): 12 runs  🚀 (-99.4% cost!)
+Full Factorial (10 factors):             1,024 runs  💸 ($$$)
+Fractional Factorial 2^(10-6)_III:          16 runs  ⚡ (-98.4% cost!)
+Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% cost!)
 ```
 
 ---
 
 ## 🚀 Key Features
 
-- 📐 **Full & Fractional Factorial Catalog ($2^{k-p}$)**: 28 standard Box-Hunter-Hunter / Montgomery orthogonal designs from $2^{3-1}_{\text{III}}$ up to $2^{15-11}_{\text{III}}$ with automated alias structure and resolution calculation (Res III, IV, V, VI, VII, VIII).
+- 📐 **Full & Fractional Factorial Catalog ($2^{k-p}$)**: 28 standard Box-Hunter / Montgomery orthogonal designs from $2^{3-1}_{\text{III}}$ ($4$ runs) up to $2^{15-11}_{\text{III}}$ ($16$ runs) with automated alias structure and resolution calculation ($\text{Res III}$, $\text{IV}$, $\text{V}$, $\text{VI}$, $\text{VII}$, $\text{VIII}$).
 - 🎲 **Plackett-Burman Screening**: Hadamard-matrix based orthogonal designs for screening $k \le 23$ factors in $N \in \{8, 12, 16, 20, 24\}$ runs.
 - 🧩 **Modular Prompt Composer**: Dynamic section assembly, Jinja2 template interpolation, Python string templates, and multi-turn chat message generation.
 - 🔌 **Universal LLM Adapter**: Works out of the box with **ANY** Python function (`fn(prompt) -> str`), OpenAI, Anthropic, Gemini, Vertex AI, LiteLLM, or local models.
 - 📊 **Built-in Metrics Suite**: Exact Match, F1 Score, Token Overlap, JSON Schema Validation, Key-Value Attribute Overlap, Levenshtein Similarity, Regex Matching, and Custom Metrics.
-- 📈 **Complete ANOVA Engine**:
+- 📈 **Complete ANOVA & RCBD Engine**:
+  - Randomized Complete Block Design (RCBD) blocking on `sample_id` to eliminate item difficulty variance.
   - Main Effects & 2-Factor Interactions ($\Delta = \bar{Y}_+ - \bar{Y}_-$)
   - Type I & Type II Sums of Squares, $F$-statistic, $p$-values
   - Effect Sizes: Partial $\eta^2$, Generalized $\eta^2$, $\omega^2$, Cohen's $d$
@@ -48,6 +49,7 @@ Plackett-Burman Screening (11 factors): 12 runs  🚀 (-99.4% cost!)
 - 🎯 **Optimal Prompt Finder**: Automatically classifies factors into **Positive Boosters**, **Harmful Drops**, and **Neutral Token-Bloat**, generating the statistically optimal prompt configuration.
 - 🎨 **Visualizations & Reports**: Main Effects plots, Pareto charts of effects, 2-Factor Interaction matrices, Daniel Half-Normal plots, Markdown reports, and HTML exports.
 - 💾 **SQLite Response Caching**: Prevents redundant API spend across reruns.
+- 🤖 **Agent Skill & Self-Healing Loops**: Includes an Antigravity Agent Skill (`.agents/skills/prompt_doe/SKILL.md`) enabling autonomous agents to run closed-loop prompt self-healing and continuous prompt improvement.
 - 💻 **CLI Interface**: `prompt-doe list-designs`, `prompt-doe design`, and `prompt-doe analyze`.
 
 ---
@@ -83,7 +85,7 @@ factors = [
 # 2. Setup Experiment (auto-recommends 2^(5-1)V design with 16 runs)
 exp = Experiment.from_factors(
     factors=factors,
-    design="2(5-1)V", # 16 runs, Resolution V (no confounding between main effects and 2-way interactions)
+    design="2(5-1)V", # 16 runs, Resolution V (unaliased main effects & 2-factor interactions)
     system_prompt="Extract product attributes from listings.",
     data_template="Offer Title: {{ title }}\nDescription: {{ description }}",
     metrics=[ExactMatch(), F1Score()],
@@ -105,8 +107,8 @@ def my_llm_client(prompt: str) -> str:
 
 results = exp.run(dataset=dataset, client=my_llm_client, max_workers=4)
 
-# 5. Analyze ANOVA & Get Optimal Prompt
-report = exp.analyze()
+# 5. Analyze ANOVA with RCBD blocking & Get Optimal Prompt
+report = exp.analyze(block_by="sample_id")
 print(report.to_markdown())
 
 # 6. Retrieve Configured Optimal Prompt Template
@@ -134,6 +136,18 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 > - 🟢 **ENABLE** `few_shot` (+24.8% accuracy, $p < 0.001$)
 > - 🔴 **DISABLE** `format_json` (-12.1% accuracy, $p = 0.002$) $\rightarrow$ *Negative constraint was overly restricting extraction!*
 > - ⚪ **OMIT** `cot` and `constraints` ($p > 0.5$) $\rightarrow$ *Omit to reduce token usage and latency without losing accuracy.*
+
+---
+
+## 🤖 Agent Skill & Self-Healing Loops
+
+`prompt_doe` includes a built-in agent skill at `.agents/skills/prompt_doe/SKILL.md`. AI coding assistants and autonomous agents can use this skill to run closed-loop **Self-Healing & Prompt Improvement Loops**:
+
+1. **Failure Diagnosis**: Cluster production errors or edge-case failures.
+2. **Hypothesis Synthesis**: Propose candidate fix factors ($A, B, C, \dots$).
+3. **Orthogonal Tournament**: Run $2^{k-p}$ design on failure cases.
+4. **ANOVA Gatekeeping**: Lock in fixes with $p < 0.05$ and $\Delta > 0$; purge harmful mutations ($\Delta < 0$) and placebo bloat ($p > 0.05$).
+5. **Continuous Promotion**: Deploy the statistically verified prompt.
 
 ---
 
@@ -187,12 +201,12 @@ prompt_doe/
 ## 🧪 Running Tests
 
 ```bash
-pytest
+pytest tests/ -v
 ```
 
 Output:
 ```
-============================== 40 passed in 5.37s ==============================
+============================== 48 passed in 5.06s ==============================
 ```
 
 ---
