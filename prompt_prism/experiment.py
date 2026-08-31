@@ -4,6 +4,7 @@ Top-Level Experiment Orchestrator for Prompt Optimization using Fractional Facto
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import pandas as pd
 
@@ -94,6 +95,13 @@ class Experiment:
             title=title,
         )
 
+    def estimate_judge_calls(self, dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]]]) -> int:
+        """Estimate the total number of LLM judge calls needed for this experiment."""
+        n_samples = len(dataset) if isinstance(dataset, (list, tuple, pd.DataFrame)) else len(list(dataset))
+        n_runs = len(self.design.runs)
+        n_judge_metrics = sum(1 for m in self.evaluator.metrics if getattr(m, "is_llm_judge", False))
+        return n_runs * n_samples * n_judge_metrics
+
     def run(
         self,
         dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]]],
@@ -109,6 +117,16 @@ class Experiment:
         Execute the experiment over the test dataset.
         """
         from .runner.cache import ResponseCache
+
+        judge_calls = self.estimate_judge_calls(dataset)
+        if judge_calls > 0:
+            warnings.warn(
+                f"[PromptPrism] Notice: This experiment includes LLM Judge metric(s). "
+                f"Estimated judge calls: {judge_calls} ({len(self.design.runs)} runs × {len(dataset)} samples). "
+                "Ensure caching is enabled to minimize repeated judge costs.",
+                UserWarning,
+                stacklevel=2,
+            )
 
         cache = ResponseCache(db_path=cache_db) if cache_db else None
         runner = ExperimentRunner(

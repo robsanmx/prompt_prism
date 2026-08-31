@@ -1,5 +1,5 @@
 """
-prompt_prism: Design of Experiments (DoE) & ANOVA for Prompt Engineering and Optimization.
+prompt_prism: Statistical Prompt Optimization & Factorial Analysis for LLMs.
 
 A universal, statistically rigorous framework for optimizing LLM prompts using
 Fractional Factorial Designs (2^(k-p)), Plackett-Burman screening, and ANOVA.
@@ -86,6 +86,9 @@ __all__ = [
     "RegexMatch",
     "CustomMetric",
     "Evaluator",
+    "DeepEvalMetric",
+    "deepeval_metric",
+    "JudgeCache",
     # Statistical Analysis & ANOVA
     "ANOVAEngine",
     "ANOVAResult",
@@ -102,3 +105,15 @@ __all__ = [
     "generate_ascii_pareto",
     "AnalysisReport",
 ]
+
+
+def __getattr__(name: str):
+    if name in {"DeepEvalMetric", "deepeval_metric"}:
+        from .evaluation.deepeval_metrics import DeepEvalMetric, deepeval_metric
+        if name == "DeepEvalMetric":
+            return DeepEvalMetric
+        return deepeval_metric
+    if name == "JudgeCache":
+        from .evaluation.judge_cache import JudgeCache
+        return JudgeCache
+    raise AttributeError(f"module '{__name__}' has no attribute '{name}'")

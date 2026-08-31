@@ -50,6 +50,9 @@ cloud = [
     "anthropic>=0.18.0",
     "litellm>=1.0.0",
 ]
+deepeval = [
+    "deepeval>=1.0.0",
+]
 
 [project.scripts]
 prompt-prism = "prompt_prism.cli.main:main"

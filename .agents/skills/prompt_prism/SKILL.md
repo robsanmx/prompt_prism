@@ -77,7 +77,7 @@ factors = [
 Prepare a representative test dataset (typically 10 to 50 items) with ground-truth targets:
 
 ```python
-from prompt_prism import ExactMatch, F1Score, JSONValidation, KeyValuesExtractionOverlap
+from prompt_prism import ExactMatch, F1Score, JSONValidation, deepeval_metric, JudgeCache
 
 # Benchmark sample cases
 dataset = [
@@ -85,8 +85,13 @@ dataset = [
     {"id": 2, "text": "...", "target": "..."},
 ]
 
-# Metrics suite
+# Option A: Deterministic Metrics Suite (Free & Fast)
 metrics = [ExactMatch(), F1Score(), JSONValidation()]
+
+# Option B: LLM-as-a-Judge (DeepEval integration with JudgeCache)
+judge_cache = JudgeCache(db_path="judge_cache.db")
+relevancy_metric = deepeval_metric("answer_relevancy", threshold=0.7, cache=judge_cache)
+g_eval_metric = deepeval_metric("g_eval", criteria="Tone is helpful and professional", cache=judge_cache)
 ```
 
 ---

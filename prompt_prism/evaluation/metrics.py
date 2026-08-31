@@ -4,6 +4,7 @@ Comprehensive Suite of Evaluation Metrics for Prompt Optimization Experiments.
 
 from __future__ import annotations
 
+from collections import Counter
 import json
 import re
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union
@@ -11,9 +12,19 @@ import numpy as np
 
 
 class Metric:
-    """Abstract Base Metric."""
+    """
+    Abstract Base Metric.
+    
+    Attributes:
+        name: Unique metric identifier used as column name in ANOVA tables.
+        higher_is_better: Whether higher score represents better performance.
+        is_llm_judge: Whether this metric is network-bound/LLM-based (default False).
+        wants_prompt: Whether this metric needs access to the composed prompt (__prompt__ in context).
+    """
     name: str = "metric"
     higher_is_better: bool = True
+    is_llm_judge: bool = False
+    wants_prompt: bool = False
 
     def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
         """Compute the metric score for a single prediction and target."""
@@ -59,10 +70,12 @@ class F1Score(Metric):
 
     def __init__(self, name: str = "f1_score", mode: str = "f1"):
         self.name = name
-        self.mode = mode  # 'f1', 'precision', 'recall'
+        self.mode = mode.lower()  # "f1", "precision", or "recall"
 
     def _tokenize(self, text: Any) -> List[str]:
-        return re.findall(r"\w+", str(text or "").lower())
+        s = str(text or "").lower().strip()
+        s = re.sub(r"[^\w\s]", " ", s)
+        return s.split()
 
     def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
         pred_tokens = self._tokenize(prediction)
@@ -74,167 +87,171 @@ class F1Score(Metric):
             return 0.0
 
         common = set(pred_tokens) & set(target_tokens)
-        num_same = sum(min(pred_tokens.count(t), target_tokens.count(t)) for t in common)
-        if num_same == 0:
+        if not common:
             return 0.0
 
-        precision = num_same / len(pred_tokens)
-        recall = num_same / len(target_tokens)
-        f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+        # Token frequency intersection
+        pred_counts = Counter(pred_tokens)
+        target_counts = Counter(target_tokens)
+        overlap = sum(min(pred_counts[token], target_counts[token]) for token in common)
+
+        precision = overlap / len(pred_tokens)
+        recall = overlap / len(target_tokens)
 
         if self.mode == "precision":
-            return float(precision)
-        elif self.mode == "recall":
-            return float(recall)
-        return float(f1)
+            return precision
+        if self.mode == "recall":
+            return recall
+
+        if precision + recall == 0:
+            return 0.0
+        return 2 * (precision * recall) / (precision + recall)
 
 
 class JSONValidation(Metric):
-    """
-    Checks if output is valid JSON and optionally conforms to required keys.
-    """
+    """Validates if the LLM output is valid JSON and optionally conforms to schema/required keys."""
 
     def __init__(
         self,
         name: str = "json_validity",
         required_keys: Optional[Sequence[str]] = None,
+        schema: Optional[Dict[str, Any]] = None,
+        extract_from_code_blocks: bool = True,
     ):
         self.name = name
-        self.required_keys = set(required_keys) if required_keys else set()
+        self.required_keys = list(required_keys) if required_keys else []
+        self.schema = schema
+        self.extract_from_code_blocks = extract_from_code_blocks
+
+    def _extract_json_str(self, text: str) -> str:
+        s = str(text or "").strip()
+        if self.extract_from_code_blocks:
+            match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", s)
+            if match:
+                return match.group(1).strip()
+        return s
 
     def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
-        if isinstance(prediction, dict):
-            parsed = prediction
-        else:
-            # Strip markdown fences if present
-            s = str(prediction or "").strip()
-            if s.startswith("```"):
-                s = re.sub(r"^```(?:json)?\n|\n```$", "", s, flags=re.MULTILINE).strip()
-            try:
-                parsed = json.loads(s)
-            except Exception:
-                # Try finding JSON substring
-                m = re.search(r"(\{.*\}|\[.*\])", s, re.DOTALL)
-                if m:
-                    try:
-                        parsed = json.loads(m.group(1))
-                    except Exception:
-                        return 0.0
-                else:
-                    return 0.0
-
-        if not isinstance(parsed, dict):
-            return 0.5  # Valid JSON, but not an object
+        json_str = self._extract_json_str(str(prediction))
+        try:
+            parsed = json.loads(json_str)
+        except Exception:
+            return 0.0
 
         if self.required_keys:
-            found_keys = set(parsed.keys())
-            matched = len(self.required_keys & found_keys)
-            return float(matched / len(self.required_keys))
+            if not isinstance(parsed, dict):
+                return 0.0
+            present = sum(1 for k in self.required_keys if k in parsed)
+            return present / len(self.required_keys)
 
         return 1.0
 
 
 class KeyValuesExtractionOverlap(Metric):
     """
-    Evaluates key-value extraction precision, recall, and value match rate against target attributes.
+    Measures precision, recall, or F1 / Jaccard similarity across extracted key-value dictionaries.
     """
 
     def __init__(
         self,
-        name: str = "extraction_f1",
-        mode: str = "f1",  # 'f1', 'precision', 'recall', 'shared_keys', 'value_accuracy'
+        name: str = "attribute_overlap",
+        mode: str = "f1",
         case_sensitive: bool = False,
     ):
         self.name = name
         self.mode = mode
         self.case_sensitive = case_sensitive
 
-    def _parse_dict(self, obj: Any) -> Dict[str, Any]:
-        if isinstance(obj, dict):
-            return obj
-        if not obj:
-            return {}
-        s = str(obj).strip()
-        if s.startswith("```"):
-            s = re.sub(r"^```(?:json)?\n|\n```$", "", s, flags=re.MULTILINE).strip()
-        try:
-            d = json.loads(s)
-            return d if isinstance(d, dict) else {}
-        except Exception:
-            # Fallback regex key-value extraction
-            matches = re.findall(r'["\']?([\w_]+)["\']?\s*[:=]\s*["\']?([^,\n\}]+)["\']?', s)
-            return {k.strip(): v.strip() for k, v in matches}
+    def _to_kv_dict(self, val: Any) -> Dict[str, str]:
+        if isinstance(val, dict):
+            d = val
+        elif isinstance(val, str):
+            s = val.strip()
+            if s.startswith("{") and s.endswith("}"):
+                try:
+                    d = json.loads(s)
+                except Exception:
+                    d = {}
+            else:
+                d = {}
+                for line in s.splitlines():
+                    if ":" in line:
+                        k, v = line.split(":", 1)
+                        d[k.strip()] = v.strip()
+        else:
+            d = {}
 
-    def _norm(self, s: Any) -> str:
-        res = str(s or "").strip()
-        return res if self.case_sensitive else res.lower()
+        if not self.case_sensitive:
+            return {str(k).lower().strip(): str(v).lower().strip() for k, v in d.items()}
+        return {str(k).strip(): str(v).strip() for k, v in d.items()}
 
     def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
-        pred_dict = self._parse_dict(prediction)
-        target_dict = self._parse_dict(target)
+        pred_dict = self._to_kv_dict(prediction)
+        target_dict = self._to_kv_dict(target)
 
-        pred_keys = {self._norm(k): v for k, v in pred_dict.items()}
-        target_keys = {self._norm(k): v for k, v in target_dict.items()}
-
-        if not pred_keys and not target_keys:
+        if not pred_dict and not target_dict:
             return 1.0
-        if not pred_keys or not target_keys:
+        if not pred_dict or not target_dict:
             return 0.0
 
-        shared_keys = set(pred_keys.keys()) & set(target_keys.keys())
-        p = len(shared_keys) / len(pred_keys) if pred_keys else 0.0
-        r = len(shared_keys) / len(target_keys) if target_keys else 0.0
-        f1 = (2 * p * r) / (p + r) if (p + r) > 0 else 0.0
+        # Matched pairs
+        matched_keys = set(pred_dict.keys()) & set(target_dict.keys())
+        exact_matches = sum(1 for k in matched_keys if pred_dict[k] == target_dict[k])
 
-        if self.mode == "shared_keys":
-            return float(len(shared_keys))
-        elif self.mode == "precision":
-            return float(p)
+        all_keys = set(pred_dict.keys()) | set(target_dict.keys())
+
+        precision = exact_matches / len(pred_dict) if pred_dict else 0.0
+        recall = exact_matches / len(target_dict) if target_dict else 0.0
+
+        if self.mode == "precision":
+            return precision
         elif self.mode == "recall":
-            return float(r)
-        elif self.mode == "value_accuracy":
-            if not shared_keys:
+            return recall
+        elif self.mode == "jaccard":
+            return exact_matches / len(all_keys) if all_keys else 0.0
+        else:  # f1
+            if precision + recall == 0:
                 return 0.0
-            val_matches = sum(
-                1 for k in shared_keys
-                if self._norm(pred_keys[k]) == self._norm(target_keys[k])
-                or self._norm(pred_keys[k]) in self._norm(target_keys[k])
-            )
-            return float(val_matches / len(shared_keys))
-        return float(f1)
+            return 2 * (precision * recall) / (precision + recall)
 
 
 class LevenshteinSimilarity(Metric):
-    """Normalized Levenshtein edit similarity in [0, 1]."""
+    """Normalized character-level Levenshtein similarity between prediction and target [0, 1]."""
 
-    def __init__(self, name: str = "similarity"):
+    def __init__(self, name: str = "levenshtein_sim"):
         self.name = name
 
     def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
-        s1 = str(prediction or "").strip()
-        s2 = str(target or "").strip()
-        if not s1 and not s2:
+        s1 = str(prediction or "")
+        s2 = str(target or "")
+        if s1 == s2:
             return 1.0
         if not s1 or not s2:
             return 0.0
 
-        # Dynamic programming edit distance
-        m, n = len(s1), len(s2)
-        dp = list(range(n + 1))
-        for i, c1 in enumerate(s1):
-            new_dp = [i + 1] + [0] * n
-            for j, c2 in enumerate(s2):
-                cost = 0 if c1 == c2 else 1
-                new_dp[j + 1] = min(dp[j + 1] + 1, new_dp[j] + 1, dp[j] + cost)
-            dp = new_dp
+        len1, len2 = len(s1), len(s2)
+        dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
+        for i in range(len1 + 1):
+            dp[i][0] = i
+        for j in range(len2 + 1):
+            dp[0][j] = j
 
-        dist = dp[n]
-        max_len = max(m, n)
-        return float(1.0 - (dist / max_len))
+        for i in range(1, len1 + 1):
+            for j in range(1, len2 + 1):
+                cost = 0 if s1[i - 1] == s2[j - 1] else 1
+                dp[i][j] = min(
+                    dp[i - 1][j] + 1,      # deletion
+                    dp[i][j - 1] + 1,      # insertion
+                    dp[i - 1][j - 1] + cost  # substitution
+                )
+
+        distance = dp[len1][len2]
+        max_len = max(len1, len2)
+        return 1.0 - (distance / max_len) if max_len > 0 else 1.0
 
 
 class RegexMatch(Metric):
-    """Checks if regex pattern matches the prediction."""
+    """Scores 1.0 if regular expression pattern matches the prediction, 0.0 otherwise."""
 
     def __init__(self, pattern: str, name: str = "regex_match", flags: int = 0):
         self.name = name
@@ -242,24 +259,42 @@ class RegexMatch(Metric):
 
     def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
         s = str(prediction or "")
-        return 1.0 if bool(self.pattern.search(s)) else 0.0
+        return 1.0 if self.pattern.search(s) else 0.0
 
 
 class CustomMetric(Metric):
-    """Wraps any custom evaluation function: fn(prediction, target, input_data) -> float."""
+    """Wraps any user-supplied callable `fn(prediction, target, input_data) -> float`."""
 
     def __init__(
         self,
-        score_fn: Callable[..., float],
+        fn: Callable[..., float],
         name: Optional[str] = None,
         higher_is_better: bool = True,
+        is_llm_judge: bool = False,
+        wants_prompt: bool = False,
     ):
-        self.score_fn = score_fn
-        self.name = name or getattr(score_fn, "__name__", "custom_metric")
+        self.fn = fn
+        self.name = name or getattr(fn, "__name__", "custom_metric")
         self.higher_is_better = higher_is_better
+        self.is_llm_judge = is_llm_judge
+        self.wants_prompt = wants_prompt
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+        import inspect
+        sig = inspect.signature(self.fn)
+        kwargs = {}
+        if "input_data" in sig.parameters:
+            kwargs["input_data"] = input_data
+        if "context" in sig.parameters:
+            kwargs["context"] = input_data
+        if "target" in sig.parameters:
+            kwargs["target"] = target
+
+        # Try calling with full signature or fallback to (pred, target)
         try:
-            return float(self.score_fn(prediction, target, input_data=input_data))
+            return float(self.fn(prediction, **kwargs))
         except TypeError:
-            return float(self.score_fn(prediction, target))
+            try:
+                return float(self.fn(prediction, target))
+            except TypeError:
+                return float(self.fn(prediction))

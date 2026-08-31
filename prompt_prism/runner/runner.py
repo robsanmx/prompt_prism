@@ -1,5 +1,5 @@
 """
-Experiment Runner: Executes DoE trials across datasets and evaluates metrics in parallel.
+Multi-threaded Experiment Runner with caching, parallel execution, and automated metrics collection.
 """
 
 from __future__ import annotations
@@ -9,51 +9,37 @@ import time
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import pandas as pd
 
-from ..core.factors import Factor, FactorSet
 from ..core.models import DesignMatrix, ExperimentResults, RunConfig, Trial
 from ..evaluation.evaluator import Evaluator
-from ..evaluation.metrics import Metric
-from ..template.composer import PromptComposer, PromptTemplate
+from ..template.composer import PromptComposer
 from .cache import ResponseCache
-from .client import CallableLLM, LLMClient, LLMResponse
+from .client import CallableLLM, LLMClient, LLMResponse, MockLLM
 
 
 class ExperimentRunner:
     """
-    Executes a prompt optimization experiment over a DesignMatrix and test dataset.
+    Executes factorial prompt experiments over a benchmark dataset with parallel execution and caching.
     """
 
     def __init__(
         self,
         composer: PromptComposer,
         client: Union[LLMClient, Callable[..., Any]],
-        evaluator: Optional[Union[Evaluator, Sequence[Metric]]] = None,
+        evaluator: Union[Evaluator, Sequence[Union[Metric, Callable[..., float]]]],
         cache: Optional[ResponseCache] = None,
         max_workers: int = 4,
-        target_col: Optional[str] = "target",
-        id_col: Optional[str] = "id",
-        as_chat_messages: bool = False,
+        target_col: str = "target",
+        id_col: str = "id",
+        retry_limit: int = 2,
     ):
         self.composer = composer
-        if isinstance(client, LLMClient):
-            self.client = client
-        elif callable(client):
-            self.client = CallableLLM(client)
-        else:
-            raise TypeError(f"Expected LLMClient or callable, got {type(client)}")
-
-        if isinstance(evaluator, Evaluator):
-            self.evaluator = evaluator
-        elif evaluator:
-            self.evaluator = Evaluator(evaluator)
-        else:
-            self.evaluator = Evaluator()
-
+        self.client = client if isinstance(client, LLMClient) else CallableLLM(client)
+        self.evaluator = evaluator if isinstance(evaluator, Evaluator) else Evaluator(evaluator)
         self.cache = cache
-        self.max_workers = max_workers
+        self.max_workers = max(1, max_workers)
         self.target_col = target_col
         self.id_col = id_col
-        self.as_chat_messages = as_chat_messages
+        self.retry_limit = retry_limit
 
     def run(
         self,
@@ -63,35 +49,37 @@ class ExperimentRunner:
         progress_callback: Optional[Callable[[int, int], None]] = None,
     ) -> ExperimentResults:
         """
-        Run the complete DoE experiment across all runs and sample test cases.
+        Execute all experimental runs across all dataset samples.
         """
-        # Convert dataset to list of dicts
+        # Normalize dataset to list of dicts
         if isinstance(dataset, pd.DataFrame):
-            items = dataset.to_dict(orient="records")
+            data_items = dataset.to_dict(orient="records")
         else:
-            items = list(dataset)
-
-        total_trials = len(design.runs) * len(items)
-        trial_tasks: List[Tuple[RunConfig, int, Dict[str, Any]]] = []
-
-        for run in design.runs:
-            for s_idx, item in enumerate(items):
-                trial_tasks.append((run, s_idx, item))
+            data_items = list(dataset)
 
         trials: List[Trial] = []
-        completed = 0
+        total_tasks = len(design.runs) * len(data_items)
+        completed_tasks = 0
 
-        def execute_single_trial(task_tuple: Tuple[RunConfig, int, Dict[str, Any]]) -> Trial:
-            run, s_idx, item = task_tuple
+        # Build execution queue
+        trial_tasks: List[Tuple[RunConfig, int, Dict[str, Any]]] = []
+        for run in design.runs:
+            for s_idx, item in enumerate(data_items):
+                trial_tasks.append((run, s_idx, item))
+
+        def execute_single_trial(task: Tuple[RunConfig, int, Dict[str, Any]]) -> Trial:
+            run, s_idx, item = task
             sample_id = item.get(self.id_col, s_idx)
             target_value = item.get(self.target_col, None)
 
-            # Compose prompt
-            if self.as_chat_messages:
-                prompt_content = self.composer.compose_messages(run, data=item)
+            # Compose prompt for this run condition and sample data
+            if self.composer.template.sections and self.composer.template.sections[0].role is not None:
+                # Chat messages format
+                prompt_content = self.composer.compose_messages(run_config=run, data=item)
                 prompt_key = str(prompt_content)
             else:
-                prompt_content = self.composer.compose_text(run, data=item)
+                # Plain text format
+                prompt_content = self.composer.compose_text(run_config=run, data=item)
                 prompt_key = prompt_content
 
             # Check cache
@@ -103,13 +91,19 @@ class ExperimentRunner:
                 if self.cache and not llm_response.error:
                     self.cache.set(prompt_key, llm_response)
 
-            # Evaluate metrics
+            # Evaluate metrics with rich context (including prompt and IDs)
             scores = {}
             if not llm_response.error:
+                eval_context = {
+                    **item,
+                    "__prompt__": prompt_key,
+                    "__run_id__": run.run_id,
+                    "__sample_id__": sample_id,
+                }
                 scores = self.evaluator.evaluate(
                     prediction=llm_response.content,
                     target=target_value,
-                    context=item,
+                    context=eval_context,
                 )
 
             return Trial(
@@ -146,16 +140,21 @@ class ExperimentRunner:
                             error=str(e),
                         )
                     )
-                completed += 1
-                if progress_callback:
-                    progress_callback(completed, total_trials)
 
-        # Sort trials by run_id, then sample_id
+                completed_tasks += 1
+                if progress_callback:
+                    progress_callback(completed_tasks, total_tasks)
+
+        # Sort trials for consistent ordering
         trials.sort(key=lambda t: (t.run_id, str(t.sample_id)))
 
         return ExperimentResults(
             experiment_id=experiment_id,
             design=design,
             trials=trials,
-            metadata={"num_runs": len(design.runs), "num_samples": len(items), "total_trials": len(trials)},
+            metadata={
+                "num_runs": len(design.runs),
+                "num_samples": len(data_items),
+                "total_trials": len(trials),
+            },
         )

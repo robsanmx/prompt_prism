@@ -41,7 +41,9 @@ Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% cost!)
 - 🎲 **Plackett-Burman Screening**: Hadamard-matrix based orthogonal designs for screening $k \le 23$ factors in $N \in \{8, 12, 16, 20, 24\}$ runs.
 - 🧩 **Modular Prompt Composer**: Dynamic section assembly, Jinja2 template interpolation, Python string templates, and multi-turn chat message generation.
 - 🔌 **Universal LLM Adapter**: Works out of the box with **ANY** Python function (`fn(prompt) -> str`), OpenAI, Anthropic, Gemini, Vertex AI, LiteLLM, or local models.
-- 📊 **Built-in Metrics Suite**: Exact Match, F1 Score, Token Overlap, JSON Schema Validation, Key-Value Attribute Overlap, Levenshtein Similarity, Regex Matching, and Custom Metrics.
+- 📊 **Comprehensive Metrics & DeepEval Integration**:
+  - Deterministic metrics: Exact Match, F1 Score, JSON Schema Validity, Key-Value Extraction Overlap, Levenshtein Similarity, Regex Matching, and Custom callables.
+  - LLM-as-a-Judge metrics (`pip install prompt-prism[deepeval]`): Answer Relevancy, Faithfulness, Hallucination, Toxicity, Bias, Contextual Precision/Recall, Summarization, and G-Eval with automatic judge response caching (`JudgeCache`).
 - 📈 **Complete ANOVA & RCBD Engine**:
   - Randomized Complete Block Design (RCBD) blocking on `sample_id` to eliminate item difficulty variance.
   - Main Effects & 2-Factor Interactions ($\Delta = \bar{Y}_+ - \bar{Y}_-$)
@@ -138,6 +140,41 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 > - 🟢 **ENABLE** `few_shot` (+24.8% accuracy, $p < 0.001$)
 > - 🔴 **DISABLE** `format_json` (-12.1% accuracy, $p = 0.002$) $\rightarrow$ *Negative constraint was overly restricting extraction!*
 > - ⚪ **OMIT** `cot` and `constraints` ($p > 0.5$) $\rightarrow$ *Omit to reduce token usage and latency without losing accuracy.*
+
+---
+
+## 🤖 LLM-as-a-Judge & DeepEval Integration
+
+To evaluate subjective qualities (answer relevancy, hallucination, tone, reasoning) without labeled datasets, install the `deepeval` extra:
+
+```bash
+pip install prompt-prism[deepeval]
+```
+
+```python
+from prompt_prism import Experiment, Factor, deepeval_metric, JudgeCache
+
+# 1. Setup Judge Cache to prevent redundant judging API calls
+judge_cache = JudgeCache(db_path="judge_cache.db")
+
+# 2. Define LLM-as-a-Judge metrics
+relevancy = deepeval_metric("answer_relevancy", threshold=0.7, cache=judge_cache)
+g_eval_custom = deepeval_metric(
+    "g_eval",
+    criteria="Evaluate if the tone is professional, concise, and helpful.",
+    cache=judge_cache,
+)
+
+# 3. Use directly as target metric in Experiment
+exp = Experiment.from_factors(
+    factors=factors,
+    design="2(5-1)V",
+    metrics=[relevancy, g_eval_custom],
+    target_metric="deepeval_answer_relevancy",
+)
+```
+
+> **💡 Best Practice:** Always set `temperature=0` on your LLM judge model and enable `JudgeCache` so that repeated ANOVA runs do not incur unnecessary judge API costs.
 
 ---
 

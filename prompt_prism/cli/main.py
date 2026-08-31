@@ -30,6 +30,9 @@ def main():
     list_parser = subparsers.add_parser("list-designs", help="List available standard fractional factorial designs")
     list_parser.add_argument("--factors", "-k", type=int, help="Filter by number of factors")
 
+    # Command: list-metrics
+    subparsers.add_parser("list-metrics", help="List available evaluation metrics and DeepEval LLM judge metrics")
+
     # Command: generate-design
     gen_parser = subparsers.add_parser("design", help="Generate a design matrix")
     gen_parser.add_argument("--factors", "-k", type=int, required=True, help="Number of factors")
@@ -42,6 +45,7 @@ def main():
     analyze_parser.add_argument("--data", "-d", type=str, required=True, help="Path to experiment results CSV")
     analyze_parser.add_argument("--target", "-t", type=str, required=True, help="Target metric column name")
     analyze_parser.add_argument("--factors", "-f", nargs="+", help="Factor column names (auto-detected if omitted)")
+    analyze_parser.add_argument("--block-by", "-b", type=str, default="sample_id", help="Blocking column (default: sample_id)")
     analyze_parser.add_argument("--output-report", "-o", type=str, help="Save report to Markdown or HTML")
 
     args = parser.parse_args()
@@ -53,6 +57,39 @@ def main():
         for p in plans:
             gens = ", ".join(p["generators"])
             print(f"{p['plan_id']:<15} {p['num_factors']:<8} {p['runs']:<6} Res {p['resolution']:<8} {gens}")
+        print()
+
+    elif args.command == "list-metrics":
+        has_deepeval = False
+        try:
+            import deepeval
+            has_deepeval = True
+        except ImportError:
+            has_deepeval = False
+
+        print("\n=== Built-in Deterministic Metrics (Zero-Cost / Offline) ===")
+        print("  - exact_match           : Exact normalized text/value match")
+        print("  - f1_score              : Token-level precision, recall, and F1 text overlap")
+        print("  - json_valid            : Validates JSON syntax and optional required schema keys")
+        print("  - attribute_overlap     : Jaccard/precision/recall over extracted key-value dictionaries")
+        print("  - levenshtein_sim       : Normalized character-level Levenshtein similarity [0, 1]")
+        print("  - regex_match           : Regular expression pattern match [0, 1]")
+        print("  - custom_metric         : User-defined Python callable fn(pred, target, context)")
+
+        print("\n=== DeepEval LLM-as-a-Judge Metrics (LLM Powered) ===")
+        status = "✅ AVAILABLE" if has_deepeval else "⚠️ REQUIRES pip install prompt-prism[deepeval]"
+        print(f"Status: {status}\n")
+        print("  - answer_relevancy      : Measures if output directly answers the input query")
+        print("  - faithfulness          : Measures if output is faithful to retrieval context")
+        print("  - hallucination         : Measures hallucinated claims not in context")
+        print("  - toxicity              : Detects toxic or offensive language")
+        print("  - bias                  : Detects demographic or ideological bias")
+        print("  - contextual_precision  : Evaluates ranking precision of retrieved context")
+        print("  - contextual_recall     : Evaluates retrieval coverage of ground truth")
+        print("  - contextual_relevancy  : Evaluates relevance of retrieved context chunks")
+        print("  - summarization         : Measures key points retention in summary")
+        print("  - json_correctness      : LLM-judged semantic correctness of JSON output")
+        print("  - g_eval                : General LLM-as-a-Judge with custom criteria & rubrics")
         print()
 
     elif args.command == "design":
@@ -88,9 +125,12 @@ def main():
             f_cols = args.factors
         else:
             exclude = {args.target, "run_id", "sample_id", "trial_id", "error", "latency_ms", "combination"}
+            if args.block_by:
+                exclude.add(args.block_by)
             f_cols = [c for c in df.columns if c not in exclude and set(df[c].dropna().unique()).issubset({0, 1, 0.0, 1.0})]
 
-        anova_res = ANOVAEngine.run_anova(data=df, factor_cols=f_cols, target_col=args.target)
+        block_col = args.block_by if (args.block_by and args.block_by in df.columns) else None
+        anova_res = ANOVAEngine.run_anova(data=df, factor_cols=f_cols, target_col=args.target, block_col=block_col)
         opt_rec = OptimalPromptFinder.find_optimal_prompt(anova_res)
 
         print("\n" + generate_ascii_pareto(anova_res) + "\n")

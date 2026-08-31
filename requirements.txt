@@ -1,0 +1,20 @@
+# Core dependencies for PromptPrism
+pandas>=1.0.0
+numpy>=1.20.0
+scipy>=1.7.0
+statsmodels>=0.13.0
+pydantic>=2.0.0
+jinja2>=3.0.0
+tabulate>=0.8.0
+
+# Optional: Visualization (pip install prompt-prism[viz])
+# matplotlib>=3.3.0
+
+# Optional: DeepEval LLM Judge Metrics (pip install prompt-prism[deepeval])
+# deepeval>=1.0.0
+
+# Optional: Cloud LLM Adapters (pip install prompt-prism[cloud])
+# openai>=1.0.0
+# anthropic>=0.18.0
+# vertexai>=1.0.0
+# litellm>=1.0.0

@@ -5,6 +5,7 @@ Evaluator orchestrator for computing multiple metrics across experiment trials.
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+import numpy as np
 import pandas as pd
 
 from .metrics import (
@@ -22,10 +23,22 @@ from .metrics import (
 class Evaluator:
     """
     Manages a suite of metrics and calculates evaluation scores for trials.
+    
+    Attributes:
+        metrics: Registered list of metric instances.
+        on_error: Error handling mode ("nan", "zero", "raise", or None for auto-detection).
+        last_errors: Map of metric name to exception message from the most recent evaluation.
     """
 
-    def __init__(self, metrics: Optional[Sequence[Union[Metric, Callable[..., float]]]] = None):
+    def __init__(
+        self,
+        metrics: Optional[Sequence[Union[Metric, Callable[..., float]]]] = None,
+        on_error: Optional[str] = None,
+    ):
         self.metrics: List[Metric] = []
+        self.on_error = on_error
+        self.last_errors: Dict[str, str] = {}
+
         if metrics:
             for m in metrics:
                 self.add_metric(m)
@@ -35,13 +48,19 @@ class Evaluator:
             self.add_metric(F1Score())
 
     def add_metric(self, metric: Union[Metric, Callable[..., float]], name: Optional[str] = None) -> Metric:
-        """Add a metric to the suite."""
+        """Add a metric to the suite. Raises ValueError on duplicate names."""
         if isinstance(metric, Metric):
             m_obj = metric
+            if name:
+                m_obj.name = name
         elif callable(metric):
             m_obj = CustomMetric(metric, name=name)
         else:
             raise TypeError(f"Expected Metric instance or callable, got {type(metric)}")
+
+        if any(existing.name == m_obj.name for existing in self.metrics):
+            raise ValueError(f"Duplicate metric name '{m_obj.name}' already registered in Evaluator.")
+
         self.metrics.append(m_obj)
         return m_obj
 
@@ -53,15 +72,35 @@ class Evaluator:
         context: Optional[Dict[str, Any]] = None,
         **kwargs,
     ) -> Dict[str, float]:
-        """Compute all configured metrics for a single prediction."""
+        """
+        Compute all configured metrics for a single prediction.
+        
+        If a metric fails:
+        - If on_error="raise", raises the exception.
+        - If on_error="nan" (or metric.is_llm_judge=True and on_error is None), assigns float("nan").
+        - If on_error="zero", assigns 0.0.
+        """
         ctx = context if context is not None else input_data
-        scores = {}
+        scores: Dict[str, float] = {}
+        self.last_errors = {}
+
         for m in self.metrics:
             try:
                 score = m.compute(prediction=prediction, target=target, input_data=ctx)
                 scores[m.name] = float(score)
-            except Exception:
-                scores[m.name] = 0.0
+            except Exception as e:
+                self.last_errors[m.name] = str(e)
+                mode = self.on_error
+                if mode is None:
+                    mode = "nan" if getattr(m, "is_llm_judge", False) else "zero"
+
+                if mode == "raise":
+                    raise e
+                elif mode == "nan":
+                    scores[m.name] = float("nan")
+                else:
+                    scores[m.name] = 0.0
+
         return scores
 
     def evaluate_dataframe(
