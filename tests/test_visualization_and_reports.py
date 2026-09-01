@@ -7,7 +7,6 @@ import pandas as pd
 import pytest
 
 from prompt_prism.analysis.anova import ANOVAEngine
-from prompt_prism.analysis.effects import EffectAnalyzer
 from prompt_prism.analysis.optimizer import OptimalPromptFinder
 from prompt_prism.design.generators import FractionalFactorialGenerator
 from prompt_prism.reporting.reporter import AnalysisReport

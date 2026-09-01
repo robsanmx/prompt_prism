@@ -5,7 +5,7 @@ Factor Main Effects and 2-Factor Interaction Effect Calculations.
 from __future__ import annotations
 
 import itertools
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -204,7 +204,6 @@ class EffectAnalyzer:
         col_to_safe = col_to_safe or {}
         interactions: List[InteractionEffect] = []
 
-        ols_params = getattr(ols_model, "params", {}) if ols_model else {}
         ols_pvalues = getattr(ols_model, "pvalues", {}) if ols_model else {}
 
         for f1, f2 in itertools.combinations(factor_cols, 2):

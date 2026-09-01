@@ -13,8 +13,8 @@ import pandas as pd
 
 from ..analysis.anova import ANOVAEngine
 from ..analysis.optimizer import OptimalPromptFinder
-from ..design.catalog import CATALOG_DESIGNS, list_available_plans
-from ..design.generators import FractionalFactorialGenerator, PlackettBurmanGenerator
+from ..design.catalog import list_available_plans
+from ..design.generators import FractionalFactorialGenerator
 from ..design.recommender import recommend_design
 from ..reporting.reporter import AnalysisReport
 from ..visualization.plots import generate_ascii_pareto

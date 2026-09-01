@@ -10,7 +10,6 @@ from prompt_prism.evaluation.metrics import (
     JSONValidation,
     KeyValuesExtractionOverlap,
     LevenshteinSimilarity,
-    RegexMatch,
 )
 
 

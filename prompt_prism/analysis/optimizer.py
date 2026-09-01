@@ -4,7 +4,7 @@ Optimal Prompt Configuration Finder based on Factorial Effects and ANOVA.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -82,8 +82,6 @@ class OptimalPromptFinder:
 
             # Sum positive drivers for optimal prediction
             opt_delta_sum = 0.0
-            var_sum = 0.0
-            cov_matrix = getattr(ols_model, "cov_params", lambda: None)()
 
             for effect in pos_drivers:
                 # Find matching param key

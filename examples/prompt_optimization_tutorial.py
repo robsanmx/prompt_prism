@@ -2,7 +2,6 @@
 End-to-End Tutorial: Optimizing an E-commerce Extraction Prompt using Fractional Factorial DoE & ANOVA.
 """
 
-import pandas as pd
 from prompt_prism import (
     ExactMatch,
     Experiment,
@@ -65,7 +64,9 @@ def main():
         title="Catalog Attribute Extraction DoE",
     )
 
-    print(f"\n✅ Created Design: {exp.design.plan_id} with {exp.design.num_runs} prompt runs across {exp.design.num_factors} factors.")
+    print(
+        f"\n✅ Created Design: {exp.design.plan_id} with {exp.design.num_runs} prompt runs across {exp.design.num_factors} factors."
+    )
     print("Design Matrix Preview:")
     print(exp.design.to_dataframe().head(8).to_string(index=False))
 
@@ -111,7 +112,9 @@ def main():
     client = MockLLM(response_generator=lambda p, kw: simulated_llm(p))
 
     # Step 5: Execute Trials
-    print(f"\n🚀 Running {len(exp.design.runs)} experimental prompt variants across {len(dataset)} items...")
+    print(
+        f"\n🚀 Running {len(exp.design.runs)} experimental prompt variants across {len(dataset)} items..."
+    )
     results = exp.run(dataset=dataset, client=client, max_workers=4)
     print(f"✅ Completed {len(results.trials)} trials.")
 
@@ -125,12 +128,17 @@ def main():
     # Step 7: Export Visualization Plots
     plot_main_effects(report.anova_result, save_path="main_effects_plot.png")
     plot_pareto_effects(report.anova_result, save_path="pareto_effects_plot.png")
-    print("\n📊 Saved diagnostic plots: 'main_effects_plot.png' and 'pareto_effects_plot.png'")
+    print(
+        "\n📊 Saved diagnostic plots: 'main_effects_plot.png' and 'pareto_effects_plot.png'"
+    )
 
     # Step 8: Get Configured Winning Prompt
-    opt_template = exp.get_optimal_prompt_template()
     sample_composed = exp.composer.compose_text(
-        run_config=exp.design.runs[0].model_copy(update={"factor_levels": report.optimal_recommendation.optimal_factor_levels}),
+        run_config=exp.design.runs[0].model_copy(
+            update={
+                "factor_levels": report.optimal_recommendation.optimal_factor_levels
+            }
+        ),
         data=dataset[0],
     )
     print("\n" + "=" * 70)

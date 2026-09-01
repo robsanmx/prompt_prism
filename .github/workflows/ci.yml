@@ -15,9 +15,10 @@ jobs:
         with:
           python-version: "3.12"
       # Pinned: an unpinned formatter turns a new release into a red build.
-      - run: pip install "black==26.5.1" "isort==9.0.1"
-      - run: black --check prompt_prism tests
-      - run: isort --check-only prompt_prism tests
+      - run: pip install "black==26.5.1" "isort==9.0.1" "flake8==7.3.0"
+      - run: black --check prompt_prism tests examples
+      - run: isort --check-only prompt_prism tests examples
+      - run: flake8 prompt_prism tests examples
 
   test:
     runs-on: ${{ matrix.os }}

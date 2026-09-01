@@ -5,18 +5,16 @@ Experiment Runner: Executes DoE trials across datasets and evaluates metrics in 
 from __future__ import annotations
 
 import concurrent.futures
-import time
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import pandas as pd
 
-from ..core.factors import Factor, FactorSet
 from ..core.models import DesignMatrix, ExperimentResults, RunConfig, Trial
 from ..evaluation.evaluator import Evaluator
 from ..evaluation.metrics import Metric
-from ..template.composer import PromptComposer, PromptTemplate
+from ..template.composer import PromptComposer
 from .cache import ResponseCache
-from .client import CallableLLM, LLMClient, LLMResponse
+from .client import CallableLLM, LLMClient
 
 
 class ExperimentRunner:

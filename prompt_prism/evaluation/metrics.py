@@ -6,9 +6,7 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union
-
-import numpy as np
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 
 class Metric:

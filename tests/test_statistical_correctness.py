@@ -4,7 +4,6 @@ Statistical Correctness Tests: Randomized Complete Block Design (RCBD), FDR mono
 
 import numpy as np
 import pandas as pd
-import pytest
 from statsmodels.stats.multitest import multipletests
 
 from prompt_prism.analysis.anova import ANOVAEngine

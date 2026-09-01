@@ -2,8 +2,6 @@
 End-to-End Integration test for complete PromptPrism Experiment workflow.
 """
 
-import pandas as pd
-
 from prompt_prism.core.factors import Factor
 from prompt_prism.evaluation.metrics import ExactMatch, F1Score
 from prompt_prism.experiment import Experiment
@@ -110,7 +108,7 @@ def test_full_experiment_e2e(tmp_path):
     assert "# Sneakers Attribute Extraction PromptPrism" in md_path.read_text()
 
     # 9. Get Configured Optimal Template
-    opt_template = exp.get_optimal_prompt_template()
+    assert exp.get_optimal_prompt_template()
     composed = exp.composer.compose_text(
         run_config=exp.design.runs[0].model_copy(
             update={"factor_levels": opt.optimal_factor_levels}

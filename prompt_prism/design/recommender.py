@@ -4,11 +4,11 @@ Design Recommender: Recommends the optimal DoE design plan given factors, budget
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import List, Optional, Sequence, Union
 
 from ..core.factors import Factor, FactorSet
 from ..core.models import DesignMatrix
-from .catalog import CATALOG_DESIGNS, list_available_plans
+from .catalog import list_available_plans
 from .generators import (
     FractionalFactorialGenerator,
     FullFactorialGenerator,

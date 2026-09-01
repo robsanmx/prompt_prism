@@ -17,16 +17,15 @@ pip install -e ".[viz,dev]"
 Run the same checks CI runs:
 
 ```bash
-pytest                             # 48 tests, ~5s, no network required
-black --check prompt_prism tests
-isort --check-only prompt_prism tests
+pytest                                      # 48 tests, ~5s, no network required
+black --check prompt_prism tests examples
+isort --check-only prompt_prism tests examples
+flake8 prompt_prism tests examples
 ```
 
-`black` and `isort` are configured in `pyproject.toml`; run them without `--check` to
-apply the formatting. A black-compatible `.flake8` config is included and `flake8` ships
-in the `dev` extra, but it is not yet a CI gate — the existing code still has unused
-imports and placeholder-free f-strings to clean up. Fixing those in a file you are
-already touching is welcome.
+`black` and `isort` are configured in `pyproject.toml` and `flake8` in `.flake8`; run the
+formatters without `--check` to apply them. All three are CI gates, and `examples/` is in
+scope for every one of them — an example that no longer imports is a broken example.
 
 ## What a good change looks like
 

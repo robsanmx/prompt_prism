@@ -4,15 +4,14 @@ Modular Prompt Composition & Templating Engine for Design of Experiments.
 
 from __future__ import annotations
 
-import re
 import string
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import jinja2
 from pydantic import BaseModel, Field
 
-from ..core.factors import Factor, FactorSet, FactorType, Level
-from ..core.models import DesignMatrix, RunConfig
+from ..core.factors import Factor, FactorSet
+from ..core.models import RunConfig
 
 
 class PromptSection(BaseModel):

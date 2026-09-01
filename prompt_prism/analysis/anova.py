@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import itertools
 import warnings
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -21,8 +21,6 @@ from .effects import EffectAnalyzer, FactorEffect, InteractionEffect
 
 class ConfoundedModelError(ValueError):
     """Raised when interaction terms are perfectly collinear or aliased with main effects."""
-
-    pass
 
 
 class ANOVARow(BaseModel):

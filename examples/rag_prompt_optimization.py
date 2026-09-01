@@ -8,9 +8,6 @@ from prompt_prism import (
     F1Score,
     Factor,
     MockLLM,
-    ROUGEMetric if False else F1Score,
-    plot_main_effects,
-    plot_pareto_effects,
 )
 
 
@@ -62,7 +59,7 @@ def main():
     # 2. Setup Experiment using 2^(6-2)IV (16 runs, Resolution IV)
     exp = Experiment.from_factors(
         factors=factors,
-        design="2(6-2)IV", # 16 runs instead of 64 runs!
+        design="2(6-2)IV",  # 16 runs instead of 64 runs!
         system_prompt="{{ system_role }}",
         data_template="Context:\n{{ xml_framing }}\n\nUser Question: {{ question }}",
         metrics=[F1Score(), ExactMatch()],
@@ -70,7 +67,9 @@ def main():
         title="Enterprise RAG Prompt Optimization",
     )
 
-    print(f"\n✅ Created Design: {exp.design.plan_id} with {exp.design.num_runs} runs across {exp.design.num_factors} factors.")
+    print(
+        f"\n✅ Created Design: {exp.design.plan_id} with {exp.design.num_runs} runs across {exp.design.num_factors} factors."
+    )
 
     # 3. Test Dataset
     dataset = [
@@ -104,7 +103,7 @@ def main():
     client = MockLLM(response_generator=lambda p, kw: rag_llm(p))
 
     # 5. Run & Analyze
-    results = exp.run(dataset=dataset, client=client, max_workers=2)
+    exp.run(dataset=dataset, client=client, max_workers=2)
     report = exp.analyze()
     print(report.to_markdown())
 
