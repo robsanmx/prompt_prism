@@ -306,16 +306,21 @@ def main():
         block_col = (
             args.block_by if (args.block_by and args.block_by in df.columns) else None
         )
+        # The direction has to reach run_anova, not just the optimizer: the effects it
+        # computes carry the action_recommendation that the report's main-effects table
+        # renders (and that the plots colour by). Passing it to only one of the two
+        # printed a report whose table said ENABLE about the same factor its own
+        # recommendation listed as harmful.
+        maximize = not args.minimize
         anova_res = ANOVAEngine.run_anova(
             data=df,
             factor_cols=f_cols,
             target_col=args.target,
             block_col=block_col,
             alpha=args.alpha,
+            maximize=maximize,
         )
-        opt_rec = OptimalPromptFinder.find_optimal_prompt(
-            anova_res, maximize=not args.minimize
-        )
+        opt_rec = OptimalPromptFinder.find_optimal_prompt(anova_res, maximize=maximize)
 
         print("\n" + generate_ascii_pareto(anova_res) + "\n")
         print(opt_rec.summary_markdown)
