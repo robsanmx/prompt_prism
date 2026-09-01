@@ -7,7 +7,7 @@ name = "prompt_prism"
 version = "1.0.0"
 description = "Universal framework for LLM Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.11"
 keywords = ["prompt-engineering", "design-of-experiments", "doe", "fractional-factorial", "anova", "llm", "prompt-optimization"]
 license = {text = "MIT"}
 authors = [{name = "robsanmx"}]
@@ -16,11 +16,9 @@ classifiers = [
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
@@ -41,11 +39,13 @@ viz = [
     "matplotlib>=3.3.0",
 ]
 dev = [
-    "pytest>=6.0.0",
-    "pytest-cov>=2.10.0",
-    "black>=22.0.0",
-    "isort>=5.0.0",
-    "flake8>=3.9.0",
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+    # Floors match the versions CI pins: an older black or isort formats
+    # differently and would fail the lint job after a clean local run.
+    "black>=26.5.1",
+    "isort>=9.0.0",
+    "flake8>=7.0.0",
 ]
 cloud = [
     "google-cloud-aiplatform>=1.0.0",
@@ -70,7 +70,7 @@ include = ["prompt_prism*"]
 
 [tool.black]
 line-length = 88
-target-version = ["py38"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
