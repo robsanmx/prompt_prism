@@ -2,7 +2,7 @@
 
 > *Separate your prompt into its true factors — like light through a prism.*
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests: Passing](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
 [![Coverage: 82%+](https://img.shields.io/badge/coverage-82%25-green.svg)]()
@@ -151,7 +151,7 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 pip install prompt-prism[deepeval]
 ```
 
-> **Note:** The `deepeval` extra requires **Python 3.10+** (DeepEval's dependency chain, e.g. `langchain-core`, does not support older versions). The core `prompt_prism` library itself works on Python 3.8+; on older interpreters the extra is simply skipped at install time.
+> **Note:** `prompt_prism` requires **Python 3.11+**, which also satisfies DeepEval's minimum (its dependency chain, e.g. `langchain-core`, needs Python 3.10+).
 
 ### 1. 🎯 Reference-Based Evaluation (WITH Golden Datasets)
 When you have ground-truth expected answers, DeepEval evaluates semantic equivalence, factual agreement, and retrieval recall against the golden targets:

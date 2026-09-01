@@ -6,7 +6,7 @@ setup(
     description="Universal framework for LLM Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA",
     author="PromptPrism Team",
     packages=find_packages(include=["prompt_prism*"]),
-    python_requires=">=3.8",
+    python_requires=">=3.11",
     install_requires=[
         "pandas>=1.0.0",
         "numpy>=1.20.0",
@@ -20,7 +20,7 @@ setup(
         "viz": ["matplotlib>=3.3.0"],
         "dev": ["pytest>=6.0.0", "pytest-cov>=2.10.0"],
         "cloud": ["google-cloud-aiplatform>=1.0.0", "vertexai>=1.0.0", "openai>=1.0.0"],
-        "deepeval": ["deepeval>=1.0.0; python_version >= '3.10'"],
+        "deepeval": ["deepeval>=1.0.0"],
     },
     entry_points={
         "console_scripts": [

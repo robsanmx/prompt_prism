@@ -11,8 +11,7 @@ tabulate>=0.8.0
 # matplotlib>=3.3.0
 
 # Optional: DeepEval LLM Judge Metrics (pip install prompt-prism[deepeval])
-# NOTE: DeepEval's dependency chain requires Python 3.10+ (core library only needs 3.8+)
-# deepeval>=1.0.0; python_version >= '3.10'
+# deepeval>=1.0.0
 
 # Optional: Cloud LLM Adapters (pip install prompt-prism[cloud])
 # openai>=1.0.0
