@@ -1,0 +1,99 @@
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "prompt_prism"
+version = "1.0.0"
+description = "Universal framework for LLM Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Roberto Sanchez" },
+]
+maintainers = [
+    { name = "Roberto Sanchez" },
+]
+keywords = ["prompt-engineering", "design-of-experiments", "doe", "fractional-factorial", "anova", "llm", "prompt-optimization"]
+license = {text = "MIT"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+]
+dependencies = [
+    "pandas>=1.0.0",
+    "numpy>=1.20.0",
+    "scipy>=1.7.0",
+    "statsmodels>=0.13.0",
+    "pydantic>=2.0.0",
+    "jinja2>=3.0.0",
+    "tabulate>=0.8.0",
+]
+
+[project.optional-dependencies]
+viz = [
+    "matplotlib>=3.3.0",
+]
+dev = [
+    "pytest>=6.0.0",
+    "pytest-cov>=2.10.0",
+    "black>=22.0.0",
+    "isort>=5.0.0",
+    "flake8>=3.9.0",
+    # The Definition of Done runs `pyflakes prompt_prism tests examples` directly, so it is
+    # declared explicitly rather than relied on as a transitive flake8 dependency.
+    "pyflakes>=2.5.0",
+]
+cloud = [
+    "google-cloud-aiplatform>=1.0.0",
+    "vertexai>=1.0.0",
+    "openai>=1.0.0",
+    "anthropic>=0.18.0",
+    "litellm>=1.0.0",
+]
+# Python 3.11+ satisfies DeepEval's minimum (langchain-core>=1.0 requires
+# Python >= 3.10), so no environment marker is needed here.
+#
+# Lower bound is 4.2.0, not 4.0: deepeval 4.2.0 reversed the score direction of
+# HallucinationMetric, ToxicityMetric and BiasMetric. Through 4.1.10 they scored
+# `toxic_count / total` (lower is better, `threshold` a maximum); from 4.2.0 they
+# score `non_toxic_count / total` (higher is better, `threshold` a minimum).
+# DEEPEVAL_METRIC_SPECS encodes the >=4.2.0 direction, so admitting 4.0.x/4.1.x
+# would silently invert every optimizer recommendation for those three metrics.
+# This is the authoritative declaration; setup.py and requirements.txt defer to it.
+deepeval = [
+    "deepeval>=4.2.0,<5",
+]
+
+[project.urls]
+Homepage = "https://github.com/robsanmx/prompt_prism"
+Repository = "https://github.com/robsanmx/prompt_prism.git"
+Issues = "https://github.com/robsanmx/prompt_prism/issues"
+Changelog = "https://github.com/robsanmx/prompt_prism/blob/main/CHANGELOG.md"
+
+[project.scripts]
+prompt-prism = "prompt_prism.cli.main:main"
+prism = "prompt_prism.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["prompt_prism*"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --cov=prompt_prism --cov-report=term-missing"
