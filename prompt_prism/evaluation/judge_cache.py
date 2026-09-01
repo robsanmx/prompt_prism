@@ -8,10 +8,13 @@ import hashlib
 import json
 import sqlite3
 import threading
+import warnings
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Dict, Optional, Sequence
 
 from pydantic import BaseModel, Field
+
+SCHEMA_VERSION: int = 2
 
 
 class JudgeResult(BaseModel):
@@ -32,29 +35,55 @@ class JudgeCache:
         self.db_path = db_path
         self._memory_cache: Dict[str, JudgeResult] = {}
         self._lock = threading.Lock()
+        self._warned_sqlite_error = False
 
         if self.db_path:
             self._init_sqlite()
+
+    def _claim_sqlite_warning(self) -> bool:
+        """Return True for the first SQLite failure only.
+
+        Guarded by the same lock as the memory cache: without it, concurrent trials in the
+        runner's thread pool can each read False and emit a duplicate warning.
+        """
+        with self._lock:
+            if self._warned_sqlite_error:
+                return False
+            self._warned_sqlite_error = True
+            return True
 
     def _init_sqlite(self) -> None:
         if not self.db_path:
             return
         path = Path(self.db_path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        with sqlite3.connect(self.db_path) as conn:
-            conn.execute("""
-                CREATE TABLE IF NOT EXISTS judge_cache (
-                    hash_key TEXT PRIMARY KEY,
-                    metric_name TEXT,
-                    judge_model TEXT,
-                    score REAL,
-                    reason TEXT,
-                    success INTEGER,
-                    token_usage TEXT,
-                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        try:
+            with sqlite3.connect(self.db_path) as conn:
+                # No schema_version column: _hash_key already prefixes every key with
+                # v{SCHEMA_VERSION}, so a row written under an older layout simply can
+                # never be looked up. Storing the version a second time needed a
+                # migration and bought nothing. Naming fewer columns than an existing
+                # table has is valid, so pre-existing databases keep working untouched.
+                conn.execute("""
+                    CREATE TABLE IF NOT EXISTS judge_cache (
+                        hash_key TEXT PRIMARY KEY,
+                        metric_name TEXT,
+                        judge_model TEXT,
+                        score REAL,
+                        reason TEXT,
+                        success INTEGER,
+                        token_usage TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )
+                """)
+                conn.commit()
+        except sqlite3.Error as e:
+            if self._claim_sqlite_warning():
+                warnings.warn(
+                    f"JudgeCache SQLite initialization failed: {e}",
+                    UserWarning,
+                    stacklevel=2,
                 )
-            """)
-            conn.commit()
 
     @staticmethod
     def _hash_key(
@@ -64,8 +93,22 @@ class JudgeCache:
         input_text: str,
         actual_output: str,
         expected_output: str,
+        context: Optional[Sequence[str]] = None,
+        retrieval_context: Optional[Sequence[str]] = None,
     ) -> str:
-        payload = f"{metric_name}||{metric_config}||{judge_model_id}||{input_text}||{actual_output}||{expected_output}"
+        if not isinstance(judge_model_id, str):
+            raise TypeError(
+                f"judge_model_id must be a string identifier, got {type(judge_model_id).__name__}"
+            )
+
+        ctx_str = json.dumps(list(context)) if context is not None else ""
+        ret_ctx_str = (
+            json.dumps(list(retrieval_context)) if retrieval_context is not None else ""
+        )
+        payload = (
+            f"v{SCHEMA_VERSION}||{metric_name}||{metric_config}||{judge_model_id}||"
+            f"{input_text}||{actual_output}||{expected_output}||{ctx_str}||{ret_ctx_str}"
+        )
         return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
     def get(
@@ -76,15 +119,19 @@ class JudgeCache:
         input_text: str = "",
         actual_output: str = "",
         expected_output: str = "",
+        context: Optional[Sequence[str]] = None,
+        retrieval_context: Optional[Sequence[str]] = None,
     ) -> Optional[JudgeResult]:
         """Look up judge score from cache."""
         key = self._hash_key(
-            metric_name,
-            metric_config,
-            judge_model_id,
-            input_text,
-            actual_output,
-            expected_output,
+            metric_name=metric_name,
+            metric_config=metric_config,
+            judge_model_id=judge_model_id,
+            input_text=input_text,
+            actual_output=actual_output,
+            expected_output=expected_output,
+            context=context,
+            retrieval_context=retrieval_context,
         )
 
         with self._lock:
@@ -111,8 +158,13 @@ class JudgeCache:
                         with self._lock:
                             self._memory_cache[key] = result
                         return result
-            except Exception:
-                pass
+            except sqlite3.Error as e:
+                if self._claim_sqlite_warning():
+                    warnings.warn(
+                        f"JudgeCache SQLite read error: {e}",
+                        UserWarning,
+                        stacklevel=2,
+                    )
 
         return None
 
@@ -124,6 +176,8 @@ class JudgeCache:
         input_text: str = "",
         actual_output: str = "",
         expected_output: str = "",
+        context: Optional[Sequence[str]] = None,
+        retrieval_context: Optional[Sequence[str]] = None,
         score: float = 0.0,
         reason: str = "",
         success: bool = True,
@@ -131,12 +185,14 @@ class JudgeCache:
     ) -> None:
         """Store judge result in memory and SQLite."""
         key = self._hash_key(
-            metric_name,
-            metric_config,
-            judge_model_id,
-            input_text,
-            actual_output,
-            expected_output,
+            metric_name=metric_name,
+            metric_config=metric_config,
+            judge_model_id=judge_model_id,
+            input_text=input_text,
+            actual_output=actual_output,
+            expected_output=expected_output,
+            context=context,
+            retrieval_context=retrieval_context,
         )
         res = JudgeResult(
             score=score,
@@ -168,5 +224,10 @@ class JudgeCache:
                         ),
                     )
                     conn.commit()
-            except Exception:
-                pass
+            except sqlite3.Error as e:
+                if self._claim_sqlite_warning():
+                    warnings.warn(
+                        f"JudgeCache SQLite write error: {e}",
+                        UserWarning,
+                        stacklevel=2,
+                    )

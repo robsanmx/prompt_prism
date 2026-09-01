@@ -5,6 +5,7 @@ Command-Line Interface (CLI) for prompt-prism / prism.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -14,8 +15,8 @@ import pandas as pd
 from ..analysis.anova import ANOVAEngine
 from ..analysis.optimizer import OptimalPromptFinder
 from ..design.aliasing import AliasStructure
-from ..design.catalog import CATALOG_DESIGNS, get_catalog_entry, list_available_plans
-from ..design.generators import FractionalFactorialGenerator, PlackettBurmanGenerator
+from ..design.catalog import get_catalog_entry, list_available_plans
+from ..design.generators import FractionalFactorialGenerator
 from ..design.recommender import recommend_design
 from ..reporting.reporter import AnalysisReport
 from ..visualization.plots import generate_ascii_pareto
@@ -109,6 +110,11 @@ def main():
         help="Significance alpha threshold (default: 0.05)",
     )
     analyze_parser.add_argument(
+        "--minimize",
+        action="store_true",
+        help="Minimize target metric instead of maximizing (e.g. for toxicity/bias/error)",
+    )
+    analyze_parser.add_argument(
         "--output-report",
         "-o",
         type=str,
@@ -146,11 +152,11 @@ def main():
         factors = list(entry["factors"])
         all_aliases = alias_struct.get_all_aliases(factors=factors, max_order=2)
 
-        print(f"\n==================================================================")
+        print("\n==================================================================")
         print(
             f" Plan: {plan_id} (Factors: {entry['num_factors']}, Runs: {entry['runs']}, Resolution: Res {entry['resolution']})"
         )
-        print(f"==================================================================")
+        print("==================================================================")
         print(f"Defining Relation: I = {' = '.join(alias_struct.defining_relation)}")
         print(f"Generators:        {', '.join(entry['generators'])}\n")
         print("Aliasing Structure (Confounded Effects up to order 2):")
@@ -166,13 +172,7 @@ def main():
         print(f"\nSummary:\n{alias_struct.summary()}\n")
 
     elif args.command == "list-metrics":
-        has_deepeval = False
-        try:
-            import deepeval
-
-            has_deepeval = True
-        except ImportError:
-            has_deepeval = False
+        has_deepeval = importlib.util.find_spec("deepeval") is not None
 
         print("\n" + "=" * 75)
         print(" 📊 PROMPTPRISM EVALUATION METRICS SUITE")
@@ -224,13 +224,13 @@ def main():
             "   • faithfulness          : Verifies if output is factually grounded in retrieval context"
         )
         print(
-            "   • hallucination         : Detects fabricated claims not present in source context"
+            "   • hallucination         : Groundedness against source context; 1.0 = no fabricated claims"
         )
         print(
-            "   • toxicity              : Safety audit detecting toxic, offensive, or harmful speech"
+            "   • toxicity              : Safety audit; 1.0 = free of toxic, offensive, or harmful speech"
         )
         print(
-            "   • bias                  : Detects demographic, gender, or ideological bias"
+            "   • bias                  : Impartiality; 1.0 = free of demographic, gender, or ideological bias"
         )
         print(
             "   • contextual_relevancy  : Evaluates relevance of retrieved context chunks to query"
@@ -313,7 +313,9 @@ def main():
             block_col=block_col,
             alpha=args.alpha,
         )
-        opt_rec = OptimalPromptFinder.find_optimal_prompt(anova_res)
+        opt_rec = OptimalPromptFinder.find_optimal_prompt(
+            anova_res, maximize=not args.minimize
+        )
 
         print("\n" + generate_ascii_pareto(anova_res) + "\n")
         print(opt_rec.summary_markdown)

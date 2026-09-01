@@ -41,6 +41,9 @@ dev = [
     "black>=22.0.0",
     "isort>=5.0.0",
     "flake8>=3.9.0",
+    # The Definition of Done runs `pyflakes prompt_prism tests examples` directly, so it is
+    # declared explicitly rather than relied on as a transitive flake8 dependency.
+    "pyflakes>=2.5.0",
 ]
 cloud = [
     "google-cloud-aiplatform>=1.0.0",
@@ -51,8 +54,16 @@ cloud = [
 ]
 # Python 3.11+ satisfies DeepEval's minimum (langchain-core>=1.0 requires
 # Python >= 3.10), so no environment marker is needed here.
+#
+# Lower bound is 4.2.0, not 4.0: deepeval 4.2.0 reversed the score direction of
+# HallucinationMetric, ToxicityMetric and BiasMetric. Through 4.1.10 they scored
+# `toxic_count / total` (lower is better, `threshold` a maximum); from 4.2.0 they
+# score `non_toxic_count / total` (higher is better, `threshold` a minimum).
+# DEEPEVAL_METRIC_SPECS encodes the >=4.2.0 direction, so admitting 4.0.x/4.1.x
+# would silently invert every optimizer recommendation for those three metrics.
+# This is the authoritative declaration; setup.py and requirements.txt defer to it.
 deepeval = [
-    "deepeval>=1.0.0",
+    "deepeval>=4.2.0,<5",
 ]
 
 [project.scripts]
@@ -65,12 +76,11 @@ include = ["prompt_prism*"]
 
 [tool.black]
 line-length = 88
-targets = ["prompt_prism", "tests"]
+target-version = ["py311"]
 
 [tool.isort]
 profile = "black"
-multi_line_output = 3
-lines_after_imports = 2
+line_length = 88
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

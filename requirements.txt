@@ -11,7 +11,9 @@ tabulate>=0.8.0
 # matplotlib>=3.3.0
 
 # Optional: DeepEval LLM Judge Metrics (pip install prompt-prism[deepeval])
-# deepeval>=1.0.0
+# Source of truth: pyproject.toml. >=4.2.0 is required because that release reversed
+# the score direction of toxicity/bias/hallucination.
+# deepeval>=4.2.0,<5
 
 # Optional: Cloud LLM Adapters (pip install prompt-prism[cloud])
 # openai>=1.0.0

@@ -199,7 +199,37 @@ faithfulness = deepeval_metric("faithfulness", cache=judge_cache)
 hallucination = deepeval_metric("hallucination", cache=judge_cache)
 ```
 
-### 3. Run Factorial Experiment with Judge Metrics
+### 3. DeepEval Supported Metric Kinds & Defaults
+
+| Kind | Default Metric Name | Higher is Better | Requires Golden Target? | Description |
+|:---|:---|:---:|:---:|:---|
+| `answer_relevancy` | `deepeval_answer_relevancy` | ✅ Yes | No | Measures directness and relevance to user input |
+| `faithfulness` | `deepeval_faithfulness` | ✅ Yes | No | Measures grounding against retrieved context docs |
+| `contextual_precision` | `deepeval_contextual_precision` | ✅ Yes | ✅ Yes | Evaluates ranking quality of retrieved context |
+| `contextual_recall` | `deepeval_contextual_recall` | ✅ Yes | ✅ Yes | Measures coverage of expected facts in retrieval |
+| `contextual_relevancy` | `deepeval_contextual_relevancy` | ✅ Yes | No | Ratio of relevant sentences in context |
+| `hallucination` | `deepeval_hallucination` | ✅ Yes | No | Groundedness: 1.0 = no ungrounded contradictions |
+| `toxicity` | `deepeval_toxicity` | ✅ Yes | No | Safety: 1.0 = no toxic, harmful, or abusive content |
+| `bias` | `deepeval_bias` | ✅ Yes | No | Impartiality: 1.0 = no gender, racial, or political bias |
+| `summarization` | `deepeval_summarization` | ✅ Yes | No | Inclusion of key facts and absence of hallucinations |
+| `g_eval` | `deepeval_g_eval` | ✅ Yes | Optional | Custom rubrics / evaluation criteria |
+| `json_correctness` | `deepeval_json_correctness` | ✅ Yes | No | Validates JSON against a Pydantic schema |
+
+> **🧭 Score direction and `threshold`:** PromptPrism targets **deepeval >= 4.2.0**, where every
+> metric scores in the same direction — `1.0` is a pass, `0.0` is a failure, and `threshold` is
+> the **minimum** passing score. `hallucination`, `toxicity` and `bias` score the *absence* of
+> the problem, so higher is better for them too. deepeval <= 4.1.10 scored those three as the
+> proportion of violations (lower was better, and `threshold` was a maximum); the extra is
+> pinned `deepeval>=4.2.0,<5` because reading the new scores with the old direction makes the
+> optimizer recommend the **more** toxic prompt. `Experiment.analyze()` picks the direction
+> from `Metric.higher_is_better` automatically; `prompt-prism analyze --minimize` sets it
+> explicitly for a metric you want to minimize (e.g. latency or an error rate).
+
+> **⚖️ Evaluation Modes (`mode="score"` vs `mode="pass"`):**
+> - `mode="score"` (Default): Yields continuous scores in `[0.0, 1.0]`. This maximizes statistical sensitivity and ANOVA power to detect fine-grained prompt factor improvements.
+> - `mode="pass"`: Binarizes evaluation to `1.0` (pass) or `0.0` (fail) based on `threshold`. Note: Binarization collapses granular differences into step functions, which discards statistical variance and reduces ANOVA effect detection power.
+
+### 4. Run Factorial Experiment with Judge Metrics
 
 ```python
 exp = Experiment.from_factors(

@@ -20,7 +20,9 @@ setup(
         "viz": ["matplotlib>=3.3.0"],
         "dev": ["pytest>=6.0.0", "pytest-cov>=2.10.0"],
         "cloud": ["google-cloud-aiplatform>=1.0.0", "vertexai>=1.0.0", "openai>=1.0.0"],
-        "deepeval": ["deepeval>=1.0.0"],
+        # Source of truth: pyproject.toml [project.optional-dependencies].deepeval
+        # 4.2.0 is the release that reversed toxicity/bias/hallucination score direction.
+        "deepeval": ["deepeval>=4.2.0,<5"],
     },
     entry_points={
         "console_scripts": [
