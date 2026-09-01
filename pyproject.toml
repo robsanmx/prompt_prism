@@ -50,8 +50,11 @@ cloud = [
     "anthropic>=0.18.0",
     "litellm>=1.0.0",
 ]
+# DeepEval's dependency chain (langchain-core>=1.0) requires Python >= 3.10,
+# while the core library only needs >= 3.8. Gate the extra with an environment
+# marker so resolution succeeds on all supported interpreters.
 deepeval = [
-    "deepeval>=1.0.0",
+    "deepeval>=1.0.0; python_version >= '3.10'",
 ]
 
 [project.scripts]

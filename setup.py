@@ -20,7 +20,7 @@ setup(
         "viz": ["matplotlib>=3.3.0"],
         "dev": ["pytest>=6.0.0", "pytest-cov>=2.10.0"],
         "cloud": ["google-cloud-aiplatform>=1.0.0", "vertexai>=1.0.0", "openai>=1.0.0"],
-        "deepeval": ["deepeval>=1.0.0"],
+        "deepeval": ["deepeval>=1.0.0; python_version >= '3.10'"],
     },
     entry_points={
         "console_scripts": [

@@ -151,6 +151,8 @@ Factor ID | Name                     | Effect Δ | t-value | Chart
 pip install prompt-prism[deepeval]
 ```
 
+> **Note:** The `deepeval` extra requires **Python 3.10+** (DeepEval's dependency chain, e.g. `langchain-core`, does not support older versions). The core `prompt_prism` library itself works on Python 3.8+; on older interpreters the extra is simply skipped at install time.
+
 ### 1. 🎯 Reference-Based Evaluation (WITH Golden Datasets)
 When you have ground-truth expected answers, DeepEval evaluates semantic equivalence, factual agreement, and retrieval recall against the golden targets:
 
