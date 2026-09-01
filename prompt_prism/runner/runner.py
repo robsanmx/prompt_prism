@@ -7,6 +7,7 @@ from __future__ import annotations
 import concurrent.futures
 import time
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+
 import pandas as pd
 
 from ..core.models import DesignMatrix, ExperimentResults, RunConfig, Trial
@@ -34,7 +35,9 @@ class ExperimentRunner:
     ):
         self.composer = composer
         self.client = client if isinstance(client, LLMClient) else CallableLLM(client)
-        self.evaluator = evaluator if isinstance(evaluator, Evaluator) else Evaluator(evaluator)
+        self.evaluator = (
+            evaluator if isinstance(evaluator, Evaluator) else Evaluator(evaluator)
+        )
         self.cache = cache
         self.max_workers = max(1, max_workers)
         self.target_col = target_col
@@ -73,9 +76,14 @@ class ExperimentRunner:
             target_value = item.get(self.target_col, None)
 
             # Compose prompt for this run condition and sample data
-            if self.composer.template.sections and self.composer.template.sections[0].role is not None:
+            if (
+                self.composer.template.sections
+                and self.composer.template.sections[0].role is not None
+            ):
                 # Chat messages format
-                prompt_content = self.composer.compose_messages(run_config=run, data=item)
+                prompt_content = self.composer.compose_messages(
+                    run_config=run, data=item
+                )
                 prompt_key = str(prompt_content)
             else:
                 # Plain text format
@@ -120,8 +128,13 @@ class ExperimentRunner:
             )
 
         # Threaded parallel execution
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_task = {executor.submit(execute_single_trial, task): task for task in trial_tasks}
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.max_workers
+        ) as executor:
+            future_to_task = {
+                executor.submit(execute_single_trial, task): task
+                for task in trial_tasks
+            }
             for future in concurrent.futures.as_completed(future_to_task):
                 try:
                     trial = future.result()

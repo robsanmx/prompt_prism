@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import uuid
 from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
 from pydantic import BaseModel, Field
 
@@ -13,7 +14,7 @@ from pydantic import BaseModel, Field
 class RunConfig(BaseModel):
     """
     Configuration for a single experimental run (a specific combination of factor levels).
-    
+
     Attributes:
         run_id: Sequential or unique identifier of the run.
         factor_levels: Mapping of factor identifier (or name) to the assigned level code.
@@ -21,6 +22,7 @@ class RunConfig(BaseModel):
         params: Model parameters (e.g. temperature, max_tokens) configured for this run.
         metadata: Extra metadata for tracking (e.g. plan_id, repetition).
     """
+
     run_id: int
     factor_levels: Dict[str, int] = Field(default_factory=dict)
     factor_names: Dict[str, int] = Field(default_factory=dict)
@@ -41,13 +43,15 @@ class RunConfig(BaseModel):
         """Compact string representation of levels (e.g. '01001')."""
         if self.combination_string:
             return self.combination_string
-        return "".join(str(self.factor_levels[k]) for k in sorted(self.factor_levels.keys()))
+        return "".join(
+            str(self.factor_levels[k]) for k in sorted(self.factor_levels.keys())
+        )
 
 
 class DesignMatrix(BaseModel):
     """
     A full Design of Experiments (DoE) matrix.
-    
+
     Attributes:
         plan_id: Name or code of the design (e.g. '2(5-1)V', 'PB-12', 'Full-2^4').
         factor_ids: Ordered list of factor IDs (e.g. ['A', 'B', 'C', 'D', 'E']).
@@ -57,6 +61,7 @@ class DesignMatrix(BaseModel):
         generators: Generator formulas (e.g. ['E=ABCD']).
         metadata: Additional details (number of factors, fraction, design properties).
     """
+
     plan_id: str
     factor_ids: List[str]
     factor_names: List[str] = Field(default_factory=list)
@@ -76,7 +81,7 @@ class DesignMatrix(BaseModel):
     def to_dataframe(self, coded: bool = True) -> pd.DataFrame:
         """
         Convert the design matrix to a pandas DataFrame.
-        
+
         Args:
             coded: If True, values are in {0, 1} (or {-1, +1} if specified).
         """
@@ -96,12 +101,20 @@ class DesignMatrix(BaseModel):
         df: pd.DataFrame,
         factor_ids: Optional[List[str]] = None,
         plan_id: str = "custom",
-        run_id_col: str = "run_id"
+        run_id_col: str = "run_id",
     ) -> DesignMatrix:
         """Create a DesignMatrix from a pandas DataFrame."""
         if factor_ids is None:
             # Exclude metadata columns
-            exclude = {run_id_col, "combination", "order", "run", "EXPERIMENT_ORDER", "PLAN_ID", "FACTORS_COMBINATION"}
+            exclude = {
+                run_id_col,
+                "combination",
+                "order",
+                "run",
+                "EXPERIMENT_ORDER",
+                "PLAN_ID",
+                "FACTORS_COMBINATION",
+            }
             factor_ids = [c for c in df.columns if c not in exclude]
 
         runs = []
@@ -117,6 +130,7 @@ class Trial(BaseModel):
     """
     The result of executing one RunConfig on a single sample dataset item.
     """
+
     trial_id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     run_id: int
     sample_id: Union[str, int]
@@ -135,6 +149,7 @@ class ExperimentResults(BaseModel):
     """
     Collection of all trials and metadata for an experiment run.
     """
+
     experiment_id: str
     design: DesignMatrix
     trials: List[Trial] = Field(default_factory=list)
@@ -167,7 +182,12 @@ class ExperimentResults(BaseModel):
     def summary_by_run(self, metric_name: Optional[str] = None) -> pd.DataFrame:
         """Compute mean and std of metrics grouped by experimental run."""
         df = self.to_dataframe()
-        metric_cols = [c for c in df.columns if c not in {"trial_id", "run_id", "sample_id", "latency_ms", "error"} and c not in self.design.factor_ids]
+        metric_cols = [
+            c
+            for c in df.columns
+            if c not in {"trial_id", "run_id", "sample_id", "latency_ms", "error"}
+            and c not in self.design.factor_ids
+        ]
         if metric_name:
             metric_cols = [metric_name]
         return df.groupby("run_id")[metric_cols].agg(["mean", "std"])

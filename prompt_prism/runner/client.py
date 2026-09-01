@@ -7,11 +7,13 @@ from __future__ import annotations
 import asyncio
 import time
 from typing import Any, Callable, Dict, List, Optional, Union
+
 from pydantic import BaseModel, Field
 
 
 class LLMResponse(BaseModel):
     """Structured response from an LLM call."""
+
     content: str
     raw: Any = None
     latency_ms: float = 0.0
@@ -24,17 +26,13 @@ class LLMClient:
     """Abstract base class for LLM clients."""
 
     def generate(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        **kwargs: Any
+        self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any
     ) -> LLMResponse:
         """Synchronously generate a response for the given prompt."""
         raise NotImplementedError
 
     async def agenerate(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        **kwargs: Any
+        self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any
     ) -> LLMResponse:
         """Asynchronously generate a response."""
         # Default async fallback runs sync in executor
@@ -51,9 +49,7 @@ class CallableLLM(LLMClient):
         self.fn = fn
 
     def generate(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        **kwargs: Any
+        self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any
     ) -> LLMResponse:
         start_t = time.perf_counter()
         try:
@@ -94,7 +90,9 @@ class MockLLM(LLMClient):
         base_quality: float = 0.5,
         noise_std: float = 0.05,
         latency_ms: float = 10.0,
-        response_generator: Optional[Callable[[Union[str, List[Dict[str, str]]], Dict[str, Any]], str]] = None,
+        response_generator: Optional[
+            Callable[[Union[str, List[Dict[str, str]]], Dict[str, Any]], str]
+        ] = None,
     ):
         self.default_response = default_response
         self.factor_effects = factor_effects or {}
@@ -104,9 +102,7 @@ class MockLLM(LLMClient):
         self.response_generator = response_generator
 
     def generate(
-        self,
-        prompt: Union[str, List[Dict[str, str]]],
-        **kwargs: Any
+        self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any
     ) -> LLMResponse:
         time.sleep(self.latency_ms / 1000.0)
 
@@ -119,5 +115,9 @@ class MockLLM(LLMClient):
             content=content,
             raw={"simulated": True},
             latency_ms=self.latency_ms,
-            token_usage={"prompt_tokens": 50, "completion_tokens": 20, "total_tokens": 70},
+            token_usage={
+                "prompt_tokens": 50,
+                "completion_tokens": 20,
+                "total_tokens": 70,
+            },
         )

@@ -7,6 +7,7 @@ from __future__ import annotations
 import itertools
 import re
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
 import pandas as pd
 
@@ -14,14 +15,57 @@ from ..core.factors import Factor, FactorSet
 from ..core.models import DesignMatrix, RunConfig
 from .catalog import CATALOG_DESIGNS, get_catalog_entry
 
-
 # Standard Plackett-Burman generating vectors (first row, coded as +1 / -1)
 PB_GENERATING_VECTORS: Dict[int, List[int]] = {
     8: [1, 1, 1, -1, 1, -1, -1],  # 7 factors
     12: [1, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1],  # 11 factors
     16: [1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1],  # 15 factors
-    20: [1, 1, -1, -1, 1, 1, 1, 1, -1, 1, -1, 1, -1, -1, -1, -1, 1, 1, -1],  # 19 factors
-    24: [1, 1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, -1, -1, -1],  # 23 factors (corrected orthogonal)
+    20: [
+        1,
+        1,
+        -1,
+        -1,
+        1,
+        1,
+        1,
+        1,
+        -1,
+        1,
+        -1,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+        1,
+        1,
+        -1,
+    ],  # 19 factors
+    24: [
+        1,
+        1,
+        1,
+        1,
+        1,
+        -1,
+        1,
+        -1,
+        1,
+        1,
+        -1,
+        -1,
+        1,
+        1,
+        -1,
+        -1,
+        1,
+        -1,
+        1,
+        -1,
+        -1,
+        -1,
+        -1,
+    ],  # 23 factors (corrected orthogonal)
 }
 
 
@@ -31,7 +75,9 @@ def parse_generator(gen_str: str) -> Tuple[str, List[str]]:
     """
     parts = gen_str.replace(" ", "").split("=")
     if len(parts) != 2:
-        raise ValueError(f"Invalid generator string: '{gen_str}'. Expected format like 'E=ABCD'")
+        raise ValueError(
+            f"Invalid generator string: '{gen_str}'. Expected format like 'E=ABCD'"
+        )
     target = parts[0].strip()
     sources = list(parts[1].strip())
     return target, sources
@@ -62,9 +108,15 @@ class FractionalFactorialGenerator:
         generators = entry["generators"]
         factor_letters = list(entry["factors"])
 
-        names = list(factor_names) if factor_names else [f"Factor_{f}" for f in factor_letters]
+        names = (
+            list(factor_names)
+            if factor_names
+            else [f"Factor_{f}" for f in factor_letters]
+        )
         if len(names) < num_factors:
-            names.extend([f"Factor_{factor_letters[i]}" for i in range(len(names), num_factors)])
+            names.extend(
+                [f"Factor_{factor_letters[i]}" for i in range(len(names), num_factors)]
+            )
 
         return cls.create(
             base_factors=base_factors,
@@ -97,7 +149,7 @@ class FractionalFactorialGenerator:
         Construct fractional factorial design matrix from base factors and generator equations.
         """
         q = len(base_factors)
-        num_runs = 2 ** q
+        num_runs = 2**q
 
         # Step 1: Generate Full Factorial grid for base factors in {0, 1}
         grid = list(itertools.product([0, 1], repeat=q))
@@ -119,7 +171,9 @@ class FractionalFactorialGenerator:
         df_final = df_full[col_order]
 
         # Step 4: Build RunConfig objects
-        factor_names_list = list(factor_names) if factor_names else [f"Factor_{c}" for c in col_order]
+        factor_names_list = (
+            list(factor_names) if factor_names else [f"Factor_{c}" for c in col_order]
+        )
         runs: List[RunConfig] = []
         for idx, row in df_final.iterrows():
             levels = {col: int(row[col]) for col in col_order}
@@ -135,7 +189,7 @@ class FractionalFactorialGenerator:
         return DesignMatrix(
             plan_id=plan_id,
             factor_ids=col_order,
-            factor_names=factor_names_list[:len(col_order)],
+            factor_names=factor_names_list[: len(col_order)],
             resolution=resolution,
             runs=runs,
             generators=list(generators),
@@ -163,13 +217,17 @@ class PlackettBurmanGenerator:
         if runs is not None:
             if runs not in PB_GENERATING_VECTORS:
                 valid_runs = sorted(PB_GENERATING_VECTORS.keys())
-                raise ValueError(f"Unsupported runs={runs} for Plackett-Burman. Choose from {valid_runs}.")
+                raise ValueError(
+                    f"Unsupported runs={runs} for Plackett-Burman. Choose from {valid_runs}."
+                )
             n_runs = runs
         else:
             k = num_factors or (len(factor_ids) if factor_ids else 7)
             candidates = [n for n in sorted(PB_GENERATING_VECTORS.keys()) if n - 1 >= k]
             if not candidates:
-                raise ValueError(f"Plackett-Burman supports up to 23 factors. Requested: {k}")
+                raise ValueError(
+                    f"Plackett-Burman supports up to 23 factors. Requested: {k}"
+                )
             n_runs = candidates[0]
 
         base_vec = PB_GENERATING_VECTORS[n_runs]
@@ -197,13 +255,21 @@ class PlackettBurmanGenerator:
         elif num_factors:
             k_keep = min(num_factors, max_factors)
             alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
-            fids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(k_keep)]
+            fids = [
+                alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(k_keep)
+            ]
         else:
             k_keep = max_factors
             alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
-            fids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(k_keep)]
+            fids = [
+                alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(k_keep)
+            ]
 
-        fnames = list(factor_names)[:k_keep] if factor_names else [f"Factor_{fid}" for fid in fids]
+        fnames = (
+            list(factor_names)[:k_keep]
+            if factor_names
+            else [f"Factor_{fid}" for fid in fids]
+        )
 
         runs_list: List[RunConfig] = []
         for idx in range(n_runs):
@@ -223,7 +289,11 @@ class PlackettBurmanGenerator:
             factor_names=fnames,
             resolution=3,  # Plackett-Burman designs are Resolution III screening designs
             runs=runs_list,
-            metadata={"num_runs": n_runs, "max_factors": max_factors, "design_type": "Plackett-Burman"},
+            metadata={
+                "num_runs": n_runs,
+                "max_factors": max_factors,
+                "design_type": "Plackett-Burman",
+            },
         )
 
 
@@ -247,12 +317,19 @@ class FullFactorialGenerator:
             fids = list(factor_ids)
         elif num_factors:
             alphabet = "ABCDEFGHJKLMNOPQRSTUVWXYZ"
-            fids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(num_factors)]
+            fids = [
+                alphabet[i] if i < len(alphabet) else f"X{i+1}"
+                for i in range(num_factors)
+            ]
         else:
             raise ValueError("Must provide either num_factors or factor_ids.")
 
         k = len(fids)
-        fnames = list(factor_names)[:k] if factor_names else [f"Factor_{fid}" for fid in fids]
+        fnames = (
+            list(factor_names)[:k]
+            if factor_names
+            else [f"Factor_{fid}" for fid in fids]
+        )
 
         if levels_per_factor:
             level_ranges = [list(range(num_lvls)) for num_lvls in levels_per_factor]
@@ -274,10 +351,18 @@ class FullFactorialGenerator:
             )
 
         return DesignMatrix(
-            plan_id=f"FullFactorial-2^{k}" if not levels_per_factor else f"FullFactorial-{len(grid)}runs",
+            plan_id=(
+                f"FullFactorial-2^{k}"
+                if not levels_per_factor
+                else f"FullFactorial-{len(grid)}runs"
+            ),
             factor_ids=fids,
             factor_names=fnames,
             resolution=8,  # Full factorial has no confounding
             runs=runs_list,
-            metadata={"num_runs": len(grid), "num_factors": k, "design_type": "FullFactorial"},
+            metadata={
+                "num_runs": len(grid),
+                "num_factors": k,
+                "design_type": "FullFactorial",
+            },
         )

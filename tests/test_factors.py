@@ -3,6 +3,7 @@ Unit tests for Factor, Level, FactorType, and FactorSet.
 """
 
 import pytest
+
 from prompt_prism.core.factors import Factor, FactorSet, FactorType, Level
 
 

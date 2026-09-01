@@ -5,6 +5,7 @@ Tests for Visualization and Reporting modules.
 import numpy as np
 import pandas as pd
 import pytest
+
 from prompt_prism.analysis.anova import ANOVAEngine
 from prompt_prism.analysis.effects import EffectAnalyzer
 from prompt_prism.analysis.optimizer import OptimalPromptFinder
@@ -29,12 +30,18 @@ def sample_anova_result():
         for _, row in base_df.iterrows():
             a, b, c, d, e = row["A"], row["B"], row["C"], row["D"], row["E"]
             score = 0.5 + 0.3 * a - 0.2 * b + 0.1 * c + np.random.normal(0, 0.05)
-            records.append({
-                "run_id": row["run_id"],
-                "sample_id": s_id,
-                "A": a, "B": b, "C": c, "D": d, "E": e,
-                "accuracy": float(np.clip(score, 0.0, 1.0)),
-            })
+            records.append(
+                {
+                    "run_id": row["run_id"],
+                    "sample_id": s_id,
+                    "A": a,
+                    "B": b,
+                    "C": c,
+                    "D": d,
+                    "E": e,
+                    "accuracy": float(np.clip(score, 0.0, 1.0)),
+                }
+            )
     df = pd.DataFrame(records)
     return ANOVAEngine.run_anova(
         data=df,

@@ -5,6 +5,7 @@ Unit and Integration Tests for DeepEval Metric Adapter, JudgeCache, and Phase 0 
 import math
 import sys
 from unittest.mock import MagicMock
+
 import numpy as np
 import pandas as pd
 import pytest
@@ -21,10 +22,10 @@ from prompt_prism.runner.client import MockLLM
 from prompt_prism.runner.runner import ExperimentRunner
 from prompt_prism.template.composer import PromptComposer, PromptSection, PromptTemplate
 
-
 # ---------------------------------------------------------------------------
 # Phase 0: Seam Tests (Evaluator on_error, duplicates, prompt in context)
 # ---------------------------------------------------------------------------
+
 
 def test_evaluator_duplicate_metric_name_raises():
     evaluator = Evaluator([ExactMatch(name="exact_match")])
@@ -64,7 +65,9 @@ def test_runner_passes_prompt_in_context():
         seen_contexts.append(dict(input_data or {}))
         return 1.0
 
-    context_metric = CustomMetric(inspect_context, name="inspect_ctx", wants_prompt=True)
+    context_metric = CustomMetric(
+        inspect_context, name="inspect_ctx", wants_prompt=True
+    )
     evaluator = Evaluator([context_metric])
 
     factors = [Factor.binary("f1", level_0_content="A", level_1_content="B")]
@@ -77,8 +80,14 @@ def test_runner_passes_prompt_in_context():
     )
     composer = PromptComposer(template, factors)
 
-    runner = ExperimentRunner(composer=composer, client=MockLLM(default_response="OK"), evaluator=evaluator)
-    design = DesignMatrix(plan_id="single", factor_ids=["f1"], runs=[RunConfig(run_id=1, factor_levels={"f1": 1})])
+    runner = ExperimentRunner(
+        composer=composer, client=MockLLM(default_response="OK"), evaluator=evaluator
+    )
+    design = DesignMatrix(
+        plan_id="single",
+        factor_ids=["f1"],
+        runs=[RunConfig(run_id=1, factor_levels={"f1": 1})],
+    )
     dataset = [{"id": "item_1", "text": "Sample text", "target": "Target val"}]
 
     res = runner.run(design=design, dataset=dataset)
@@ -94,6 +103,7 @@ def test_runner_passes_prompt_in_context():
 # ---------------------------------------------------------------------------
 # Phase 1 & 2: DeepEval Adapter & JudgeCache Tests (Deterministic Stubs)
 # ---------------------------------------------------------------------------
+
 
 class StubDeepEvalJudge:
     def __init__(self, score=0.88, should_fail=False):
@@ -157,13 +167,17 @@ def test_judge_failure_is_nan_and_anova_survives():
     assert math.isnan(score)
 
     # Test that ANOVAEngine drops NaN and still fits without crashing
-    df = pd.DataFrame({
-        "A": [0, 1, 0, 1, 0, 1, 0, 1],
-        "B": [0, 0, 1, 1, 0, 0, 1, 1],
-        "target_score": [0.8, 0.9, np.nan, 0.85, 0.7, 0.95, 0.6, 0.9],
-        "sample_id": [1, 2, 3, 4, 1, 2, 3, 4],
-    })
-    anova_res = ANOVAEngine.run_anova(data=df, factor_cols=["A", "B"], target_col="target_score")
+    df = pd.DataFrame(
+        {
+            "A": [0, 1, 0, 1, 0, 1, 0, 1],
+            "B": [0, 0, 1, 1, 0, 0, 1, 1],
+            "target_score": [0.8, 0.9, np.nan, 0.85, 0.7, 0.95, 0.6, 0.9],
+            "sample_id": [1, 2, 3, 4, 1, 2, 3, 4],
+        }
+    )
+    anova_res = ANOVAEngine.run_anova(
+        data=df, factor_cols=["A", "B"], target_col="target_score"
+    )
     assert anova_res.r_squared > 0.0
     assert len(anova_res.main_effects) == 2
 
@@ -178,15 +192,24 @@ def test_judge_cache_hit(tmp_path):
         call_count[0] += 1
         return StubDeepEvalJudge(score=0.95)
 
-    metric = DeepEvalMetric(metric_factory=counting_factory, name="cached_judge", cache=cache, judge_model_id="default")
+    metric = DeepEvalMetric(
+        metric_factory=counting_factory,
+        name="cached_judge",
+        cache=cache,
+        judge_model_id="default",
+    )
 
     # Call 1: Miss
-    score1 = metric.compute(prediction="Output A", target="Target A", input_data={"input": "Prompt A"})
+    score1 = metric.compute(
+        prediction="Output A", target="Target A", input_data={"input": "Prompt A"}
+    )
     assert score1 == 0.95
     assert call_count[0] == 1
 
     # Call 2: Hit (factory not invoked)
-    score2 = metric.compute(prediction="Output A", target="Target A", input_data={"input": "Prompt A"})
+    score2 = metric.compute(
+        prediction="Output A", target="Target A", input_data={"input": "Prompt A"}
+    )
     assert score2 == 0.95
     assert call_count[0] == 1  # Still 1!
 
@@ -195,8 +218,12 @@ def test_mode_pass():
     stub_high = StubDeepEvalJudge(score=0.85)
     stub_low = StubDeepEvalJudge(score=0.30)
 
-    metric_pass = DeepEvalMetric(metric_factory=lambda: stub_high, name="pass_metric", mode="pass")
-    metric_fail = DeepEvalMetric(metric_factory=lambda: stub_low, name="fail_metric", mode="pass")
+    metric_pass = DeepEvalMetric(
+        metric_factory=lambda: stub_high, name="pass_metric", mode="pass"
+    )
+    metric_fail = DeepEvalMetric(
+        metric_factory=lambda: stub_low, name="fail_metric", mode="pass"
+    )
 
     assert metric_pass.compute("pred") == 1.0
     assert metric_fail.compute("pred") == 0.0

@@ -7,7 +7,6 @@ from __future__ import annotations
 import warnings
 from typing import Any, Dict, List, Optional
 
-
 CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
     "2(3-1)III": {
         "plan_id": "2(3-1)III",
@@ -304,8 +303,17 @@ CATALOG_DESIGNS: Dict[str, Dict[str, Any]] = {
         "runs": 16,
         "base_factors": ["A", "B", "C", "D"],
         "generators": [
-            "E=AB", "F=AC", "G=AD", "H=BC", "J=BD", "K=CD",
-            "L=ABC", "M=ABD", "N=ACD", "O=BCD", "P=ABCD"
+            "E=AB",
+            "F=AC",
+            "G=AD",
+            "H=BC",
+            "J=BD",
+            "K=CD",
+            "L=ABC",
+            "M=ABD",
+            "N=ACD",
+            "O=BCD",
+            "P=ABCD",
         ],
         "identity": "I = ABE = ACF = ADG = BCH = BDJ = CDK = ABCL = ABDM = ACDN = BCDO = ABCDP = ...",
     },

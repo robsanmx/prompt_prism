@@ -5,6 +5,7 @@ Unit tests for EffectAnalyzer, ANOVAEngine, and OptimalPromptFinder.
 import numpy as np
 import pandas as pd
 import pytest
+
 from prompt_prism.analysis.anova import ANOVAEngine
 from prompt_prism.analysis.effects import EffectAnalyzer
 from prompt_prism.analysis.optimizer import OptimalPromptFinder
@@ -38,16 +39,18 @@ def synthetic_factorial_dataset():
             score = 0.50 + 0.35 * a - 0.25 * b + 0.15 * c + 0.0 * d + 0.0 * e + noise
             score = float(np.clip(score, 0.0, 1.0))
 
-            records.append({
-                "run_id": row["run_id"],
-                "sample_id": s_id,
-                "A": a,
-                "B": b,
-                "C": c,
-                "D": d,
-                "E": e,
-                "f1_score": score,
-            })
+            records.append(
+                {
+                    "run_id": row["run_id"],
+                    "sample_id": s_id,
+                    "A": a,
+                    "B": b,
+                    "C": c,
+                    "D": d,
+                    "E": e,
+                    "f1_score": score,
+                }
+            )
 
     return pd.DataFrame(records)
 

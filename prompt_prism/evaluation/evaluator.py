@@ -5,6 +5,7 @@ Evaluator orchestrator for computing multiple metrics across experiment trials.
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+
 import numpy as np
 import pandas as pd
 
@@ -23,7 +24,7 @@ from .metrics import (
 class Evaluator:
     """
     Manages a suite of metrics and calculates evaluation scores for trials.
-    
+
     Attributes:
         metrics: Registered list of metric instances.
         on_error: Error handling mode ("nan", "zero", "raise", or None for auto-detection).
@@ -47,7 +48,9 @@ class Evaluator:
             self.add_metric(ExactMatch())
             self.add_metric(F1Score())
 
-    def add_metric(self, metric: Union[Metric, Callable[..., float]], name: Optional[str] = None) -> Metric:
+    def add_metric(
+        self, metric: Union[Metric, Callable[..., float]], name: Optional[str] = None
+    ) -> Metric:
         """Add a metric to the suite. Raises ValueError on duplicate names."""
         if isinstance(metric, Metric):
             m_obj = metric
@@ -59,7 +62,9 @@ class Evaluator:
             raise TypeError(f"Expected Metric instance or callable, got {type(metric)}")
 
         if any(existing.name == m_obj.name for existing in self.metrics):
-            raise ValueError(f"Duplicate metric name '{m_obj.name}' already registered in Evaluator.")
+            raise ValueError(
+                f"Duplicate metric name '{m_obj.name}' already registered in Evaluator."
+            )
 
         self.metrics.append(m_obj)
         return m_obj
@@ -74,7 +79,7 @@ class Evaluator:
     ) -> Dict[str, float]:
         """
         Compute all configured metrics for a single prediction.
-        
+
         If a metric fails:
         - If on_error="raise", raises the exception.
         - If on_error="nan" (or metric.is_llm_judge=True and on_error is None), assigns float("nan").
@@ -119,4 +124,6 @@ class Evaluator:
             results.append(scores)
 
         scores_df = pd.DataFrame(results)
-        return pd.concat([df.reset_index(drop=True), scores_df.reset_index(drop=True)], axis=1)
+        return pd.concat(
+            [df.reset_index(drop=True), scores_df.reset_index(drop=True)], axis=1
+        )

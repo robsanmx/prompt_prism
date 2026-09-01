@@ -5,10 +5,15 @@ Design Recommender: Recommends the optimal DoE design plan given factors, budget
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence, Union
+
 from ..core.factors import Factor, FactorSet
 from ..core.models import DesignMatrix
 from .catalog import CATALOG_DESIGNS, list_available_plans
-from .generators import FractionalFactorialGenerator, FullFactorialGenerator, PlackettBurmanGenerator
+from .generators import (
+    FractionalFactorialGenerator,
+    FullFactorialGenerator,
+    PlackettBurmanGenerator,
+)
 
 
 def recommend_design(
@@ -19,13 +24,13 @@ def recommend_design(
 ) -> DesignMatrix:
     """
     Select and build the most statistically powerful and cost-effective design matrix.
-    
+
     Args:
         factors: Number of factors (int) OR list of Factor objects / names / FactorSet.
         max_runs: Optional hard upper limit on the number of prompt variations / runs.
         min_resolution: Minimum desired resolution (3 = screening, 4 = unaliased main effects, 5 = unaliased interactions).
         prefer_plackett_burman: If True and budget is tight, prefers PB screening designs.
-        
+
     Returns:
         DesignMatrix ready for execution.
     """
@@ -36,7 +41,9 @@ def recommend_design(
 
     if isinstance(factors, int):
         num_factors = factors
-        factor_ids = [alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(num_factors)]
+        factor_ids = [
+            alphabet[i] if i < len(alphabet) else f"X{i+1}" for i in range(num_factors)
+        ]
         factor_names = [f"Factor_{fid}" for fid in factor_ids]
     elif isinstance(factors, FactorSet):
         num_factors = len(factors)
@@ -46,10 +53,16 @@ def recommend_design(
         num_factors = len(factors)
         for i, item in enumerate(factors):
             if isinstance(item, Factor):
-                factor_ids.append(item.id or (alphabet[i] if i < len(alphabet) else f"X{i+1}"))
+                factor_ids.append(
+                    item.id or (alphabet[i] if i < len(alphabet) else f"X{i+1}")
+                )
                 factor_names.append(item.name)
             else:
-                factor_ids.append(str(item) if len(str(item)) <= 2 else (alphabet[i] if i < len(alphabet) else f"X{i+1}"))
+                factor_ids.append(
+                    str(item)
+                    if len(str(item)) <= 2
+                    else (alphabet[i] if i < len(alphabet) else f"X{i+1}")
+                )
                 factor_names.append(str(item))
 
     # If PB screening is specifically requested
@@ -70,7 +83,7 @@ def recommend_design(
 
     # Check catalog plans for this number of factors
     matching_plans = list_available_plans(num_factors=num_factors)
-    
+
     # Filter by constraints
     candidates = []
     for plan in matching_plans:

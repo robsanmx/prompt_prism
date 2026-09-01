@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from statsmodels.stats.multitest import multipletests
+
 from prompt_prism.analysis.anova import ANOVAEngine
 from prompt_prism.analysis.effects import EffectAnalyzer
 from prompt_prism.design.generators import FractionalFactorialGenerator
@@ -33,12 +34,18 @@ def test_recovers_known_effect():
             noise = np.random.normal(0, 0.005)
             score = base_item + 0.030 * (a - 0.5) + noise
             score = float(np.clip(score, 0.0, 1.0))
-            records.append({
-                "sample_id": s_id,
-                "run_id": row["run_id"],
-                "A": a, "B": row["B"], "C": row["C"], "D": row["D"], "E": row["E"],
-                "metric": score,
-            })
+            records.append(
+                {
+                    "sample_id": s_id,
+                    "run_id": row["run_id"],
+                    "A": a,
+                    "B": row["B"],
+                    "C": row["C"],
+                    "D": row["D"],
+                    "E": row["E"],
+                    "metric": score,
+                }
+            )
 
     df = pd.DataFrame(records)
 
@@ -74,12 +81,18 @@ def test_null_effects_not_significant():
         for _, row in base_df.iterrows():
             noise = np.random.normal(0, 0.05)
             score = float(np.clip(base_item + noise, 0.0, 1.0))
-            records.append({
-                "sample_id": s_id,
-                "run_id": row["run_id"],
-                "A": row["A"], "B": row["B"], "C": row["C"], "D": row["D"], "E": row["E"],
-                "metric": score,
-            })
+            records.append(
+                {
+                    "sample_id": s_id,
+                    "run_id": row["run_id"],
+                    "A": row["A"],
+                    "B": row["B"],
+                    "C": row["C"],
+                    "D": row["D"],
+                    "E": row["E"],
+                    "metric": score,
+                }
+            )
 
     df = pd.DataFrame(records)
     res = ANOVAEngine.run_anova(
@@ -123,8 +136,8 @@ def test_bh_fdr_monotone():
     np.testing.assert_array_almost_equal(res, expected_q)
     # Check monotonicity: if p1 <= p2 then q1 <= q2
     for i in range(len(res) - 1):
-        if p_raw[i] <= p_raw[i+1]:
-            assert res[i] <= res[i+1] + 1e-9
+        if p_raw[i] <= p_raw[i + 1]:
+            assert res[i] <= res[i + 1] + 1e-9
 
 
 def test_main_effects_agree_with_anova_table():
@@ -139,12 +152,18 @@ def test_main_effects_agree_with_anova_table():
             a = row["A"]
             b = row["B"]
             score = 0.5 + 0.2 * a - 0.15 * b + np.random.normal(0, 0.05)
-            records.append({
-                "sample_id": s_id,
-                "run_id": row["run_id"],
-                "A": a, "B": b, "C": row["C"], "D": row["D"], "E": row["E"],
-                "metric": float(np.clip(score, 0.0, 1.0)),
-            })
+            records.append(
+                {
+                    "sample_id": s_id,
+                    "run_id": row["run_id"],
+                    "A": a,
+                    "B": b,
+                    "C": row["C"],
+                    "D": row["D"],
+                    "E": row["E"],
+                    "metric": float(np.clip(score, 0.0, 1.0)),
+                }
+            )
 
     df = pd.DataFrame(records)
     res = ANOVAEngine.run_anova(
@@ -155,9 +174,13 @@ def test_main_effects_agree_with_anova_table():
         alpha=0.05,
     )
 
-    anova_sig_map = {row.source: row.is_significant for row in res.anova_table if row.source != "Residual"}
+    anova_sig_map = {
+        row.source: row.is_significant
+        for row in res.anova_table
+        if row.source != "Residual"
+    }
     for eff in res.main_effects:
         if eff.factor_id in anova_sig_map:
-            assert eff.is_significant == anova_sig_map[eff.factor_id], (
-                f"Disagreement for factor {eff.factor_id}: effect says {eff.is_significant}, ANOVA says {anova_sig_map[eff.factor_id]}"
-            )
+            assert (
+                eff.is_significant == anova_sig_map[eff.factor_id]
+            ), f"Disagreement for factor {eff.factor_id}: effect says {eff.is_significant}, ANOVA says {anova_sig_map[eff.factor_id]}"

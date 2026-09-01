@@ -83,7 +83,9 @@ class AliasStructure:
 
         return sorted(list(aliases), key=lambda a: (len(a), a))
 
-    def get_all_aliases(self, factors: Sequence[str], max_order: int = 2) -> Dict[str, List[str]]:
+    def get_all_aliases(
+        self, factors: Sequence[str], max_order: int = 2
+    ) -> Dict[str, List[str]]:
         """
         Map each main factor and 2-factor interaction to its alias chain.
         """
@@ -112,9 +114,15 @@ class AliasStructure:
             f"Defining Relation: I = {' = '.join(self.defining_relation) if self.defining_relation else 'None'}",
         ]
         if self.resolution == 3:
-            lines.append("⚠️ WARNING: Resolution III design — Main effects are confounded with 2-factor interactions.")
+            lines.append(
+                "⚠️ WARNING: Resolution III design — Main effects are confounded with 2-factor interactions."
+            )
         elif self.resolution == 4:
-            lines.append("ℹ️ Resolution IV design — Main effects are unaliased with 2-factor interactions, but 2-factor interactions are aliased with each other.")
+            lines.append(
+                "ℹ️ Resolution IV design — Main effects are unaliased with 2-factor interactions, but 2-factor interactions are aliased with each other."
+            )
         elif self.resolution >= 5:
-            lines.append("✅ Resolution V+ design — Main effects and 2-factor interactions are unaliased with each other.")
+            lines.append(
+                "✅ Resolution V+ design — Main effects and 2-factor interactions are unaliased with each other."
+            )
         return "\n".join(lines)

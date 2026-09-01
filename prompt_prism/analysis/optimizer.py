@@ -5,6 +5,7 @@ Optimal Prompt Configuration Finder based on Factorial Effects and ANOVA.
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Tuple
+
 import numpy as np
 from pydantic import BaseModel, Field
 
@@ -14,6 +15,7 @@ from .effects import FactorEffect
 
 class OptimalPromptRecommendation(BaseModel):
     """Container for optimal prompt factor settings and expected performance gain."""
+
     target_metric: str
     optimal_factor_levels: Dict[str, int]
     factor_names_map: Dict[str, str] = Field(default_factory=dict)
@@ -68,12 +70,16 @@ class OptimalPromptFinder:
 
         # Compute predicted optimal and baseline scores using fitted OLS model coefficients
         ols_model = anova_result.metadata.get("ols_model")
-        res_resolution = anova_result.alias_structure.resolution if anova_result.alias_structure else 8
+        res_resolution = (
+            anova_result.alias_structure.resolution
+            if anova_result.alias_structure
+            else 8
+        )
 
         if ols_model and hasattr(ols_model, "params"):
             params = dict(ols_model.params)
             intercept = float(params.get("Intercept", 0.0))
-            
+
             # Sum positive drivers for optimal prediction
             opt_delta_sum = 0.0
             var_sum = 0.0
@@ -86,12 +92,24 @@ class OptimalPromptFinder:
                         opt_delta_sum += float(v)
                         break
 
-            baseline_score = float(np.clip(intercept, 0.0, 1.0)) if intercept > 0 else float(anova_result.main_effects[0].mean_level_0 if anova_result.main_effects else 0.5)
+            baseline_score = (
+                float(np.clip(intercept, 0.0, 1.0))
+                if intercept > 0
+                else float(
+                    anova_result.main_effects[0].mean_level_0
+                    if anova_result.main_effects
+                    else 0.5
+                )
+            )
             pred_optimal = float(np.clip(intercept + opt_delta_sum, 0.0, 1.0))
             expected_gain = pred_optimal - baseline_score
 
             # Approximate 95% CI for predicted gain
-            se_gain = float(np.sqrt(sum(e.std_error ** 2 for e in pos_drivers))) if pos_drivers else 0.0
+            se_gain = (
+                float(np.sqrt(sum(e.std_error**2 for e in pos_drivers)))
+                if pos_drivers
+                else 0.0
+            )
             ci_low = expected_gain - 1.96 * se_gain
             ci_high = expected_gain + 1.96 * se_gain
         else:
@@ -104,7 +122,9 @@ class OptimalPromptFinder:
             ci_low = None
             ci_high = None
 
-        gain_pct = (expected_gain / (baseline_score if abs(baseline_score) > 1e-9 else 1.0)) * 100
+        gain_pct = (
+            expected_gain / (baseline_score if abs(baseline_score) > 1e-9 else 1.0)
+        ) * 100
 
         # Generate summary markdown
         summary_md = cls.generate_summary_markdown(
@@ -167,19 +187,23 @@ class OptimalPromptFinder:
         ]
 
         if ci_low is not None and ci_high is not None:
-            lines.append(f"- **95% Confidence Interval for Gain:** `[{ci_low:+.4f}, {ci_high:+.4f}]`")
+            lines.append(
+                f"- **95% Confidence Interval for Gain:** `[{ci_low:+.4f}, {ci_high:+.4f}]`"
+            )
 
         lines.append("")
 
         # Add resolution caution if screening design
         if resolution == 3:
-            lines.extend([
-                "> ⚠️ **Methodological Notice (Resolution III Screening):**",
-                "> This experiment uses a Resolution III screening design. Main effects are mathematically",
-                "> confounded with 2-factor interactions. Significant factors listed below are **candidates**",
-                "> that require a confirmation run or fold-over design before production deployment.",
-                "",
-            ])
+            lines.extend(
+                [
+                    "> ⚠️ **Methodological Notice (Resolution III Screening):**",
+                    "> This experiment uses a Resolution III screening design. Main effects are mathematically",
+                    "> confounded with 2-factor interactions. Significant factors listed below are **candidates**",
+                    "> that require a confirmation run or fold-over design before production deployment.",
+                    "",
+                ]
+            )
 
         # Positive Drivers
         if resolution >= 5:
@@ -187,12 +211,18 @@ class OptimalPromptFinder:
         elif resolution == 4:
             header_pos = "#### 🏆 Statistically Significant Boosters (ENABLE - Res IV clean main effects):"
         else:
-            header_pos = "#### 🔍 Candidate Positive Drivers (CONFIRMATION RECOMMENDED):"
+            header_pos = (
+                "#### 🔍 Candidate Positive Drivers (CONFIRMATION RECOMMENDED):"
+            )
 
         lines.append(header_pos)
         if pos_drivers:
             for d in pos_drivers:
-                alias_str = f" [Aliased with: {', '.join(d.aliased_with)}]" if d.aliased_with else ""
+                alias_str = (
+                    f" [Aliased with: {', '.join(d.aliased_with)}]"
+                    if d.aliased_with
+                    else ""
+                )
                 lines.append(
                     f"  - **{d.factor_name}** (`{d.factor_id}`): effect = {d.effect_delta:+.4f} ({d.relative_change_pct:+.1f}%), "
                     f"p = {d.p_value:.4g}, Cohen's d = {d.cohens_d:.2f}{alias_str}"
@@ -211,7 +241,11 @@ class OptimalPromptFinder:
         lines.append(header_neg)
         if neg_factors:
             for d in neg_factors:
-                alias_str = f" [Aliased with: {', '.join(d.aliased_with)}]" if d.aliased_with else ""
+                alias_str = (
+                    f" [Aliased with: {', '.join(d.aliased_with)}]"
+                    if d.aliased_with
+                    else ""
+                )
                 lines.append(
                     f"  - **{d.factor_name}** (`{d.factor_id}`): effect = {d.effect_delta:+.4f} ({d.relative_change_pct:+.1f}%), "
                     f"p = {d.p_value:.4g}{alias_str}"
@@ -222,7 +256,9 @@ class OptimalPromptFinder:
         lines.append("")
 
         # Neutral Factors
-        lines.append("#### ℹ️ Neutral / Non-Significant Factors (Recommended to Omit to Save Tokens):")
+        lines.append(
+            "#### ℹ️ Neutral / Non-Significant Factors (Recommended to Omit to Save Tokens):"
+        )
         if neutral_factors:
             for d in neutral_factors:
                 lines.append(
@@ -230,6 +266,8 @@ class OptimalPromptFinder:
                     f"(p = {d.p_value:.4g}, not significant)"
                 )
         else:
-            lines.append("  - None (all tested factors had statistically significant effects).")
+            lines.append(
+                "  - None (all tested factors had statistically significant effects)."
+            )
 
         return "\n".join(lines)

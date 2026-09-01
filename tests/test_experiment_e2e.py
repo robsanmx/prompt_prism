@@ -3,6 +3,7 @@ End-to-End Integration test for complete PromptPrism Experiment workflow.
 """
 
 import pandas as pd
+
 from prompt_prism.core.factors import Factor
 from prompt_prism.evaluation.metrics import ExactMatch, F1Score
 from prompt_prism.experiment import Experiment
@@ -12,18 +13,45 @@ from prompt_prism.runner.client import MockLLM
 def test_full_experiment_e2e(tmp_path):
     # 1. Define Factors
     factors = [
-        Factor.binary("persona", level_0_content="", level_1_content="You are an expert catalog specialist."),
-        Factor.binary("few_shot", level_0_content="", level_1_content="Example: Brand=Nike"),
+        Factor.binary(
+            "persona",
+            level_0_content="",
+            level_1_content="You are an expert catalog specialist.",
+        ),
+        Factor.binary(
+            "few_shot", level_0_content="", level_1_content="Example: Brand=Nike"
+        ),
         Factor.binary("cot", level_0_content="", level_1_content="Think step by step."),
-        Factor.binary("format_json", level_0_content="PlainText", level_1_content="StrictJSON"),
-        Factor.binary("constraints", level_0_content="", level_1_content="Only extract existing values."),
+        Factor.binary(
+            "format_json", level_0_content="PlainText", level_1_content="StrictJSON"
+        ),
+        Factor.binary(
+            "constraints",
+            level_0_content="",
+            level_1_content="Only extract existing values.",
+        ),
     ]
 
     # 2. Test Dataset
     dataset = [
-        {"id": 1, "title": "Nike Air Max 90 Red", "description": "Men sneakers size 42", "target": "Brand: Nike, Color: Red"},
-        {"id": 2, "title": "Adidas Ultraboost 21", "description": "Running shoes black", "target": "Brand: Adidas, Color: Black"},
-        {"id": 3, "title": "Puma Suede Classic", "description": "Retro sneakers blue", "target": "Brand: Puma, Color: Blue"},
+        {
+            "id": 1,
+            "title": "Nike Air Max 90 Red",
+            "description": "Men sneakers size 42",
+            "target": "Brand: Nike, Color: Red",
+        },
+        {
+            "id": 2,
+            "title": "Adidas Ultraboost 21",
+            "description": "Running shoes black",
+            "target": "Brand: Adidas, Color: Black",
+        },
+        {
+            "id": 3,
+            "title": "Puma Suede Classic",
+            "description": "Retro sneakers blue",
+            "target": "Brand: Puma, Color: Blue",
+        },
     ]
 
     # 3. Create simulated response generator that responds better when persona and few_shot are present
@@ -84,7 +112,9 @@ def test_full_experiment_e2e(tmp_path):
     # 9. Get Configured Optimal Template
     opt_template = exp.get_optimal_prompt_template()
     composed = exp.composer.compose_text(
-        run_config=exp.design.runs[0].model_copy(update={"factor_levels": opt.optimal_factor_levels}),
+        run_config=exp.design.runs[0].model_copy(
+            update={"factor_levels": opt.optimal_factor_levels}
+        ),
         data={"title": "Test Shoe", "description": "Test Desc"},
     )
     assert "expert catalog specialist" in composed

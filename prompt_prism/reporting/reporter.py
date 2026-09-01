@@ -7,6 +7,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
+
 import pandas as pd
 
 from ..analysis.anova import ANOVAResult
@@ -49,7 +50,7 @@ class AnalysisReport:
         Generate a complete AnalysisReport from ExperimentResults with RCBD blocking and aliasing.
         """
         from ..analysis.anova import ANOVAEngine
-        
+
         df = experiment_results.to_dataframe()
         factor_cols = experiment_results.design.factor_ids
 
@@ -95,28 +96,34 @@ class AnalysisReport:
         ]
 
         if self.anova_result and self.anova_result.block_col:
-            lines.append(f"**Blocking Variable (RCBD):** `{self.anova_result.block_col}`  ")
+            lines.append(
+                f"**Blocking Variable (RCBD):** `{self.anova_result.block_col}`  "
+            )
 
-        lines.extend([
-            f"",
-            f"---",
-            f"",
-            f"## 1. Executive Summary & Optimal Prompt Recipe",
-            f"",
-        ])
+        lines.extend(
+            [
+                f"",
+                f"---",
+                f"",
+                f"## 1. Executive Summary & Optimal Prompt Recipe",
+                f"",
+            ]
+        )
 
         if self.optimal_recommendation:
             lines.append(self.optimal_recommendation.summary_markdown)
             lines.append("")
 
-        lines.extend([
-            f"---",
-            f"",
-            f"## 2. Factor Main Effects Ranking",
-            f"",
-            f"| Factor ID | Factor Name | Level 0 Mean | Level 1 Mean | Effect (Δ) | Rel % | t-statistic | p-value | p (Bonf) | Cohen's d | Significant? | Action |",
-            f"|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|",
-        ])
+        lines.extend(
+            [
+                f"---",
+                f"",
+                f"## 2. Factor Main Effects Ranking",
+                f"",
+                f"| Factor ID | Factor Name | Level 0 Mean | Level 1 Mean | Effect (Δ) | Rel % | t-statistic | p-value | p (Bonf) | Cohen's d | Significant? | Action |",
+                f"|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|",
+            ]
+        )
 
         if self.anova_result:
             for eff in self.anova_result.main_effects:
@@ -135,38 +142,46 @@ class AnalysisReport:
                     f"{eff.cohens_d:.2f} | {sig_badge} | {action_badge} |"
                 )
 
-        lines.extend([
-            f"",
-            f"---",
-            f"",
-            f"## 3. Analysis of Variance (ANOVA) Table",
-            f"",
-            f"| Source | Factor Name | Sum of Sq (SS) | DF | Mean Sq (MS) | F-value | PR(>F) | Partial η² | Significant |",
-            f"|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
-        ])
+        lines.extend(
+            [
+                f"",
+                f"---",
+                f"",
+                f"## 3. Analysis of Variance (ANOVA) Table",
+                f"",
+                f"| Source | Factor Name | Sum of Sq (SS) | DF | Mean Sq (MS) | F-value | PR(>F) | Partial η² | Significant |",
+                f"|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+            ]
+        )
 
         if self.anova_result:
             for row in self.anova_result.anova_table:
                 f_str = f"{row.f_statistic:.3f}" if row.f_statistic is not None else "-"
                 p_str = f"{row.p_value:.4g}" if row.p_value is not None else "-"
-                eta_str = f"{row.partial_eta_sq:.4f}" if row.partial_eta_sq is not None else "-"
+                eta_str = (
+                    f"{row.partial_eta_sq:.4f}"
+                    if row.partial_eta_sq is not None
+                    else "-"
+                )
                 sig_str = "✅" if row.is_significant else ""
                 lines.append(
                     f"| {row.source} | {row.factor_name} | {row.sum_sq:.4f} | {row.df:.0f} | {row.mean_sq:.4f} | {f_str} | {p_str} | {eta_str} | {sig_str} |"
                 )
 
         if self.alias_structure:
-            lines.extend([
-                f"",
-                f"---",
-                f"",
-                f"## 4. Fractional Design & Aliasing Structure",
-                f"",
-                f"- **Design Resolution:** `Res {self.alias_structure.resolution}`",
-                f"- **Defining Relation:** `I = {' = '.join(self.alias_structure.defining_relation)}`",
-                f"",
-                f"> {self.alias_structure.summary()}",
-            ])
+            lines.extend(
+                [
+                    f"",
+                    f"---",
+                    f"",
+                    f"## 4. Fractional Design & Aliasing Structure",
+                    f"",
+                    f"- **Design Resolution:** `Res {self.alias_structure.resolution}`",
+                    f"- **Defining Relation:** `I = {' = '.join(self.alias_structure.defining_relation)}`",
+                    f"",
+                    f"> {self.alias_structure.summary()}",
+                ]
+            )
 
         md_text = "\n".join(lines)
         if save_path:

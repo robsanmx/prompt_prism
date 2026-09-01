@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+
 import pandas as pd
 
 from .analysis.anova import ANOVAEngine, ANOVAResult
@@ -14,7 +15,11 @@ from .core.factors import Factor, FactorSet, FactorType, Level
 from .core.models import DesignMatrix, ExperimentResults, RunConfig
 from .design.aliasing import AliasStructure
 from .design.catalog import CATALOG_DESIGNS
-from .design.generators import FractionalFactorialGenerator, FullFactorialGenerator, PlackettBurmanGenerator
+from .design.generators import (
+    FractionalFactorialGenerator,
+    FullFactorialGenerator,
+    PlackettBurmanGenerator,
+)
 from .design.recommender import recommend_design
 from .evaluation.evaluator import Evaluator
 from .evaluation.metrics import ExactMatch, F1Score, Metric
@@ -40,7 +45,9 @@ class Experiment:
         target_metric: str = "f1_score",
         title: str = "PromptPrism Experiment",
     ):
-        self.factors = FactorSet(factors) if isinstance(factors, (list, tuple)) else factors
+        self.factors = (
+            FactorSet(factors) if isinstance(factors, (list, tuple)) else factors
+        )
         self.template = template
         self.composer = PromptComposer(template=self.template, factors=self.factors)
         self.title = title
@@ -50,7 +57,9 @@ class Experiment:
         if isinstance(design, DesignMatrix):
             self.design = design
         elif isinstance(design, str):
-            self.design = FractionalFactorialGenerator.from_plan_id(design, factor_names=self.factors.names)
+            self.design = FractionalFactorialGenerator.from_plan_id(
+                design, factor_names=self.factors.names
+            )
         else:
             self.design = recommend_design(factors=self.factors, max_runs=max_runs)
 
@@ -95,11 +104,19 @@ class Experiment:
             title=title,
         )
 
-    def estimate_judge_calls(self, dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]]]) -> int:
+    def estimate_judge_calls(
+        self, dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]]]
+    ) -> int:
         """Estimate the total number of LLM judge calls needed for this experiment."""
-        n_samples = len(dataset) if isinstance(dataset, (list, tuple, pd.DataFrame)) else len(list(dataset))
+        n_samples = (
+            len(dataset)
+            if isinstance(dataset, (list, tuple, pd.DataFrame))
+            else len(list(dataset))
+        )
         n_runs = len(self.design.runs)
-        n_judge_metrics = sum(1 for m in self.evaluator.metrics if getattr(m, "is_llm_judge", False))
+        n_judge_metrics = sum(
+            1 for m in self.evaluator.metrics if getattr(m, "is_llm_judge", False)
+        )
         return n_runs * n_samples * n_judge_metrics
 
     def run(
@@ -160,7 +177,9 @@ class Experiment:
         """
         exp_res = results or self.last_results
         if exp_res is None:
-            raise ValueError("No experiment results provided or available. Run the experiment first.")
+            raise ValueError(
+                "No experiment results provided or available. Run the experiment first."
+            )
 
         metric_name = target_metric or self.target_metric
         name_map = dict(zip(self.factors.ids, self.factors.names))
@@ -207,7 +226,9 @@ class Experiment:
                 if len(candidate_fids) >= 3:
                     break
 
-        surviving_factors = [self.factors[fid] for fid in candidate_fids if fid in self.factors.ids]
+        surviving_factors = [
+            self.factors[fid] for fid in candidate_fids if fid in self.factors.ids
+        ]
         if not surviving_factors:
             surviving_factors = list(self.factors)
 

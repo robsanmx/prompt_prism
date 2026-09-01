@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import asyncio
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+
 import numpy as np
 
 from .judge_cache import JudgeCache
@@ -15,7 +16,7 @@ from .metrics import Metric
 class DeepEvalMetric(Metric):
     """
     Wraps any DeepEval LLM judge metric as a PromptPrism Metric.
-    
+
     Attributes:
         metric_factory: A zero-argument callable returning a fresh deepeval metric instance per evaluation (thread-safe).
         name: Metric identifier.
@@ -29,6 +30,7 @@ class DeepEvalMetric(Metric):
         judge_model_id: Identifier of the backing judge model for caching.
         higher_is_better: Whether higher score represents better performance.
     """
+
     is_llm_judge: bool = True
     wants_prompt: bool = True
 
@@ -54,12 +56,24 @@ class DeepEvalMetric(Metric):
         self.judge_model_id = judge_model_id
         self.higher_is_better = higher_is_better
 
-    def _build_test_case(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]]) -> Any:
+    def _build_test_case(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]]
+    ) -> Any:
         try:
             from deepeval.test_case import LLMTestCase
         except ImportError:
             from collections import namedtuple
-            LLMTestCase = namedtuple("LLMTestCase", ["input", "actual_output", "expected_output", "context", "retrieval_context"])
+
+            LLMTestCase = namedtuple(
+                "LLMTestCase",
+                [
+                    "input",
+                    "actual_output",
+                    "expected_output",
+                    "context",
+                    "retrieval_context",
+                ],
+            )
 
         data = input_data or {}
         # Resolve input query or prompt
@@ -85,7 +99,12 @@ class DeepEvalMetric(Metric):
             retrieval_context=ret_ctx,
         )
 
-    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self,
+        prediction: Any,
+        target: Any = None,
+        input_data: Optional[Dict[str, Any]] = None,
+    ) -> float:
         """Execute the judge evaluation, checking cache and returning score or NaN on failure."""
         data = input_data or {}
         inp_str = str(data.get(self.input_key) or data.get("__prompt__") or "")
@@ -103,7 +122,11 @@ class DeepEvalMetric(Metric):
                 expected_output=exp_str,
             )
             if cached_val is not None:
-                return float(cached_val.score if self.mode == "score" else (1.0 if cached_val.success else 0.0))
+                return float(
+                    cached_val.score
+                    if self.mode == "score"
+                    else (1.0 if cached_val.success else 0.0)
+                )
 
         # Instantiate fresh metric instance for thread safety
         try:
@@ -127,13 +150,20 @@ class DeepEvalMetric(Metric):
 
             if loop and loop.is_running():
                 import concurrent.futures
+
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
                     pool.submit(metric_inst.measure, test_case).result()
             else:
                 metric_inst.measure(test_case)
 
             score_val = float(getattr(metric_inst, "score", float("nan")))
-            is_success = bool(getattr(metric_inst, "is_successful", lambda: score_val >= getattr(metric_inst, "threshold", 0.5))())
+            is_success = bool(
+                getattr(
+                    metric_inst,
+                    "is_successful",
+                    lambda: score_val >= getattr(metric_inst, "threshold", 0.5),
+                )()
+            )
             reason = getattr(metric_inst, "reason", "")
 
             # Cache the result
@@ -173,7 +203,7 @@ def deepeval_metric(
 ) -> DeepEvalMetric:
     """
     Convenience factory to create a DeepEvalMetric without manually importing deepeval.
-    
+
     Supported kinds:
         - "answer_relevancy"
         - "faithfulness"

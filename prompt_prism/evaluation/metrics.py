@@ -4,33 +4,39 @@ Comprehensive Suite of Evaluation Metrics for Prompt Optimization Experiments.
 
 from __future__ import annotations
 
-from collections import Counter
 import json
 import re
+from collections import Counter
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union
+
 import numpy as np
 
 
 class Metric:
     """
     Abstract Base Metric.
-    
+
     Attributes:
         name: Unique metric identifier used as column name in ANOVA tables.
         higher_is_better: Whether higher score represents better performance.
         is_llm_judge: Whether this metric is network-bound/LLM-based (default False).
         wants_prompt: Whether this metric needs access to the composed prompt (__prompt__ in context).
     """
+
     name: str = "metric"
     higher_is_better: bool = True
     is_llm_judge: bool = False
     wants_prompt: bool = False
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         """Compute the metric score for a single prediction and target."""
         raise NotImplementedError
 
-    def __call__(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def __call__(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         return self.compute(prediction, target, input_data)
 
 
@@ -59,7 +65,9 @@ class ExactMatch(Metric):
             s = re.sub(r"[^\w\s]", "", s)
         return re.sub(r"\s+", " ", s)
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         norm_pred = self._normalize(prediction)
         norm_target = self._normalize(target)
         return 1.0 if norm_pred == norm_target else 0.0
@@ -77,7 +85,9 @@ class F1Score(Metric):
         s = re.sub(r"[^\w\s]", " ", s)
         return s.split()
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         pred_tokens = self._tokenize(prediction)
         target_tokens = self._tokenize(target)
 
@@ -131,7 +141,12 @@ class JSONValidation(Metric):
                 return match.group(1).strip()
         return s
 
-    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self,
+        prediction: Any,
+        target: Any = None,
+        input_data: Optional[Dict[str, Any]] = None,
+    ) -> float:
         json_str = self._extract_json_str(str(prediction))
         try:
             parsed = json.loads(json_str)
@@ -182,10 +197,14 @@ class KeyValuesExtractionOverlap(Metric):
             d = {}
 
         if not self.case_sensitive:
-            return {str(k).lower().strip(): str(v).lower().strip() for k, v in d.items()}
+            return {
+                str(k).lower().strip(): str(v).lower().strip() for k, v in d.items()
+            }
         return {str(k).strip(): str(v).strip() for k, v in d.items()}
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         pred_dict = self._to_kv_dict(prediction)
         target_dict = self._to_kv_dict(target)
 
@@ -221,7 +240,9 @@ class LevenshteinSimilarity(Metric):
     def __init__(self, name: str = "levenshtein_sim"):
         self.name = name
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         s1 = str(prediction or "")
         s2 = str(target or "")
         if s1 == s2:
@@ -240,9 +261,9 @@ class LevenshteinSimilarity(Metric):
             for j in range(1, len2 + 1):
                 cost = 0 if s1[i - 1] == s2[j - 1] else 1
                 dp[i][j] = min(
-                    dp[i - 1][j] + 1,      # deletion
-                    dp[i][j - 1] + 1,      # insertion
-                    dp[i - 1][j - 1] + cost  # substitution
+                    dp[i - 1][j] + 1,  # deletion
+                    dp[i][j - 1] + 1,  # insertion
+                    dp[i - 1][j - 1] + cost,  # substitution
                 )
 
         distance = dp[len1][len2]
@@ -257,7 +278,12 @@ class RegexMatch(Metric):
         self.name = name
         self.pattern = re.compile(pattern, flags)
 
-    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self,
+        prediction: Any,
+        target: Any = None,
+        input_data: Optional[Dict[str, Any]] = None,
+    ) -> float:
         s = str(prediction or "")
         return 1.0 if self.pattern.search(s) else 0.0
 
@@ -279,8 +305,14 @@ class CustomMetric(Metric):
         self.is_llm_judge = is_llm_judge
         self.wants_prompt = wants_prompt
 
-    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self,
+        prediction: Any,
+        target: Any = None,
+        input_data: Optional[Dict[str, Any]] = None,
+    ) -> float:
         import inspect
+
         sig = inspect.signature(self.fn)
         kwargs = {}
         if "input_data" in sig.parameters:

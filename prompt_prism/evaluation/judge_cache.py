@@ -6,15 +6,17 @@ from __future__ import annotations
 
 import hashlib
 import json
-from pathlib import Path
 import sqlite3
 import threading
+from pathlib import Path
 from typing import Any, Dict, Optional
+
 from pydantic import BaseModel, Field
 
 
 class JudgeResult(BaseModel):
     """Cached output from an LLM judge evaluation."""
+
     score: float
     reason: str = ""
     success: bool = True
@@ -76,7 +78,14 @@ class JudgeCache:
         expected_output: str = "",
     ) -> Optional[JudgeResult]:
         """Look up judge score from cache."""
-        key = self._hash_key(metric_name, metric_config, judge_model_id, input_text, actual_output, expected_output)
+        key = self._hash_key(
+            metric_name,
+            metric_config,
+            judge_model_id,
+            input_text,
+            actual_output,
+            expected_output,
+        )
 
         with self._lock:
             if key in self._memory_cache:
@@ -88,7 +97,7 @@ class JudgeCache:
                     cursor = conn.cursor()
                     cursor.execute(
                         "SELECT score, reason, success, token_usage FROM judge_cache WHERE hash_key = ?",
-                        (key,)
+                        (key,),
                     )
                     row = cursor.fetchone()
                     if row:
@@ -121,7 +130,14 @@ class JudgeCache:
         token_usage: Optional[Dict[str, int]] = None,
     ) -> None:
         """Store judge result in memory and SQLite."""
-        key = self._hash_key(metric_name, metric_config, judge_model_id, input_text, actual_output, expected_output)
+        key = self._hash_key(
+            metric_name,
+            metric_config,
+            judge_model_id,
+            input_text,
+            actual_output,
+            expected_output,
+        )
         res = JudgeResult(
             score=score,
             reason=reason,

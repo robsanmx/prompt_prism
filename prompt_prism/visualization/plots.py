@@ -6,13 +6,16 @@ from __future__ import annotations
 
 import io
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
 import pandas as pd
 
 try:
     import matplotlib
+
     matplotlib.use("Agg")  # Non-interactive backend
     import matplotlib.pyplot as plt
+
     HAS_MATPLOTLIB = True
 except ImportError:
     HAS_MATPLOTLIB = False
@@ -59,16 +62,24 @@ def plot_main_effects(
 
         x_vals = [0, 1]
         y_vals = [eff.mean_level_0, eff.mean_level_1]
-        
+
         # Color based on significance
-        color = "#2b8a3e" if eff.is_significant and eff.effect_delta > 0 else (
-            "#c92a2a" if eff.is_significant and eff.effect_delta < 0 else "#495057"
+        color = (
+            "#2b8a3e"
+            if eff.is_significant and eff.effect_delta > 0
+            else (
+                "#c92a2a" if eff.is_significant and eff.effect_delta < 0 else "#495057"
+            )
         )
 
         ax.plot(x_vals, y_vals, marker="o", linewidth=2.5, markersize=8, color=color)
         ax.set_xticks([0, 1])
         ax.set_xticklabels(["0 (Off)", "1 (On)"], fontsize=9)
-        ax.set_title(f"{eff.factor_name} ({eff.factor_id})\nΔ={eff.effect_delta:+.3f} (p={eff.p_value:.3g})", fontsize=10, fontweight="medium")
+        ax.set_title(
+            f"{eff.factor_name} ({eff.factor_id})\nΔ={eff.effect_delta:+.3f} (p={eff.p_value:.3g})",
+            fontsize=10,
+            fontweight="medium",
+        )
         ax.grid(True, linestyle="--", alpha=0.5)
         ax.set_ylim(y_min - y_pad, y_max + y_pad)
 
@@ -104,28 +115,44 @@ def plot_pareto_effects(
         return None
 
     fig, ax = plt.subplots(figsize=figsize)
-    
+
     # Sort by absolute t-statistic
     sorted_effs = sorted(effects, key=lambda e: abs(e.t_statistic), reverse=False)
     names = [f"{e.factor_name} ({e.factor_id})" for e in sorted_effs]
     t_vals = [abs(e.t_statistic) for e in sorted_effs]
-    colors = ["#2b8a3e" if e.is_significant and e.effect_delta > 0 else (
-        "#c92a2a" if e.is_significant and e.effect_delta < 0 else "#868e96"
-    ) for e in sorted_effs]
+    colors = [
+        (
+            "#2b8a3e"
+            if e.is_significant and e.effect_delta > 0
+            else ("#c92a2a" if e.is_significant and e.effect_delta < 0 else "#868e96")
+        )
+        for e in sorted_effs
+    ]
 
     y_pos = np.arange(len(names))
     ax.barh(y_pos, t_vals, color=colors, height=0.6, edgecolor="black", linewidth=0.5)
     ax.set_yticks(y_pos)
     ax.set_yticklabels(names, fontsize=10)
     ax.set_xlabel("|Standardized Effect (t-value)|", fontsize=11, fontweight="medium")
-    ax.set_title(title or f"Pareto Chart of Effects ({anova_result.target_metric})", fontsize=13, fontweight="bold")
+    ax.set_title(
+        title or f"Pareto Chart of Effects ({anova_result.target_metric})",
+        fontsize=13,
+        fontweight="bold",
+    )
     ax.grid(True, axis="x", linestyle="--", alpha=0.5)
 
     # Add critical t line
     from scipy import stats
+
     df_res = anova_result.residual_df if anova_result.residual_df > 0 else 30
     t_crit = stats.t.ppf(1.0 - anova_result.alpha / 2.0, df=df_res)
-    ax.axvline(t_crit, color="#d9480f", linestyle="--", linewidth=2, label=f"Significance (α={anova_result.alpha}, t={t_crit:.2f})")
+    ax.axvline(
+        t_crit,
+        color="#d9480f",
+        linestyle="--",
+        linewidth=2,
+        label=f"Significance (α={anova_result.alpha}, t={t_crit:.2f})",
+    )
     ax.legend(loc="lower right")
 
     plt.tight_layout()
@@ -158,7 +185,12 @@ def plot_interaction_effects(
     fig_size = figsize or (cols * 4.0, rows * 3.2)
 
     fig, axes = plt.subplots(rows, cols, figsize=fig_size, sharey=True, squeeze=False)
-    fig.suptitle(title or f"2-Factor Interaction Plots ({anova_result.target_metric})", fontsize=14, fontweight="bold", y=1.02)
+    fig.suptitle(
+        title or f"2-Factor Interaction Plots ({anova_result.target_metric})",
+        fontsize=14,
+        fontweight="bold",
+        y=1.02,
+    )
 
     for idx, inter in enumerate(top_int):
         r = idx // cols
@@ -173,8 +205,18 @@ def plot_interaction_effects(
         # Line for f2 = 1
         y_f2_1 = [inter.mean_01, inter.mean_11]
 
-        ax.plot([0, 1], y_f2_0, marker="o", linewidth=2, label=f"{f2}=0", color="#1c7ed6")
-        ax.plot([0, 1], y_f2_1, marker="s", linewidth=2, linestyle="--", label=f"{f2}=1", color="#f76707")
+        ax.plot(
+            [0, 1], y_f2_0, marker="o", linewidth=2, label=f"{f2}=0", color="#1c7ed6"
+        )
+        ax.plot(
+            [0, 1],
+            y_f2_1,
+            marker="s",
+            linewidth=2,
+            linestyle="--",
+            label=f"{f2}=1",
+            color="#f76707",
+        )
 
         ax.set_xticks([0, 1])
         ax.set_xticklabels([f"{f1}=0", f"{f1}=1"], fontsize=9)
