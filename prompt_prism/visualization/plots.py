@@ -4,11 +4,9 @@ Diagnostic and Effect Visualizations (Main Effects, Pareto Chart, Interaction Ma
 
 from __future__ import annotations
 
-import io
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Optional, Tuple
 
 import numpy as np
-import pandas as pd
 
 try:
     import matplotlib
@@ -21,7 +19,21 @@ except ImportError:
     HAS_MATPLOTLIB = False
 
 from ..analysis.anova import ANOVAResult
-from ..analysis.effects import FactorEffect, InteractionEffect
+
+ENABLE_COLOR = "#2b8a3e"
+DISABLE_COLOR = "#c92a2a"
+
+
+def _action_color(action: str, neutral: str) -> str:
+    """Map a FactorEffect.action_recommendation onto its plot colour.
+
+    Both plots share this so they cannot disagree about which factor is the good one.
+    """
+    if action == "ENABLE":
+        return ENABLE_COLOR
+    if action == "DISABLE":
+        return DISABLE_COLOR
+    return neutral
 
 
 def plot_main_effects(
@@ -63,14 +75,7 @@ def plot_main_effects(
         x_vals = [0, 1]
         y_vals = [eff.mean_level_0, eff.mean_level_1]
 
-        # Color based on significance
-        color = (
-            "#2b8a3e"
-            if eff.is_significant and eff.effect_delta > 0
-            else (
-                "#c92a2a" if eff.is_significant and eff.effect_delta < 0 else "#495057"
-            )
-        )
+        color = _action_color(eff.action_recommendation, neutral="#495057")
 
         ax.plot(x_vals, y_vals, marker="o", linewidth=2.5, markersize=8, color=color)
         ax.set_xticks([0, 1])
@@ -120,13 +125,11 @@ def plot_pareto_effects(
     sorted_effs = sorted(effects, key=lambda e: abs(e.t_statistic), reverse=False)
     names = [f"{e.factor_name} ({e.factor_id})" for e in sorted_effs]
     t_vals = [abs(e.t_statistic) for e in sorted_effs]
+    # R34: colour by action_recommendation, the same field plot_main_effects and the
+    # report table read. Deriving direction from the sign of the delta here made the
+    # Pareto chart paint the harmful factor green on any minimized metric.
     colors = [
-        (
-            "#2b8a3e"
-            if e.is_significant and e.effect_delta > 0
-            else ("#c92a2a" if e.is_significant and e.effect_delta < 0 else "#868e96")
-        )
-        for e in sorted_effs
+        _action_color(e.action_recommendation, neutral="#868e96") for e in sorted_effs
     ]
 
     y_pos = np.arange(len(names))
@@ -198,7 +201,6 @@ def plot_interaction_effects(
         ax = axes[r][c]
 
         f1, f2 = inter.factor_1, inter.factor_2
-        n1, n2 = inter.factor_1_name or f1, inter.factor_2_name or f2
 
         # Line for f2 = 0
         y_f2_0 = [inter.mean_00, inter.mean_10]
@@ -247,15 +249,14 @@ def generate_ascii_pareto(anova_result: ANOVAResult, max_width: int = 40) -> str
     max_t = max(abs(e.t_statistic) for e in effects) or 1.0
     lines = [
         f"=== Pareto Chart of Standardized Effects ({anova_result.target_metric}) ===",
-        f"Factor ID | Name                     | Effect Δ | t-value | Chart",
-        f"----------+--------------------------+----------+---------+-----------------------------------------",
+        "Factor ID | Name                     | Effect Δ | t-value | Chart",
+        "----------+--------------------------+----------+---------+-----------------------------------------",
     ]
 
     for e in effects:
         t_abs = abs(e.t_statistic)
         bar_len = int((t_abs / max_t) * max_width)
         symbol = "█" if e.is_significant else "░"
-        sign_char = "+" if e.effect_delta >= 0 else "-"
         bar = symbol * bar_len
         flag = " [*** SIG ***]" if e.is_significant else ""
         lines.append(

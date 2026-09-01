@@ -4,15 +4,12 @@ Automated Reporting: Generates rich Markdown, HTML, and JSON reports from DoE & 
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
-
-import pandas as pd
+from typing import Dict, Optional, Union
 
 from ..analysis.anova import ANOVAResult
 from ..analysis.optimizer import OptimalPromptFinder, OptimalPromptRecommendation
-from ..core.models import DesignMatrix, ExperimentResults
+from ..core.models import ExperimentResults
 from ..design.aliasing import AliasStructure
 
 
@@ -45,6 +42,7 @@ class AnalysisReport:
         include_interactions: bool = False,
         alpha: float = 0.05,
         title: str = "Prompt Design of Experiments (DoE) & ANOVA Analysis Report",
+        maximize: bool = True,
     ) -> AnalysisReport:
         """
         Generate a complete AnalysisReport from ExperimentResults with RCBD blocking and aliasing.
@@ -69,12 +67,14 @@ class AnalysisReport:
             alias_structure=alias_struct,
             include_interactions=include_interactions,
             alpha=alpha,
+            maximize=maximize,
         )
 
         # Optimal prompt recommendation
         optimal_rec = OptimalPromptFinder.find_optimal_prompt(
             anova_result=anova_res,
             factor_names_map=factor_name_map,
+            maximize=maximize,
         )
 
         return cls(
@@ -89,7 +89,7 @@ class AnalysisReport:
         """Render report as detailed GitHub-flavored Markdown."""
         lines = [
             f"# {self.title}",
-            f"",
+            "",
             f"**Target Metric:** `{self.anova_result.target_metric if self.anova_result else 'N/A'}`  ",
             f"**Model R²:** `{self.anova_result.r_squared:.4f}` (Adj. R²: `{self.anova_result.r_squared_adj:.4f}`)  ",
             f"**Significance Level (α):** `{self.anova_result.alpha if self.anova_result else 0.05}`  ",
@@ -102,11 +102,11 @@ class AnalysisReport:
 
         lines.extend(
             [
-                f"",
-                f"---",
-                f"",
-                f"## 1. Executive Summary & Optimal Prompt Recipe",
-                f"",
+                "",
+                "---",
+                "",
+                "## 1. Executive Summary & Optimal Prompt Recipe",
+                "",
             ]
         )
 
@@ -116,12 +116,12 @@ class AnalysisReport:
 
         lines.extend(
             [
-                f"---",
-                f"",
-                f"## 2. Factor Main Effects Ranking",
-                f"",
-                f"| Factor ID | Factor Name | Level 0 Mean | Level 1 Mean | Effect (Δ) | Rel % | t-statistic | p-value | p (Bonf) | Cohen's d | Significant? | Action |",
-                f"|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|",
+                "---",
+                "",
+                "## 2. Factor Main Effects Ranking",
+                "",
+                "| Factor ID | Factor Name | Level 0 Mean | Level 1 Mean | Effect (Δ) | Rel % | t-statistic | p-value | p (Bonf) | Cohen's d | Significant? | Action |",
+                "|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|",
             ]
         )
 
@@ -144,13 +144,13 @@ class AnalysisReport:
 
         lines.extend(
             [
-                f"",
-                f"---",
-                f"",
-                f"## 3. Analysis of Variance (ANOVA) Table",
-                f"",
-                f"| Source | Factor Name | Sum of Sq (SS) | DF | Mean Sq (MS) | F-value | PR(>F) | Partial η² | Significant |",
-                f"|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
+                "",
+                "---",
+                "",
+                "## 3. Analysis of Variance (ANOVA) Table",
+                "",
+                "| Source | Factor Name | Sum of Sq (SS) | DF | Mean Sq (MS) | F-value | PR(>F) | Partial η² | Significant |",
+                "|:---|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|",
             ]
         )
 
@@ -171,14 +171,14 @@ class AnalysisReport:
         if self.alias_structure:
             lines.extend(
                 [
-                    f"",
-                    f"---",
-                    f"",
-                    f"## 4. Fractional Design & Aliasing Structure",
-                    f"",
+                    "",
+                    "---",
+                    "",
+                    "## 4. Fractional Design & Aliasing Structure",
+                    "",
                     f"- **Design Resolution:** `Res {self.alias_structure.resolution}`",
                     f"- **Defining Relation:** `I = {' = '.join(self.alias_structure.defining_relation)}`",
-                    f"",
+                    "",
                     f"> {self.alias_structure.summary()}",
                 ]
             )

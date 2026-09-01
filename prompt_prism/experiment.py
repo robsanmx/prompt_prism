@@ -5,29 +5,20 @@ Top-Level Experiment Orchestrator for Prompt Optimization using Fractional Facto
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, Optional, Sequence, Union
 
 import pandas as pd
 
-from .analysis.anova import ANOVAEngine, ANOVAResult
-from .analysis.optimizer import OptimalPromptFinder, OptimalPromptRecommendation
-from .core.factors import Factor, FactorSet, FactorType, Level
-from .core.models import DesignMatrix, ExperimentResults, RunConfig
-from .design.aliasing import AliasStructure
-from .design.catalog import CATALOG_DESIGNS
-from .design.generators import (
-    FractionalFactorialGenerator,
-    FullFactorialGenerator,
-    PlackettBurmanGenerator,
-)
+from .core.factors import Factor, FactorSet
+from .core.models import DesignMatrix, ExperimentResults
+from .design.generators import FractionalFactorialGenerator
 from .design.recommender import recommend_design
 from .evaluation.evaluator import Evaluator
 from .evaluation.metrics import ExactMatch, F1Score, Metric
 from .reporting.reporter import AnalysisReport
-from .runner.client import CallableLLM, LLMClient
+from .runner.client import LLMClient
 from .runner.runner import ExperimentRunner
-from .template.composer import PromptComposer, PromptSection, PromptTemplate
-from .visualization.plots import plot_main_effects, plot_pareto_effects
+from .template.composer import PromptComposer, PromptTemplate
 
 
 class Experiment:
@@ -87,6 +78,10 @@ class Experiment:
     ) -> Experiment:
         """
         Create an Experiment directly from a list of Factors and templates.
+
+        Note: Supplying `system_prompt` assigns `role="system"` and configures the runner
+        to pass structured chat messages (`List[Dict[str, str]]`) to the LLM client rather
+        than a single formatted text string.
         """
         factor_set = FactorSet(factors)
         template = PromptTemplate.from_factors(
@@ -171,6 +166,7 @@ class Experiment:
         block_by: Optional[str] = "sample_id",
         include_interactions: bool = False,
         alpha: float = 0.05,
+        maximize: Optional[bool] = None,
     ) -> AnalysisReport:
         """
         Perform ANOVA and Main Effects analysis on the experiment results using RCBD blocking.
@@ -184,6 +180,13 @@ class Experiment:
         metric_name = target_metric or self.target_metric
         name_map = dict(zip(self.factors.ids, self.factors.names))
 
+        if maximize is None:
+            maximize = True
+            for m in self.evaluator.metrics:
+                if m.name == metric_name:
+                    maximize = getattr(m, "higher_is_better", True)
+                    break
+
         self.last_report = AnalysisReport.generate(
             experiment_results=exp_res,
             target_metric=metric_name,
@@ -192,6 +195,7 @@ class Experiment:
             include_interactions=include_interactions,
             alpha=alpha,
             title=f"{self.title} - ANOVA Analysis ({metric_name})",
+            maximize=maximize,
         )
         return self.last_report
 
@@ -242,13 +246,44 @@ class Experiment:
     def get_optimal_prompt_template(
         self,
         report: Optional[AnalysisReport] = None,
+        target_metric: Optional[str] = None,
+        maximize: Optional[bool] = None,
     ) -> PromptTemplate:
         """
         Returns a new PromptTemplate pre-configured with the statistically optimal factor levels.
+
+        Args:
+            report: An existing report to read. Defaults to the last one analyzed.
+            target_metric: Re-analyze for this metric. Ignored when `report` is passed
+                explicitly, since that report is the caller's chosen input.
+            maximize: Re-analyze in this direction. As above.
+
+        Passing `target_metric` or `maximize` re-runs `analyze()` when they disagree with the
+        cached report, rather than silently returning a recommendation computed for a
+        different metric or the opposite direction.
         """
         rep = report or self.last_report
+
+        # An explicit override must not be silently dropped just because a report is cached.
+        if (
+            report is None
+            and rep is not None
+            and (target_metric or maximize is not None)
+        ):
+            wanted_metric = target_metric or rep.anova_result.target_metric
+            wanted_maximize = (
+                maximize
+                if maximize is not None
+                else rep.anova_result.metadata.get("maximize", True)
+            )
+            if (
+                wanted_metric != rep.anova_result.target_metric
+                or wanted_maximize != rep.anova_result.metadata.get("maximize", True)
+            ):
+                rep = self.analyze(target_metric=target_metric, maximize=maximize)
+
         if rep is None:
-            rep = self.analyze()
+            rep = self.analyze(target_metric=target_metric, maximize=maximize)
 
         opt_rec = rep.optimal_recommendation
         if not opt_rec:

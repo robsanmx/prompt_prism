@@ -4,13 +4,13 @@ Optimal Prompt Configuration Finder based on Factorial Effects and ANOVA.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel, Field
 
 from .anova import ANOVAResult
-from .effects import FactorEffect
+from .effects import EffectAnalyzer, FactorEffect
 
 
 class OptimalPromptRecommendation(BaseModel):
@@ -41,6 +41,7 @@ class OptimalPromptFinder:
         anova_result: ANOVAResult,
         default_neutral_level: int = 0,
         factor_names_map: Optional[Dict[str, str]] = None,
+        maximize: bool = True,
     ) -> OptimalPromptRecommendation:
         """
         Synthesize ANOVA and factor effect estimates into the optimal prompt configuration.
@@ -52,21 +53,47 @@ class OptimalPromptFinder:
 
         optimal_levels: Dict[str, int] = {}
 
+        effects_maximize = anova_result.metadata.get("maximize", True)
+
         for effect in anova_result.main_effects:
             fid = effect.factor_id
             fname = factor_names_map.get(fid, effect.factor_name or fid)
             effect.factor_name = fname
 
-            if effect.is_significant:
-                if effect.effect_delta > 0:
-                    pos_drivers.append(effect)
-                    optimal_levels[fid] = 1  # Enable booster
-                else:
-                    neg_factors.append(effect)
-                    optimal_levels[fid] = 0  # Disable harmful
+            # EffectAnalyzer is the single producer of this field. Read it; only re-derive
+            # (via that same rule, into a local) when the caller asks for a direction the
+            # effects were not computed under. Never write it back - these FactorEffect
+            # objects belong to the ANOVAResult and other consumers read them too.
+            if maximize == effects_maximize:
+                action = effect.action_recommendation
+            else:
+                action = EffectAnalyzer.resolve_action(
+                    effect.effect_delta, effect.is_significant, maximize
+                )
+
+            if action == "ENABLE":
+                pos_drivers.append(effect)
+                optimal_levels[fid] = 1  # Enable booster
+            elif action == "DISABLE":
+                neg_factors.append(effect)
+                optimal_levels[fid] = 0  # Disable harmful
             else:
                 neutral_factors.append(effect)
-                optimal_levels[fid] = default_neutral_level  # Default neutral
+                optimal_levels[fid] = default_neutral_level
+
+        # Determine prediction bounds from observed target range
+        target_min = anova_result.metadata.get("target_min")
+        target_max = anova_result.metadata.get("target_max")
+        if target_min is None or target_max is None:
+            all_means = [e.mean_level_0 for e in anova_result.main_effects] + [
+                e.mean_level_1 for e in anova_result.main_effects
+            ]
+            target_min = min(all_means) if all_means else 0.0
+            target_max = max(all_means) if all_means else 1.0
+
+        is_unit_interval = target_min >= 0.0 and target_max <= 1.0
+        bound_low = 0.0 if is_unit_interval else float(target_min)
+        bound_high = 1.0 if is_unit_interval else float(target_max)
 
         # Compute predicted optimal and baseline scores using fitted OLS model coefficients
         ols_model = anova_result.metadata.get("ols_model")
@@ -82,9 +109,6 @@ class OptimalPromptFinder:
 
             # Sum positive drivers for optimal prediction
             opt_delta_sum = 0.0
-            var_sum = 0.0
-            cov_matrix = getattr(ols_model, "cov_params", lambda: None)()
-
             for effect in pos_drivers:
                 # Find matching param key
                 for k, v in params.items():
@@ -93,16 +117,22 @@ class OptimalPromptFinder:
                         break
 
             baseline_score = (
-                float(np.clip(intercept, 0.0, 1.0))
-                if intercept > 0
+                float(np.clip(intercept, bound_low, bound_high))
+                if (intercept > 0 or not is_unit_interval)
                 else float(
                     anova_result.main_effects[0].mean_level_0
                     if anova_result.main_effects
                     else 0.5
                 )
             )
-            pred_optimal = float(np.clip(intercept + opt_delta_sum, 0.0, 1.0))
-            expected_gain = pred_optimal - baseline_score
+            pred_optimal = float(
+                np.clip(intercept + opt_delta_sum, bound_low, bound_high)
+            )
+            expected_gain = (
+                (pred_optimal - baseline_score)
+                if maximize
+                else (baseline_score - pred_optimal)
+            )
 
             # Approximate 95% CI for predicted gain
             se_gain = (
@@ -115,10 +145,20 @@ class OptimalPromptFinder:
         else:
             # Descriptive fallback
             m0_list = [e.mean_level_0 for e in anova_result.main_effects]
-            baseline_score = float(np.mean(m0_list)) if m0_list else 0.5
-            pos_gain = sum(e.effect_delta for e in pos_drivers)
-            pred_optimal = float(np.clip(baseline_score + pos_gain, 0.0, 1.0))
-            expected_gain = pred_optimal - baseline_score
+            baseline_score = (
+                float(np.mean(m0_list))
+                if m0_list
+                else (0.5 if is_unit_interval else (bound_low + bound_high) / 2)
+            )
+            delta_sum = sum(e.effect_delta for e in pos_drivers)
+            pred_optimal = float(
+                np.clip(baseline_score + delta_sum, bound_low, bound_high)
+            )
+            expected_gain = (
+                (pred_optimal - baseline_score)
+                if maximize
+                else (baseline_score - pred_optimal)
+            )
             ci_low = None
             ci_high = None
 
@@ -141,6 +181,7 @@ class OptimalPromptFinder:
             ci_high=ci_high,
             resolution=res_resolution,
             alpha=anova_result.alpha,
+            maximize=maximize,
         )
 
         return OptimalPromptRecommendation(
@@ -176,10 +217,12 @@ class OptimalPromptFinder:
         ci_high: Optional[float],
         resolution: int,
         alpha: float,
+        maximize: bool = True,
     ) -> str:
         """Format an executive prompt optimization recipe with resolution qualifications."""
+        direction_label = " (maximize)" if maximize else " (minimize)"
         lines = [
-            f"### 🎯 Optimal Prompt Configuration for `{target_metric}`",
+            f"### 🎯 Optimal Prompt Configuration for `{target_metric}`{direction_label}",
             "",
             f"- **Predicted Optimal Performance:** `{pred_optimal:.4f}`",
             f"- **Baseline Performance:** `{baseline_score:.4f}`",

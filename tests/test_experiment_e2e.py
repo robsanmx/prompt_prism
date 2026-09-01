@@ -2,8 +2,6 @@
 End-to-End Integration test for complete PromptPrism Experiment workflow.
 """
 
-import pandas as pd
-
 from prompt_prism.core.factors import Factor
 from prompt_prism.evaluation.metrics import ExactMatch, F1Score
 from prompt_prism.experiment import Experiment
@@ -111,6 +109,7 @@ def test_full_experiment_e2e(tmp_path):
 
     # 9. Get Configured Optimal Template
     opt_template = exp.get_optimal_prompt_template()
+    assert opt_template is not None
     composed = exp.composer.compose_text(
         run_config=exp.design.runs[0].model_copy(
             update={"factor_levels": opt.optimal_factor_levels}
@@ -119,3 +118,60 @@ def test_full_experiment_e2e(tmp_path):
     )
     assert "expert catalog specialist" in composed
     assert "Example: Brand=Nike" in composed
+
+
+def _minimizable_experiment():
+    """An experiment whose target metric improves when factor A is OFF."""
+    from prompt_prism.core.factors import Factor
+    from prompt_prism.evaluation.metrics import CustomMetric
+    from prompt_prism.runner.client import CallableLLM
+
+    factors = [Factor.binary("verbose", level_1_content="Be verbose.")]
+
+    def client_fn(prompt, **kwargs):
+        # Level 1 produces a longer answer; "length" is the metric we minimize.
+        return "word " * (5 if "verbose" in str(prompt).lower() else 1)
+
+    def length_metric(prediction, target=None, input_data=None):
+        return float(len(str(prediction).split()))
+
+    metric = CustomMetric(length_metric, name="length", higher_is_better=False)
+    exp = Experiment.from_factors(
+        factors=factors,
+        system_prompt="Answer the question.",
+        data_template="{{ text }}",
+        metrics=[metric],
+        target_metric="length",
+    )
+    dataset = [{"id": i, "text": f"q{i}", "target": "x"} for i in range(4)]
+    exp.run(dataset=dataset, client=CallableLLM(client_fn))
+    return exp
+
+
+def test_get_optimal_prompt_template_honors_explicit_direction():
+    """R35: an explicit maximize must not be dropped because a report is cached."""
+    exp = _minimizable_experiment()
+
+    rep_min = exp.analyze()  # auto-detects minimize from higher_is_better=False
+    assert rep_min.anova_result.metadata["maximize"] is False
+    levels_min = dict(rep_min.optimal_recommendation.optimal_factor_levels)
+
+    # Asking for the opposite direction must re-analyze, not reuse the cached report.
+    exp.get_optimal_prompt_template(maximize=True)
+    assert exp.last_report.anova_result.metadata["maximize"] is True
+    levels_max = dict(exp.last_report.optimal_recommendation.optimal_factor_levels)
+
+    assert (
+        levels_min != levels_max
+    ), "explicit maximize=True was silently ignored in favour of the cached report"
+
+
+def test_get_optimal_prompt_template_reuses_matching_report():
+    """R35: no override, or an agreeing one, keeps today's caching behavior."""
+    exp = _minimizable_experiment()
+    rep = exp.analyze()
+    exp.get_optimal_prompt_template()
+    assert exp.last_report is rep
+
+    exp.get_optimal_prompt_template(maximize=False)
+    assert exp.last_report is rep

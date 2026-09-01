@@ -5,7 +5,7 @@ Factor Main Effects and 2-Factor Interaction Effect Calculations.
 from __future__ import annotations
 
 import itertools
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 import pandas as pd
@@ -56,6 +56,20 @@ class InteractionEffect(BaseModel):
 class EffectAnalyzer:
     """Computes main effects, interaction effects, and effect sizes for DoE results."""
 
+    @staticmethod
+    def resolve_action(delta: float, is_significant: bool, maximize: bool) -> str:
+        """Map an effect delta onto ENABLE / DISABLE / OMIT_NEUTRAL.
+
+        This is the **only** place the direction rule lives. The optimizer, reporter and
+        plots all read the resulting ``FactorEffect.action_recommendation`` rather than
+        re-deriving direction from the sign of the delta - re-deriving it in four places is
+        how a minimize report ended up contradicting its own charts.
+        """
+        if not is_significant:
+            return "OMIT_NEUTRAL"
+        is_booster = (delta > 0) if maximize else (delta < 0)
+        return "ENABLE" if is_booster else "DISABLE"
+
     @classmethod
     def compute_main_effects(
         cls,
@@ -67,6 +81,7 @@ class EffectAnalyzer:
         col_to_safe: Optional[Dict[str, str]] = None,
         alias_structure: Optional[AliasStructure] = None,
         alpha: float = 0.05,
+        maximize: bool = True,
     ) -> List[FactorEffect]:
         """
         Compute main effect estimates for all factors on the target metric.
@@ -155,11 +170,7 @@ class EffectAnalyzer:
                     f"Confounded with 3-factor interactions: {', '.join(aliases)}"
                 )
 
-            # Action recommendation
-            if is_sig:
-                action = "ENABLE" if delta > 0 else "DISABLE"
-            else:
-                action = "OMIT_NEUTRAL"
+            action = cls.resolve_action(delta, is_sig, maximize)
 
             fname = factor_name_map.get(fid, fid)
             effects.append(
@@ -204,7 +215,6 @@ class EffectAnalyzer:
         col_to_safe = col_to_safe or {}
         interactions: List[InteractionEffect] = []
 
-        ols_params = getattr(ols_model, "params", {}) if ols_model else {}
         ols_pvalues = getattr(ols_model, "pvalues", {}) if ols_model else {}
 
         for f1, f2 in itertools.combinations(factor_cols, 2):

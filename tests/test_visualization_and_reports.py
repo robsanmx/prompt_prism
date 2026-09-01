@@ -7,8 +7,8 @@ import pandas as pd
 import pytest
 
 from prompt_prism.analysis.anova import ANOVAEngine
-from prompt_prism.analysis.effects import EffectAnalyzer
 from prompt_prism.analysis.optimizer import OptimalPromptFinder
+from prompt_prism.core.models import ExperimentResults, Trial
 from prompt_prism.design.generators import FractionalFactorialGenerator
 from prompt_prism.reporting.reporter import AnalysisReport
 from prompt_prism.visualization.plots import (
@@ -96,3 +96,70 @@ def test_analysis_report_export(sample_anova_result, tmp_path):
     assert "<!DOCTYPE html>" in html
     assert (tmp_path / "report.md").exists()
     assert (tmp_path / "report.html").exists()
+
+
+def test_report_direction_consistency(tmp_path):
+    # R19: Verify section 1 recommendation and section 2 action badges agree for maximize & minimize
+    design = FractionalFactorialGenerator.from_plan_id("2(5-1)V")
+    base_df = design.to_dataframe()
+    records = []
+    np.random.seed(42)
+    for s_id in range(5):
+        for _, row in base_df.iterrows():
+            a, b = row["A"], row["B"]
+            # A increases toxicity, B decreases toxicity
+            tox = 0.5 + 0.3 * a - 0.25 * b + np.random.normal(0, 0.02)
+            records.append(
+                {
+                    "run_id": row["run_id"],
+                    "sample_id": s_id,
+                    "A": a,
+                    "B": b,
+                    "C": row["C"],
+                    "D": row["D"],
+                    "E": row["E"],
+                    "toxicity": float(np.clip(tox, 0.0, 1.0)),
+                }
+            )
+
+    trials = [
+        Trial(
+            trial_id=f"t_{i}",
+            run_id=r["run_id"],
+            sample_id=r["sample_id"],
+            factor_levels={
+                "A": r["A"],
+                "B": r["B"],
+                "C": r["C"],
+                "D": r["D"],
+                "E": r["E"],
+            },
+            metrics={"toxicity": r["toxicity"]},
+        )
+        for i, r in enumerate(records)
+    ]
+    exp_res = ExperimentResults(experiment_id="exp_tox", design=design, trials=trials)
+
+    # 1. Maximize report
+    rep_max = AnalysisReport.generate(
+        experiment_results=exp_res,
+        target_metric="toxicity",
+        maximize=True,
+    )
+    md_max = rep_max.to_markdown()
+    assert "🟢 ENABLE" in md_max
+    assert "**A**" in md_max
+    assert rep_max.optimal_recommendation.optimal_factor_levels["A"] == 1
+    assert rep_max.optimal_recommendation.optimal_factor_levels["B"] == 0
+
+    # 2. Minimize report
+    rep_min = AnalysisReport.generate(
+        experiment_results=exp_res,
+        target_metric="toxicity",
+        maximize=False,
+    )
+    md_min = rep_min.to_markdown()
+    assert "🟢 ENABLE" in md_min
+    assert "**B**" in md_min
+    assert rep_min.optimal_recommendation.optimal_factor_levels["B"] == 1
+    assert rep_min.optimal_recommendation.optimal_factor_levels["A"] == 0

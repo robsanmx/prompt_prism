@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import itertools
 import warnings
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
@@ -120,6 +120,7 @@ class ANOVAEngine:
         max_interaction_order: int = 2,
         ss_type: int = 2,
         alpha: float = 0.05,
+        maximize: bool = True,
     ) -> ANOVAResult:
         """
         Run ANOVA on experimental data using Randomized Complete Block Design (RCBD) or standard Factorial OLS.
@@ -135,6 +136,7 @@ class ANOVAEngine:
             max_interaction_order: 2 for pairwise interactions.
             ss_type: ANOVA Sum of Squares type (1, 2, or 3).
             alpha: Significance threshold (default 0.05).
+            maximize: Whether higher score is better for the target metric (default True).
         """
         factor_name_map = factor_name_map or {}
         included_cols = [c for c in factor_cols if c in data.columns] + [target_col]
@@ -243,6 +245,7 @@ class ANOVAEngine:
             col_to_safe=col_to_safe,
             alias_structure=alias_structure,
             alpha=alpha,
+            maximize=maximize,
         )
 
         interactions = EffectAnalyzer.compute_interaction_effects(
@@ -341,12 +344,16 @@ class ANOVAEngine:
                 row_objects[r_idx].p_value_bonferroni = min(1.0, p * m_tests)
                 row_objects[r_idx].p_value_fdr = fdr_p_values[i]
 
-        # Factor classification strictly aligned with unified main effects
+        # Factor classification strictly aligned with unified main effects and action recommendations
         sig_pos = [
-            e.factor_id for e in main_effects if e.is_significant and e.effect_delta > 0
+            e.factor_id
+            for e in main_effects
+            if e.is_significant and e.action_recommendation == "ENABLE"
         ]
         sig_neg = [
-            e.factor_id for e in main_effects if e.is_significant and e.effect_delta < 0
+            e.factor_id
+            for e in main_effects
+            if e.is_significant and e.action_recommendation == "DISABLE"
         ]
         neutral = [e.factor_id for e in main_effects if not e.is_significant]
 
@@ -373,5 +380,10 @@ class ANOVAEngine:
                 "num_observations": len(clean_df),
                 "ss_type": ss_type,
                 "ols_model": ols_model,
+                "target_min": float(clean_df[target_col].min()),
+                "target_max": float(clean_df[target_col].max()),
+                # The direction main_effects[*].action_recommendation was computed under,
+                # so a consumer given a different one knows to re-derive.
+                "maximize": maximize,
             },
         )
