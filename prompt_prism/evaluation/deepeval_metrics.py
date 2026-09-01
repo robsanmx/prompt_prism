@@ -390,15 +390,20 @@ def deepeval_metric(
     """
     Factory function constructing a configured DeepEvalMetric instance.
 
+    Every supported kind scores in the same direction under deepeval >= 4.2.0: higher is
+    better, including hallucination, toxicity and bias, which score the *absence* of the
+    problem. See DEEPEVAL_METRIC_SPECS for the per-kind direction and `higher_is_better`
+    to override it.
+
     Supported kinds:
         - "answer_relevancy": AnswerRelevancyMetric
         - "faithfulness": FaithfulnessMetric
         - "contextual_precision": ContextualPrecisionMetric
         - "contextual_recall": ContextualRecallMetric
         - "contextual_relevancy": ContextualRelevancyMetric
-        - "hallucination": HallucinationMetric (higher_is_better=False)
-        - "bias": BiasMetric (higher_is_better=False)
-        - "toxicity": ToxicityMetric (higher_is_better=False)
+        - "hallucination": HallucinationMetric
+        - "bias": BiasMetric
+        - "toxicity": ToxicityMetric
         - "summarization": SummarizationMetric
         - "g_eval": GEval (custom criteria / rubric)
         - "json" / "json_correctness": JsonCorrectnessMetric
