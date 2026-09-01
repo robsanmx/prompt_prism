@@ -12,9 +12,10 @@ import pandas as pd
 
 from ..core.models import DesignMatrix, ExperimentResults, RunConfig, Trial
 from ..evaluation.evaluator import Evaluator
+from ..evaluation.metrics import Metric
 from ..template.composer import PromptComposer
 from .cache import ResponseCache
-from .client import CallableLLM, LLMClient, LLMResponse, MockLLM
+from .client import CallableLLM, LLMClient, LLMResponse
 
 
 class ExperimentRunner:
@@ -33,6 +34,19 @@ class ExperimentRunner:
         id_col: str = "id",
         retry_limit: int = 2,
     ):
+        """
+        Initialize ExperimentRunner.
+
+        Args:
+            composer: PromptComposer for rendering prompts.
+            client: LLM client or callable.
+            evaluator: Evaluator instance or list of metrics.
+            cache: Optional ResponseCache.
+            max_workers: Thread pool concurrency for trial execution.
+            target_col: Column name for ground truth target.
+            id_col: Column name for sample identifier.
+            retry_limit: Number of additional attempts after the first on failure (default 2 means up to 3 total calls). Note: governs trial execution / client generation only, not inner judge metric calls.
+        """
         self.composer = composer
         self.client = client if isinstance(client, LLMClient) else CallableLLM(client)
         self.evaluator = (
@@ -42,7 +56,7 @@ class ExperimentRunner:
         self.max_workers = max(1, max_workers)
         self.target_col = target_col
         self.id_col = id_col
-        self.retry_limit = retry_limit
+        self.retry_limit = max(0, retry_limit)
 
     def run(
         self,
@@ -76,10 +90,10 @@ class ExperimentRunner:
             target_value = item.get(self.target_col, None)
 
             # Compose prompt for this run condition and sample data
-            if (
-                self.composer.template.sections
-                and self.composer.template.sections[0].role is not None
-            ):
+            has_explicit_roles = any(
+                sec.role is not None for sec in self.composer.template.sections
+            )
+            if has_explicit_roles:
                 # Chat messages format
                 prompt_content = self.composer.compose_messages(
                     run_config=run, data=item
@@ -95,24 +109,46 @@ class ExperimentRunner:
             if cached_resp:
                 llm_response = cached_resp
             else:
-                llm_response = self.client.generate(prompt_content)
-                if self.cache and not llm_response.error:
-                    self.cache.set(prompt_key, llm_response)
+                # Execute with retry_limit attempts
+                max_attempts = 1 + self.retry_limit
+                llm_response = None
+                for attempt in range(max_attempts):
+                    try:
+                        llm_response = self.client.generate(prompt_content)
+                        if not llm_response.error:
+                            if self.cache:
+                                self.cache.set(prompt_key, llm_response)
+                            break
+                    except Exception as exc:
+                        llm_response = LLMResponse(content="", error=str(exc))
+
+                    if attempt < max_attempts - 1:
+                        time.sleep(min(0.05 * (2**attempt), 0.5))
+
+                if llm_response is None:
+                    llm_response = LLMResponse(content="", error="No attempts executed")
 
             # Evaluate metrics with rich context (including prompt and IDs)
             scores = {}
+            judge_reasons: Dict[str, str] = {}
+            eval_context = {
+                **item,
+                "__prompt__": prompt_key,
+                "__run_id__": run.run_id,
+                "__sample_id__": sample_id,
+            }
             if not llm_response.error:
-                eval_context = {
-                    **item,
-                    "__prompt__": prompt_key,
-                    "__run_id__": run.run_id,
-                    "__sample_id__": sample_id,
-                }
                 scores = self.evaluator.evaluate(
                     prediction=llm_response.content,
                     target=target_value,
                     context=eval_context,
                 )
+                # last_reasons is thread-local, so this reads only this trial's judges.
+                judge_reasons = dict(self.evaluator.last_reasons)
+
+            trial_metadata: Dict[str, Any] = {"combination": run.combination_string}
+            for m_name, reason in judge_reasons.items():
+                trial_metadata[f"judge_reasons.{m_name}"] = reason
 
             return Trial(
                 run_id=run.run_id,
@@ -124,7 +160,7 @@ class ExperimentRunner:
                 latency_ms=llm_response.latency_ms,
                 token_usage=llm_response.token_usage,
                 error=llm_response.error,
-                metadata={"combination": run.combination_string},
+                metadata=trial_metadata,
             )
 
         # Threaded parallel execution

@@ -168,11 +168,16 @@ class ExperimentResults(BaseModel):
                 "latency_ms": t.latency_ms,
                 "error": t.error,
             }
-            # Factor levels
+            # Trial metadata (e.g. combination, judge_reasons.*)
+            if t.metadata:
+                for meta_k, meta_v in t.metadata.items():
+                    row[meta_k] = meta_v
+
+            # Factor levels (precedence over metadata on key collision)
             for fid, lvl in t.factor_levels.items():
                 row[fid] = lvl
 
-            # Metric scores
+            # Metric scores (precedence over metadata/factors on key collision)
             for m_name, m_val in t.metrics.items():
                 row[m_name] = m_val
 
@@ -182,12 +187,26 @@ class ExperimentResults(BaseModel):
     def summary_by_run(self, metric_name: Optional[str] = None) -> pd.DataFrame:
         """Compute mean and std of metrics grouped by experimental run."""
         df = self.to_dataframe()
-        metric_cols = [
-            c
-            for c in df.columns
-            if c not in {"trial_id", "run_id", "sample_id", "latency_ms", "error"}
-            and c not in self.design.factor_ids
-        ]
         if metric_name:
             metric_cols = [metric_name]
+        else:
+            all_metric_keys = set()
+            for t in self.trials:
+                all_metric_keys.update(t.metrics.keys())
+            metric_cols = [c for c in df.columns if c in all_metric_keys]
+            if not metric_cols:
+                metric_cols = [
+                    c
+                    for c in df.columns
+                    if c
+                    not in {
+                        "trial_id",
+                        "run_id",
+                        "sample_id",
+                        "latency_ms",
+                        "error",
+                    }
+                    and c not in self.design.factor_ids
+                    and pd.api.types.is_numeric_dtype(df[c])
+                ]
         return df.groupby("run_id")[metric_cols].agg(["mean", "std"])

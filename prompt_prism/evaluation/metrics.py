@@ -4,12 +4,11 @@ Comprehensive Suite of Evaluation Metrics for Prompt Optimization Experiments.
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from collections import Counter
-from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union
-
-import numpy as np
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 
 class Metric:
@@ -38,6 +37,16 @@ class Metric:
         self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
     ) -> float:
         return self.compute(prediction, target, input_data)
+
+    def pop_reason(self) -> Optional[str]:
+        """Return and clear an explanation for this thread's most recent `compute`.
+
+        Metrics that produce a human-readable justification - LLM judges - override this;
+        `Evaluator` collects the result into `last_reasons`. Deterministic metrics have no
+        explanation to give, so the default is None. This is the explicit alternative to
+        writing the reason back into the caller's `input_data` dict.
+        """
+        return None
 
 
 class ExactMatch(Metric):
@@ -79,6 +88,10 @@ class F1Score(Metric):
     def __init__(self, name: str = "f1_score", mode: str = "f1"):
         self.name = name
         self.mode = mode.lower()  # "f1", "precision", or "recall"
+        if self.mode not in ("f1", "precision", "recall"):
+            raise ValueError(
+                f"Unknown mode '{mode}'. Expected one of: 'f1', 'precision', 'recall'"
+            )
 
     def _tokenize(self, text: Any) -> List[str]:
         s = str(text or "").lower().strip()
@@ -147,11 +160,22 @@ class JSONValidation(Metric):
         target: Any = None,
         input_data: Optional[Dict[str, Any]] = None,
     ) -> float:
-        json_str = self._extract_json_str(str(prediction))
-        try:
-            parsed = json.loads(json_str)
-        except Exception:
-            return 0.0
+        if isinstance(prediction, (dict, list)):
+            parsed = prediction
+        else:
+            json_str = self._extract_json_str(str(prediction))
+            try:
+                parsed = json.loads(json_str)
+            except Exception:
+                # Fallback: look for embedded JSON in surrounding prose
+                match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", json_str)
+                if match:
+                    try:
+                        parsed = json.loads(match.group(1))
+                    except Exception:
+                        return 0.0
+                else:
+                    return 0.0
 
         if self.required_keys:
             if not isinstance(parsed, dict):
@@ -174,7 +198,11 @@ class KeyValuesExtractionOverlap(Metric):
         case_sensitive: bool = False,
     ):
         self.name = name
-        self.mode = mode
+        self.mode = mode.lower()
+        if self.mode not in ("f1", "precision", "recall", "jaccard"):
+            raise ValueError(
+                f"Unknown mode '{mode}'. Expected one of: 'f1', 'precision', 'recall', 'jaccard'"
+            )
         self.case_sensitive = case_sensitive
 
     def _to_kv_dict(self, val: Any) -> Dict[str, str]:
@@ -251,22 +279,22 @@ class LevenshteinSimilarity(Metric):
             return 0.0
 
         len1, len2 = len(s1), len(s2)
-        dp = [[0] * (len2 + 1) for _ in range(len1 + 1)]
-        for i in range(len1 + 1):
-            dp[i][0] = i
-        for j in range(len2 + 1):
-            dp[0][j] = j
+        previous_row = list(range(len2 + 1))
+        current_row = [0] * (len2 + 1)
 
         for i in range(1, len1 + 1):
+            current_row[0] = i
+            c1 = s1[i - 1]
             for j in range(1, len2 + 1):
-                cost = 0 if s1[i - 1] == s2[j - 1] else 1
-                dp[i][j] = min(
-                    dp[i - 1][j] + 1,  # deletion
-                    dp[i][j - 1] + 1,  # insertion
-                    dp[i - 1][j - 1] + cost,  # substitution
+                cost = 0 if c1 == s2[j - 1] else 1
+                current_row[j] = min(
+                    previous_row[j] + 1,  # deletion
+                    current_row[j - 1] + 1,  # insertion
+                    previous_row[j - 1] + cost,  # substitution
                 )
+            previous_row, current_row = current_row, previous_row
 
-        distance = dp[len1][len2]
+        distance = previous_row[len2]
         max_len = max(len1, len2)
         return 1.0 - (distance / max_len) if max_len > 0 else 1.0
 
@@ -293,17 +321,75 @@ class CustomMetric(Metric):
 
     def __init__(
         self,
-        fn: Callable[..., float],
+        fn: Optional[Callable[..., float]] = None,
         name: Optional[str] = None,
         higher_is_better: bool = True,
         is_llm_judge: bool = False,
         wants_prompt: bool = False,
+        score_fn: Optional[Callable[..., float]] = None,
     ):
+        if fn is None and score_fn is not None:
+            import warnings
+
+            warnings.warn(
+                "`score_fn` is deprecated; use `fn` instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            fn = score_fn
+        elif fn is None:
+            raise TypeError("CustomMetric missing required argument: 'fn'")
+
         self.fn = fn
         self.name = name or getattr(fn, "__name__", "custom_metric")
         self.higher_is_better = higher_is_better
         self.is_llm_judge = is_llm_judge
         self.wants_prompt = wants_prompt
+        self._caller = self._compile_caller(fn)
+
+    @staticmethod
+    def _compile_caller(
+        fn: Callable[..., Any],
+    ) -> Callable[[Any, Any, Optional[Dict[str, Any]]], float]:
+        # Each shape is declared exactly once, as the (args, kwargs) it would be called
+        # with. The bind probe and the real invocation therefore use the same expression -
+        # writing them as two parallel lambdas let them drift into a wrong-argument bug.
+        candidate_shapes = [
+            lambda p, t, d: ((p, t, d), {}),
+            lambda p, t, d: ((p, t), {"input_data": d}),
+            lambda p, t, d: ((p,), {"target": t, "input_data": d}),
+            lambda p, t, d: ((p, t), {"context": d}),
+            lambda p, t, d: ((p,), {"target": t, "context": d}),
+            lambda p, t, d: ((p,), {"input_data": d}),
+            lambda p, t, d: ((p,), {"context": d}),
+            lambda p, t, d: ((p, t), {}),
+            lambda p, t, d: ((p,), {"target": t}),
+            lambda p, t, d: ((p,), {}),
+            lambda p, t, d: ((), {"prediction": p, "target": t, "input_data": d}),
+        ]
+
+        try:
+            sig = inspect.signature(fn)
+            for shape in candidate_shapes:
+                probe_args, probe_kwargs = shape("pred", "target", {})
+                try:
+                    sig.bind(*probe_args, **probe_kwargs)
+                except TypeError:
+                    continue
+
+                def caller(pred, target, input_data, _shape=shape):
+                    call_args, call_kwargs = _shape(pred, target, input_data)
+                    return float(fn(*call_args, **call_kwargs))
+
+                return caller
+        except (TypeError, ValueError):
+            # inspect.signature fails on some builtins and C callables; fall through to
+            # the canonical three-argument call and let any real mismatch surface there.
+            pass
+
+        return lambda pred, target, input_data: float(
+            fn(pred, target, input_data=input_data)
+        )
 
     def compute(
         self,
@@ -311,22 +397,4 @@ class CustomMetric(Metric):
         target: Any = None,
         input_data: Optional[Dict[str, Any]] = None,
     ) -> float:
-        import inspect
-
-        sig = inspect.signature(self.fn)
-        kwargs = {}
-        if "input_data" in sig.parameters:
-            kwargs["input_data"] = input_data
-        if "context" in sig.parameters:
-            kwargs["context"] = input_data
-        if "target" in sig.parameters:
-            kwargs["target"] = target
-
-        # Try calling with full signature or fallback to (pred, target)
-        try:
-            return float(self.fn(prediction, **kwargs))
-        except TypeError:
-            try:
-                return float(self.fn(prediction, target))
-            except TypeError:
-                return float(self.fn(prediction))
+        return self._caller(prediction, target, input_data)

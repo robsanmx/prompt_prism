@@ -5,7 +5,7 @@ Alias and Confounding Structure Analyzer for Fractional Factorial Designs.
 from __future__ import annotations
 
 import itertools
-from typing import Dict, List, Optional, Sequence, Set, Tuple
+from typing import Dict, List, Sequence, Set
 
 
 def multiply_words(w1: str, w2: str) -> str:

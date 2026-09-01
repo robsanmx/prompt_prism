@@ -4,15 +4,14 @@ Modular Prompt Composition & Templating Engine for Design of Experiments.
 
 from __future__ import annotations
 
-import re
 import string
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import jinja2
 from pydantic import BaseModel, Field
 
-from ..core.factors import Factor, FactorSet, FactorType, Level
-from ..core.models import DesignMatrix, RunConfig
+from ..core.factors import Factor, FactorSet
+from ..core.models import RunConfig
 
 
 class PromptSection(BaseModel):
@@ -34,7 +33,9 @@ class PromptSection(BaseModel):
     id: str
     factor_id: Optional[str] = None
     content: str = ""
-    role: str = "user"  # 'system', 'user', 'assistant'
+    role: Optional[str] = (
+        None  # 'system', 'user', 'assistant', or None for text template
+    )
     position: int = 0
     prefix: str = ""
     suffix: str = ""
@@ -103,13 +104,19 @@ class PromptTemplate:
         id: str,
         factor_id: Optional[str] = None,
         content: str = "",
-        role: str = "user",
+        role: Optional[str] = None,
         position: Optional[int] = None,
         prefix: str = "",
         suffix: str = "",
         delimiter: str = "\n\n",
     ) -> PromptSection:
-        """Add a section to the prompt template."""
+        """
+        Add a section to the prompt template.
+
+        Note: Setting an explicit `role` (or `system_prompt`) on any section switches
+        `PromptComposer.compose` to output structured chat messages (`List[Dict[str, str]]`),
+        which is passed directly to the LLM client. Leaving `role=None` preserves plain text output.
+        """
         pos = position if position is not None else len(self.sections)
         sec = PromptSection(
             id=id,
@@ -153,9 +160,7 @@ class PromptTemplate:
             pos += 1
 
         if data_template:
-            template.add_section(
-                id="data_payload", content=data_template, role="user", position=pos
-            )
+            template.add_section(id="data_payload", content=data_template, position=pos)
 
         return template
 

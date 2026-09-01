@@ -60,6 +60,11 @@ class CallableLLM(LLMClient):
 
             elapsed_ms = (time.perf_counter() - start_t) * 1000.0
 
+            if isinstance(res, LLMResponse):
+                if res.latency_ms == 0.0:
+                    res.latency_ms = elapsed_ms
+                return res
+
             content = res if isinstance(res, str) else str(res)
             return LLMResponse(
                 content=content,

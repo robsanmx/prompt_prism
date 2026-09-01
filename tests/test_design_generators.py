@@ -3,7 +3,6 @@ Unit tests for Fractional Factorial, Plackett-Burman, and Full Factorial Design 
 """
 
 import numpy as np
-import pytest
 
 from prompt_prism.design.catalog import CATALOG_DESIGNS, list_available_plans
 from prompt_prism.design.generators import (

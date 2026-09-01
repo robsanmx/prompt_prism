@@ -5,68 +5,24 @@ Design Generators: Fractional Factorial (2^(k-p)), Plackett-Burman, and Full Fac
 from __future__ import annotations
 
 import itertools
-import re
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 
-from ..core.factors import Factor, FactorSet
 from ..core.models import DesignMatrix, RunConfig
-from .catalog import CATALOG_DESIGNS, get_catalog_entry
+from .catalog import get_catalog_entry
 
 # Standard Plackett-Burman generating vectors (first row, coded as +1 / -1)
+# fmt: off
 PB_GENERATING_VECTORS: Dict[int, List[int]] = {
-    8: [1, 1, 1, -1, 1, -1, -1],  # 7 factors
+    8:  [1, 1, 1, -1, 1, -1, -1],  # 7 factors
     12: [1, 1, -1, 1, 1, 1, -1, -1, -1, 1, -1],  # 11 factors
     16: [1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, -1, -1, -1],  # 15 factors
-    20: [
-        1,
-        1,
-        -1,
-        -1,
-        1,
-        1,
-        1,
-        1,
-        -1,
-        1,
-        -1,
-        1,
-        -1,
-        -1,
-        -1,
-        -1,
-        1,
-        1,
-        -1,
-    ],  # 19 factors
-    24: [
-        1,
-        1,
-        1,
-        1,
-        1,
-        -1,
-        1,
-        -1,
-        1,
-        1,
-        -1,
-        -1,
-        1,
-        1,
-        -1,
-        -1,
-        1,
-        -1,
-        1,
-        -1,
-        -1,
-        -1,
-        -1,
-    ],  # 23 factors (corrected orthogonal)
+    20: [1, 1, -1, -1, 1, 1, 1, 1, -1, 1, -1, 1, -1, -1, -1, -1, 1, 1, -1],  # 19 factors
+    24: [1, 1, 1, 1, 1, -1, 1, -1, 1, 1, -1, -1, 1, 1, -1, -1, 1, -1, 1, -1, -1, -1, -1],  # 23 factors (corrected orthogonal)
 }
+# fmt: on
 
 
 def parse_generator(gen_str: str) -> Tuple[str, List[str]]:
@@ -149,7 +105,6 @@ class FractionalFactorialGenerator:
         Construct fractional factorial design matrix from base factors and generator equations.
         """
         q = len(base_factors)
-        num_runs = 2**q
 
         # Step 1: Generate Full Factorial grid for base factors in {0, 1}
         grid = list(itertools.product([0, 1], repeat=q))
