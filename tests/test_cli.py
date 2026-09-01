@@ -8,7 +8,14 @@ import sys
 
 def test_cli_list_designs():
     res = subprocess.run(
-        [sys.executable, "-m", "prompt_prism.cli.main", "list-designs", "--factors", "5"],
+        [
+            sys.executable,
+            "-m",
+            "prompt_prism.cli.main",
+            "list-designs",
+            "--factors",
+            "5",
+        ],
         capture_output=True,
         text=True,
     )
@@ -19,7 +26,16 @@ def test_cli_list_designs():
 
 def test_cli_generate_design():
     res = subprocess.run(
-        [sys.executable, "-m", "prompt_prism.cli.main", "design", "--factors", "5", "--runs", "16"],
+        [
+            sys.executable,
+            "-m",
+            "prompt_prism.cli.main",
+            "design",
+            "--factors",
+            "5",
+            "--runs",
+            "16",
+        ],
         capture_output=True,
         text=True,
     )

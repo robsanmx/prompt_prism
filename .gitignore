@@ -65,3 +65,8 @@ reports/
 *.db
 *.sqlite
 graphify-out/
+
+# Local agent / tooling state
+.claude/
+.deepeval/
+tasks/

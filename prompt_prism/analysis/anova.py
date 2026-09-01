@@ -7,11 +7,12 @@ from __future__ import annotations
 import itertools
 import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
 import pandas as pd
-from pydantic import BaseModel, ConfigDict, Field
 import statsmodels.api as sm
 import statsmodels.formula.api as smf
+from pydantic import BaseModel, ConfigDict, Field
 from statsmodels.stats.multitest import multipletests
 
 from ..design.aliasing import AliasStructure
@@ -20,11 +21,13 @@ from .effects import EffectAnalyzer, FactorEffect, InteractionEffect
 
 class ConfoundedModelError(ValueError):
     """Raised when interaction terms are perfectly collinear or aliased with main effects."""
+
     pass
 
 
 class ANOVARow(BaseModel):
     """Single row in the ANOVA table."""
+
     source: str
     factor_name: str = ""
     sum_sq: float
@@ -43,6 +46,7 @@ class ANOVAResult(BaseModel):
     """
     Complete ANOVA output containing the ANOVA table, effect sizes, model diagnostics, and factor rankings.
     """
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     target_metric: str
@@ -69,20 +73,22 @@ class ANOVAResult(BaseModel):
         """Convert ANOVA results table to pandas DataFrame."""
         records = []
         for r in self.anova_table:
-            records.append({
-                "Source": r.source,
-                "Factor Name": r.factor_name,
-                "Sum of Sq": r.sum_sq,
-                "DF": r.df,
-                "Mean Sq": r.mean_sq,
-                "F": r.f_statistic,
-                "PR(>F)": r.p_value,
-                "p (Bonferroni)": r.p_value_bonferroni,
-                "p (FDR)": r.p_value_fdr,
-                "Partial Eta^2": r.partial_eta_sq,
-                "Omega^2": r.omega_sq,
-                "Significant": r.is_significant,
-            })
+            records.append(
+                {
+                    "Source": r.source,
+                    "Factor Name": r.factor_name,
+                    "Sum of Sq": r.sum_sq,
+                    "DF": r.df,
+                    "Mean Sq": r.mean_sq,
+                    "F": r.f_statistic,
+                    "PR(>F)": r.p_value,
+                    "p (Bonferroni)": r.p_value_bonferroni,
+                    "p (FDR)": r.p_value_fdr,
+                    "Partial Eta^2": r.partial_eta_sq,
+                    "Omega^2": r.omega_sq,
+                    "Significant": r.is_significant,
+                }
+            )
         return pd.DataFrame(records)
 
 
@@ -92,7 +98,9 @@ class ANOVAEngine:
     """
 
     @classmethod
-    def _adjust_p_values(cls, p_values: Sequence[float], method: str = "fdr_bh") -> List[float]:
+    def _adjust_p_values(
+        cls, p_values: Sequence[float], method: str = "fdr_bh"
+    ) -> List[float]:
         """Adjust p-values using statsmodels multipletests (e.g. Benjamini-Hochberg FDR)."""
         if not p_values:
             return []
@@ -115,7 +123,7 @@ class ANOVAEngine:
     ) -> ANOVAResult:
         """
         Run ANOVA on experimental data using Randomized Complete Block Design (RCBD) or standard Factorial OLS.
-        
+
         Args:
             data: DataFrame containing factor columns (0/1), target metric, and optional block column.
             factor_cols: Names/IDs of the factor columns.
@@ -130,15 +138,23 @@ class ANOVAEngine:
         """
         factor_name_map = factor_name_map or {}
         included_cols = [c for c in factor_cols if c in data.columns] + [target_col]
-        has_blocking = bool(block_col and block_col in data.columns and data[block_col].nunique() > 1)
+        has_blocking = bool(
+            block_col and block_col in data.columns and data[block_col].nunique() > 1
+        )
         if has_blocking and block_col not in included_cols:
             included_cols.append(block_col)
 
         clean_df = data[included_cols].dropna()
 
-        valid_factors = [f for f in factor_cols if f in clean_df.columns and clean_df[f].nunique() > 1]
+        valid_factors = [
+            f
+            for f in factor_cols
+            if f in clean_df.columns and clean_df[f].nunique() > 1
+        ]
         if not valid_factors:
-            raise ValueError(f"No factors with multiple levels found in dataset columns: {factor_cols}")
+            raise ValueError(
+                f"No factors with multiple levels found in dataset columns: {factor_cols}"
+            )
 
         # Map column names to safe identifiers to avoid Patsy keyword collisions (such as column 'C')
         col_to_safe = {f: f"__f_{i}_{f}__" for i, f in enumerate(valid_factors)}
@@ -200,10 +216,22 @@ class ANOVAEngine:
 
         r_sq = float(ols_model.rsquared)
         r_sq_adj = float(ols_model.rsquared_adj)
-        f_stat = float(ols_model.fvalue) if hasattr(ols_model, "fvalue") and not np.isnan(ols_model.fvalue) else 0.0
-        model_pval = float(ols_model.f_pvalue) if hasattr(ols_model, "f_pvalue") and not np.isnan(ols_model.f_pvalue) else 1.0
+        f_stat = (
+            float(ols_model.fvalue)
+            if hasattr(ols_model, "fvalue") and not np.isnan(ols_model.fvalue)
+            else 0.0
+        )
+        model_pval = (
+            float(ols_model.f_pvalue)
+            if hasattr(ols_model, "f_pvalue") and not np.isnan(ols_model.f_pvalue)
+            else 1.0
+        )
         res_df = float(ols_model.df_resid)
-        res_se = float(np.sqrt(ols_model.mse_resid)) if hasattr(ols_model, "mse_resid") else 0.0
+        res_se = (
+            float(np.sqrt(ols_model.mse_resid))
+            if hasattr(ols_model, "mse_resid")
+            else 0.0
+        )
 
         # Compute unified main effects and interactions using fitted model coefficients
         main_effects = EffectAnalyzer.compute_main_effects(
@@ -229,11 +257,15 @@ class ANOVAEngine:
         )
 
         omitted_interactions = [
-            f"{e.factor_1}:{e.factor_2}" for e in interactions if np.isnan(e.effect_delta)
+            f"{e.factor_1}:{e.factor_2}"
+            for e in interactions
+            if np.isnan(e.effect_delta)
         ]
 
         # Process ANOVA Table
-        res_ss = anova_df.loc["Residual", "sum_sq"] if "Residual" in anova_df.index else 1e-9
+        res_ss = (
+            anova_df.loc["Residual", "sum_sq"] if "Residual" in anova_df.index else 1e-9
+        )
         total_ss = anova_df["sum_sq"].sum()
         ms_resid = res_ss / res_df if res_df > 0 else 1e-9
 
@@ -255,10 +287,18 @@ class ANOVAEngine:
             df_val = float(row["df"])
             ms = ss / df_val if df_val > 0 else 0.0
             f_val = float(row["F"]) if "F" in row and not np.isnan(row["F"]) else None
-            p_val = float(row["PR(>F)"]) if "PR(>F)" in row and not np.isnan(row["PR(>F)"]) else None
+            p_val = (
+                float(row["PR(>F)"])
+                if "PR(>F)" in row and not np.isnan(row["PR(>F)"])
+                else None
+            )
 
             # Effect sizes
-            partial_eta = (ss / (ss + res_ss)) if (ss + res_ss) > 0 and source_clean != "Residual" else None
+            partial_eta = (
+                (ss / (ss + res_ss))
+                if (ss + res_ss) > 0 and source_clean != "Residual"
+                else None
+            )
             omega_sq = (
                 (ss - df_val * ms_resid) / (total_ss + ms_resid)
                 if source_clean != "Residual" and (total_ss + ms_resid) > 0
@@ -268,7 +308,11 @@ class ANOVAEngine:
                 omega_sq = 0.0
 
             # Exclude nuisance block and residual from multiple comparisons adjustment
-            if p_val is not None and source_clean != "Residual" and not source_clean.startswith("Block"):
+            if (
+                p_val is not None
+                and source_clean != "Residual"
+                and not source_clean.startswith("Block")
+            ):
                 p_vals_list.append((len(row_objects), p_val))
 
             fname = factor_name_map.get(source_clean, source_clean)
@@ -298,8 +342,12 @@ class ANOVAEngine:
                 row_objects[r_idx].p_value_fdr = fdr_p_values[i]
 
         # Factor classification strictly aligned with unified main effects
-        sig_pos = [e.factor_id for e in main_effects if e.is_significant and e.effect_delta > 0]
-        sig_neg = [e.factor_id for e in main_effects if e.is_significant and e.effect_delta < 0]
+        sig_pos = [
+            e.factor_id for e in main_effects if e.is_significant and e.effect_delta > 0
+        ]
+        sig_neg = [
+            e.factor_id for e in main_effects if e.is_significant and e.effect_delta < 0
+        ]
         neutral = [e.factor_id for e in main_effects if not e.is_significant]
 
         return ANOVAResult(
@@ -321,5 +369,9 @@ class ANOVAEngine:
             alpha=alpha,
             block_col=block_col if has_blocking else None,
             alias_structure=alias_structure,
-            metadata={"num_observations": len(clean_df), "ss_type": ss_type, "ols_model": ols_model},
+            metadata={
+                "num_observations": len(clean_df),
+                "ss_type": ss_type,
+                "ols_model": ols_model,
+            },
         )

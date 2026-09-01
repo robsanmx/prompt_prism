@@ -4,7 +4,7 @@
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests: Passing](https://img.shields.io/badge/tests-passing-brightgreen.svg)]()
+[![CI](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml/badge.svg)](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml)
 [![Coverage: 82%+](https://img.shields.io/badge/coverage-82%25-green.svg)]()
 
 **`prompt_prism`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to isolate, quantify, and optimize LLM prompts with 90%+ cost reduction and zero guesswork.
@@ -213,6 +213,14 @@ Output:
 
 ---
 
+## 🤝 Contributing
+
+Contributions are welcome — new designs, new metrics, and corrections to the statistics
+especially. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the development setup and the
+checks CI runs.
+
+---
+
 ## 📜 License
 
-MIT License. Designed and built with ❤️ for universal prompt optimization.
+[MIT License](LICENSE). Designed and built with ❤️ for universal prompt optimization.

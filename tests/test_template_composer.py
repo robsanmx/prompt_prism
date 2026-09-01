@@ -18,8 +18,14 @@ def test_prompt_section_render():
 
 
 def test_prompt_composer_modular_sections():
-    f1 = Factor.binary("persona", level_0_content="", level_1_content="You are an expert AI.")
-    f2 = Factor.binary("format", level_0_content="Return plaintext.", level_1_content="Return JSON object.")
+    f1 = Factor.binary(
+        "persona", level_0_content="", level_1_content="You are an expert AI."
+    )
+    f2 = Factor.binary(
+        "format",
+        level_0_content="Return plaintext.",
+        level_1_content="Return JSON object.",
+    )
     f_set = FactorSet([f1, f2])
 
     template = PromptTemplate.from_factors(
@@ -52,10 +58,14 @@ def test_prompt_composer_chat_messages():
     tmpl = PromptTemplate()
     tmpl.add_section(id="sys", content="System instruction", role="system", position=0)
     tmpl.add_section(id="persona", factor_id="A", role="system", position=1)
-    tmpl.add_section(id="user_data", content="Input: {{ val }}", role="user", position=2)
+    tmpl.add_section(
+        id="user_data", content="Input: {{ val }}", role="user", position=2
+    )
 
     composer = PromptComposer(template=tmpl, factors=f_set)
-    messages = composer.compose_messages(RunConfig(run_id=1, factor_levels={"A": 1}), data={"val": "123"})
+    messages = composer.compose_messages(
+        RunConfig(run_id=1, factor_levels={"A": 1}), data={"val": "123"}
+    )
 
     assert len(messages) == 2
     assert messages[0]["role"] == "system"
@@ -66,19 +76,20 @@ def test_prompt_composer_chat_messages():
 
 
 def test_prompt_composer_jinja_master():
-    tmpl = PromptTemplate(
-        master_template="""
+    tmpl = PromptTemplate(master_template="""
 {% if persona %}Persona: {{ persona }}{% endif %}
 Task: Extract data from {{ item_name }}.
 Format: {{ format }}
-        """.strip()
-    )
+        """.strip())
     f1 = Factor.binary("persona", level_1_content="Senior Auditor")
     f2 = Factor.binary("format", level_0_content="YAML", level_1_content="JSON")
     f_set = FactorSet([f1, f2])
 
     composer = PromptComposer(template=tmpl, factors=f_set)
-    text = composer.compose_text(RunConfig(run_id=1, factor_levels={"A": 1, "B": 1}), data={"item_name": "Invoice #42"})
+    text = composer.compose_text(
+        RunConfig(run_id=1, factor_levels={"A": 1, "B": 1}),
+        data={"item_name": "Invoice #42"},
+    )
 
     assert "Persona: Senior Auditor" in text
     assert "Task: Extract data from Invoice #42." in text

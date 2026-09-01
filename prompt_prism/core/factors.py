@@ -6,24 +6,26 @@ from __future__ import annotations
 
 import enum
 from typing import Any, Dict, List, Optional, Sequence, Union
+
 from pydantic import BaseModel, Field, field_validator
 
 
 class FactorType(str, enum.Enum):
     """Types of prompt factors."""
-    TEXT = "text"              # Raw text insertion / replacement
-    SECTION = "section"        # Modular prompt section (toggleable or multi-variant)
-    TEMPLATE = "template"      # Dynamic template string
-    PARAM = "param"            # Model generation parameter (e.g. temperature, top_p)
-    BOOLEAN = "boolean"        # Simple on/off toggle
-    CATEGORICAL = "categorical"# Multi-level categorical variant
-    NUMERIC = "numeric"        # Numeric scale factor
+
+    TEXT = "text"  # Raw text insertion / replacement
+    SECTION = "section"  # Modular prompt section (toggleable or multi-variant)
+    TEMPLATE = "template"  # Dynamic template string
+    PARAM = "param"  # Model generation parameter (e.g. temperature, top_p)
+    BOOLEAN = "boolean"  # Simple on/off toggle
+    CATEGORICAL = "categorical"  # Multi-level categorical variant
+    NUMERIC = "numeric"  # Numeric scale factor
 
 
 class Level(BaseModel):
     """
     Represents a specific level (variant/state) of a Factor.
-    
+
     Attributes:
         code: The coded representation (e.g., 0, 1, or -1, +1, or custom index).
         name: Human-readable name (e.g., "Zero-Shot", "3-Shot Examples").
@@ -31,6 +33,7 @@ class Level(BaseModel):
         description: Optional description of this level.
         metadata: Optional dictionary of additional metadata.
     """
+
     code: int = 0
     name: str = ""
     content: Any = ""
@@ -44,15 +47,20 @@ class Level(BaseModel):
         content: Any = "",
         description: Optional[str] = None,
         metadata: Optional[Dict[str, Any]] = None,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         super().__init__(
             code=code,
-            name=name or (str(content) if isinstance(content, str) and len(str(content)) < 30 else f"Level {code}"),
+            name=name
+            or (
+                str(content)
+                if isinstance(content, str) and len(str(content)) < 30
+                else f"Level {code}"
+            ),
             content=content,
             description=description,
             metadata=metadata or {},
-            **kwargs
+            **kwargs,
         )
 
     def __repr__(self) -> str:
@@ -62,7 +70,7 @@ class Level(BaseModel):
 class Factor(BaseModel):
     """
     Represents a variable factor in a Prompt Design of Experiments.
-    
+
     Attributes:
         id: Standard single-letter or short identifier (e.g. 'A', 'B', 'C', 'X1').
         name: Full descriptive name of the factor (e.g. 'persona', 'few_shot_examples').
@@ -73,6 +81,7 @@ class Factor(BaseModel):
         default_level_code: Default level code if not specified.
         metadata: Extra metadata dictionary.
     """
+
     id: str = ""
     name: str
     factor_type: FactorType = FactorType.SECTION
@@ -86,7 +95,10 @@ class Factor(BaseModel):
     @classmethod
     def normalize_levels(cls, v: Any) -> List[Level]:
         if not v:
-            return [Level(code=0, name="Disabled", content=""), Level(code=1, name="Enabled", content="")]
+            return [
+                Level(code=0, name="Disabled", content=""),
+                Level(code=1, name="Enabled", content=""),
+            ]
         if isinstance(v, list):
             res = []
             for idx, item in enumerate(v):
@@ -109,7 +121,10 @@ class Factor(BaseModel):
                     return level
         elif isinstance(code_or_name, str):
             for level in self.levels:
-                if level.name.lower() == code_or_name.lower() or str(level.code) == code_or_name:
+                if (
+                    level.name.lower() == code_or_name.lower()
+                    or str(level.code) == code_or_name
+                ):
                     return level
         # Default fallback to first level or level 0
         for level in self.levels:

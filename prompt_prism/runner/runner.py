@@ -7,6 +7,7 @@ from __future__ import annotations
 import concurrent.futures
 import time
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+
 import pandas as pd
 
 from ..core.factors import Factor, FactorSet
@@ -81,7 +82,9 @@ class ExperimentRunner:
         trials: List[Trial] = []
         completed = 0
 
-        def execute_single_trial(task_tuple: Tuple[RunConfig, int, Dict[str, Any]]) -> Trial:
+        def execute_single_trial(
+            task_tuple: Tuple[RunConfig, int, Dict[str, Any]],
+        ) -> Trial:
             run, s_idx, item = task_tuple
             sample_id = item.get(self.id_col, s_idx)
             target_value = item.get(self.target_col, None)
@@ -126,8 +129,13 @@ class ExperimentRunner:
             )
 
         # Threaded parallel execution
-        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            future_to_task = {executor.submit(execute_single_trial, task): task for task in trial_tasks}
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.max_workers
+        ) as executor:
+            future_to_task = {
+                executor.submit(execute_single_trial, task): task
+                for task in trial_tasks
+            }
             for future in concurrent.futures.as_completed(future_to_task):
                 try:
                     trial = future.result()
@@ -157,5 +165,9 @@ class ExperimentRunner:
             experiment_id=experiment_id,
             design=design,
             trials=trials,
-            metadata={"num_runs": len(design.runs), "num_samples": len(items), "total_trials": len(trials)},
+            metadata={
+                "num_runs": len(design.runs),
+                "num_samples": len(items),
+                "total_trials": len(trials),
+            },
         )

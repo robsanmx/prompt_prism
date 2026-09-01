@@ -3,7 +3,9 @@ Tests for Runner, Cache, and Client modules.
 """
 
 import time
+
 import pytest
+
 from prompt_prism.core.factors import Factor, FactorSet
 from prompt_prism.core.models import DesignMatrix, RunConfig
 from prompt_prism.design.generators import FractionalFactorialGenerator
@@ -17,7 +19,7 @@ from prompt_prism.template.composer import PromptComposer, PromptTemplate
 def test_response_cache_memory():
     cache = ResponseCache(enabled=True)
     res = LLMResponse(content="Cached output", latency_ms=50.0)
-    
+
     assert cache.get("test prompt") is None
     cache.set("test prompt", res)
     cached_res = cache.get("test prompt")
@@ -28,10 +30,12 @@ def test_response_cache_memory():
 def test_response_cache_sqlite(tmp_path):
     db_path = tmp_path / "cache.db"
     cache = ResponseCache(db_path=db_path, enabled=True)
-    res = LLMResponse(content="SQLite output", latency_ms=30.0, token_usage={"tokens": 10})
-    
+    res = LLMResponse(
+        content="SQLite output", latency_ms=30.0, token_usage={"tokens": 10}
+    )
+
     cache.set("prompt 1", res, params={"temp": 0.2})
-    
+
     # Reload new cache instance from same db
     cache2 = ResponseCache(db_path=db_path, enabled=True)
     retrieved = cache2.get("prompt 1", params={"temp": 0.2})
@@ -83,7 +87,10 @@ def test_experiment_runner_multithreaded():
         ],
     )
 
-    dataset = [{"id": 1, "q": "what is 6x7?", "target": "42"}, {"id": 2, "q": "what is 21x2?", "target": "42"}]
+    dataset = [
+        {"id": 1, "q": "what is 6x7?", "target": "42"},
+        {"id": 2, "q": "what is 21x2?", "target": "42"},
+    ]
     results = runner.run(design=design, dataset=dataset)
 
     assert len(results.trials) == 4

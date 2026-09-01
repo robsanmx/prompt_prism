@@ -4,11 +4,12 @@ Design Property Tests: Orthogonality, balance, and resolution verification for a
 
 import numpy as np
 import pytest
+
 from prompt_prism.design.aliasing import AliasStructure
 from prompt_prism.design.catalog import CATALOG_DESIGNS, get_catalog_entry
 from prompt_prism.design.generators import (
-    FractionalFactorialGenerator,
     PB_GENERATING_VECTORS,
+    FractionalFactorialGenerator,
     PlackettBurmanGenerator,
 )
 
@@ -53,16 +54,16 @@ def test_catalog_resolution_matches_label():
         declared_res = entry["resolution"]
 
         # Check declared resolution
-        assert computed_res == declared_res, (
-            f"Plan {plan_id}: computed resolution {computed_res} != declared resolution {declared_res}"
-        )
+        assert (
+            computed_res == declared_res
+        ), f"Plan {plan_id}: computed resolution {computed_res} != declared resolution {declared_res}"
 
         # Check Roman numeral suffix in plan_id
         for roman, val in roman_to_int.items():
             if plan_id.endswith(roman):
-                assert computed_res == val, (
-                    f"Plan {plan_id}: label suffix {roman} (={val}) != computed resolution {computed_res}"
-                )
+                assert (
+                    computed_res == val
+                ), f"Plan {plan_id}: label suffix {roman} (={val}) != computed resolution {computed_res}"
                 break
 
 

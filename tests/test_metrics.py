@@ -33,7 +33,7 @@ def test_json_validation():
     assert jv.compute('{"brand": "Nike", "color": "red"}') == 1.0
     assert jv.compute('```json\n{"brand": "Nike", "color": "red"}\n```') == 1.0
     assert jv.compute('{"brand": "Nike"}') == 0.5
-    assert jv.compute('Not json') == 0.0
+    assert jv.compute("Not json") == 0.0
 
 
 def test_extraction_overlap():
@@ -52,12 +52,16 @@ def test_levenshtein_similarity():
 
 
 def test_evaluator_suite():
-    evaluator = Evaluator([
-        ExactMatch(),
-        F1Score(),
-        JSONValidation(),
-        CustomMetric(lambda pred, target: len(str(pred)) / 100.0, name="length_ratio"),
-    ])
+    evaluator = Evaluator(
+        [
+            ExactMatch(),
+            F1Score(),
+            JSONValidation(),
+            CustomMetric(
+                lambda pred, target: len(str(pred)) / 100.0, name="length_ratio"
+            ),
+        ]
+    )
 
     scores = evaluator.evaluate(
         prediction='{"name": "test"}',

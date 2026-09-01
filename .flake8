@@ -1,0 +1,5 @@
+[flake8]
+# Defer line wrapping and slice/operator spacing to black.
+max-line-length = 88
+extend-ignore = E203, E501, W503
+exclude = .git,__pycache__,build,dist,.venv,*.egg-info

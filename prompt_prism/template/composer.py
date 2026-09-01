@@ -7,8 +7,9 @@ from __future__ import annotations
 import re
 import string
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
-from pydantic import BaseModel, Field
+
 import jinja2
+from pydantic import BaseModel, Field
 
 from ..core.factors import Factor, FactorSet, FactorType, Level
 from ..core.models import DesignMatrix, RunConfig
@@ -17,7 +18,7 @@ from ..core.models import DesignMatrix, RunConfig
 class PromptSection(BaseModel):
     """
     A modular section of a prompt that can be toggled, varied, or conditioned on a factor.
-    
+
     Attributes:
         id: Section identifier (e.g. 'persona', 'task', 'examples', 'constraints').
         factor_id: Optional ID or name of the Factor controlling this section.
@@ -29,6 +30,7 @@ class PromptSection(BaseModel):
         delimiter: Separator after this section (default newline).
         is_active: Whether section is active regardless of factors.
     """
+
     id: str
     factor_id: Optional[str] = None
     content: str = ""
@@ -40,9 +42,17 @@ class PromptSection(BaseModel):
     is_active: bool = True
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    def render(self, factor_level_content: Optional[Any] = None, data: Optional[Dict[str, Any]] = None) -> str:
+    def render(
+        self,
+        factor_level_content: Optional[Any] = None,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> str:
         """Render this section with variable interpolation."""
-        raw_text = str(factor_level_content) if factor_level_content is not None else self.content
+        raw_text = (
+            str(factor_level_content)
+            if factor_level_content is not None
+            else self.content
+        )
         if not raw_text.strip():
             return ""
 
@@ -129,7 +139,9 @@ class PromptTemplate:
         template = cls()
         pos = 0
         if system_prompt:
-            template.add_section(id="system_static", content=system_prompt, role="system", position=pos)
+            template.add_section(
+                id="system_static", content=system_prompt, role="system", position=pos
+            )
             pos += 1
 
         for factor in factors:
@@ -141,7 +153,9 @@ class PromptTemplate:
             pos += 1
 
         if data_template:
-            template.add_section(id="data_payload", content=data_template, role="user", position=pos)
+            template.add_section(
+                id="data_payload", content=data_template, role="user", position=pos
+            )
 
         return template
 
@@ -157,7 +171,11 @@ class PromptComposer:
         factors: Optional[Union[FactorSet, Sequence[Factor]]] = None,
     ):
         self.template = template
-        self.factors = FactorSet(factors) if isinstance(factors, (list, tuple)) else (factors or FactorSet())
+        self.factors = (
+            FactorSet(factors)
+            if isinstance(factors, (list, tuple))
+            else (factors or FactorSet())
+        )
 
     def compose_text(
         self,
@@ -174,7 +192,9 @@ class PromptComposer:
             # Build context dict with factor level contents and data
             context: Dict[str, Any] = dict(data)
             for factor in self.factors:
-                level_code = run_config.factor_levels.get(factor.id, run_config.factor_names.get(factor.name, 0))
+                level_code = run_config.factor_levels.get(
+                    factor.id, run_config.factor_names.get(factor.name, 0)
+                )
                 lvl = factor.get_level(level_code)
                 context[factor.name] = lvl.content
                 context[f"{factor.name}_level"] = level_code
@@ -198,7 +218,9 @@ class PromptComposer:
             if sec.factor_id:
                 factor = self.factors.get(sec.factor_id)
                 if factor:
-                    lvl_code = run_config.factor_levels.get(factor.id, run_config.factor_names.get(factor.name, 0))
+                    lvl_code = run_config.factor_levels.get(
+                        factor.id, run_config.factor_names.get(factor.name, 0)
+                    )
                     level = factor.get_level(lvl_code)
                     level_content = level.content
 
@@ -218,7 +240,7 @@ class PromptComposer:
         """
         data = data or {}
         sorted_sections = sorted(self.template.sections, key=lambda s: s.position)
-        
+
         # Group rendered sections by role
         roles_order = []
         messages_by_role: Dict[str, List[str]] = {}
@@ -231,7 +253,9 @@ class PromptComposer:
             if sec.factor_id:
                 factor = self.factors.get(sec.factor_id)
                 if factor:
-                    lvl_code = run_config.factor_levels.get(factor.id, run_config.factor_names.get(factor.name, 0))
+                    lvl_code = run_config.factor_levels.get(
+                        factor.id, run_config.factor_names.get(factor.name, 0)
+                    )
                     level = factor.get_level(lvl_code)
                     level_content = level.content
 
@@ -254,6 +278,8 @@ class PromptComposer:
             # Fallback
             full_text = self.compose_text(run_config, data)
             if full_text:
-                messages.append({"role": self.template.default_role, "content": full_text})
+                messages.append(
+                    {"role": self.template.default_role, "content": full_text}
+                )
 
         return messages

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import itertools
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+
 import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field
@@ -16,6 +17,7 @@ from ..design.aliasing import AliasStructure
 
 class FactorEffect(BaseModel):
     """Estimated main effect for a single prompt factor."""
+
     factor_id: str
     factor_name: str
     mean_level_0: float
@@ -34,6 +36,7 @@ class FactorEffect(BaseModel):
 
 class InteractionEffect(BaseModel):
     """Estimated 2-way interaction between two factors."""
+
     factor_1: str
     factor_2: str
     factor_1_name: str = ""
@@ -116,10 +119,17 @@ class EffectAnalyzer:
                     t_stat = float(t_stat) if not np.isnan(t_stat) else 0.0
                     pval = float(pval) if not np.isnan(pval) else 1.0
                     sp = np.sqrt(
-                        ((len(vals_1) - 1) * vals_1.var() + (len(vals_0) - 1) * vals_0.var())
+                        (
+                            (len(vals_1) - 1) * vals_1.var()
+                            + (len(vals_0) - 1) * vals_0.var()
+                        )
                         / (len(vals_1) + len(vals_0) - 2)
                     )
-                    se = float(sp * np.sqrt(1 / len(vals_1) + 1 / len(vals_0))) if sp > 0 else 0.0
+                    se = (
+                        float(sp * np.sqrt(1 / len(vals_1) + 1 / len(vals_0)))
+                        if sp > 0
+                        else 0.0
+                    )
                 else:
                     se = 0.0
                     t_stat = 0.0
@@ -130,12 +140,20 @@ class EffectAnalyzer:
             is_sig = bool(pval < alpha)
 
             # Check Aliasing
-            aliases = alias_structure.get_aliases_for_term(fid, max_order=3) if alias_structure else []
+            aliases = (
+                alias_structure.get_aliases_for_term(fid, max_order=3)
+                if alias_structure
+                else []
+            )
             conf_warning = ""
             if alias_structure and alias_structure.resolution == 3 and aliases:
-                conf_warning = f"Confounded with 2-factor interactions: {', '.join(aliases)}"
+                conf_warning = (
+                    f"Confounded with 2-factor interactions: {', '.join(aliases)}"
+                )
             elif alias_structure and alias_structure.resolution == 4 and aliases:
-                conf_warning = f"Confounded with 3-factor interactions: {', '.join(aliases)}"
+                conf_warning = (
+                    f"Confounded with 3-factor interactions: {', '.join(aliases)}"
+                )
 
             # Action recommendation
             if is_sig:
@@ -197,7 +215,12 @@ class EffectAnalyzer:
             grouped = df.groupby([f1, f2])[target_col].mean().to_dict()
 
             # Check if any cell is missing
-            if (0, 0) not in grouped or (0, 1) not in grouped or (1, 0) not in grouped or (1, 1) not in grouped:
+            if (
+                (0, 0) not in grouped
+                or (0, 1) not in grouped
+                or (1, 0) not in grouped
+                or (1, 1) not in grouped
+            ):
                 # Cell is missing -> return NaN
                 interactions.append(
                     InteractionEffect(
@@ -236,7 +259,11 @@ class EffectAnalyzer:
                     break
 
             is_sig = bool(pval is not None and pval < alpha)
-            aliases = alias_structure.get_aliases_for_term(f1 + f2, max_order=2) if alias_structure else []
+            aliases = (
+                alias_structure.get_aliases_for_term(f1 + f2, max_order=2)
+                if alias_structure
+                else []
+            )
 
             interactions.append(
                 InteractionEffect(
@@ -258,7 +285,10 @@ class EffectAnalyzer:
             )
 
         interactions.sort(
-            key=lambda e: (not np.isnan(e.effect_delta), abs(e.effect_delta) if not np.isnan(e.effect_delta) else -1),
+            key=lambda e: (
+                not np.isnan(e.effect_delta),
+                abs(e.effect_delta) if not np.isnan(e.effect_delta) else -1,
+            ),
             reverse=True,
         )
         return interactions

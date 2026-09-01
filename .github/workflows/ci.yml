@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Pinned: an unpinned formatter turns a new release into a red build.
+      - run: pip install "black==26.5.1" "isort==9.0.1"
+      - run: black --check prompt_prism tests
+      - run: isort --check-only prompt_prism tests
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        include:
+          # 3.8 is EOL and absent from the ubuntu-latest tool cache, but the package
+          # still claims and passes on it, so keep it verified on the older runner.
+          - os: ubuntu-22.04
+            python-version: "3.8"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+      - run: pip install -e ".[viz,dev]"
+      - run: pytest

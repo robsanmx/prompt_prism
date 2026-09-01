@@ -5,6 +5,7 @@ Evaluator orchestrator for computing multiple metrics across experiment trials.
 from __future__ import annotations
 
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+
 import pandas as pd
 
 from .metrics import (
@@ -24,7 +25,9 @@ class Evaluator:
     Manages a suite of metrics and calculates evaluation scores for trials.
     """
 
-    def __init__(self, metrics: Optional[Sequence[Union[Metric, Callable[..., float]]]] = None):
+    def __init__(
+        self, metrics: Optional[Sequence[Union[Metric, Callable[..., float]]]] = None
+    ):
         self.metrics: List[Metric] = []
         if metrics:
             for m in metrics:
@@ -34,7 +37,9 @@ class Evaluator:
             self.add_metric(ExactMatch())
             self.add_metric(F1Score())
 
-    def add_metric(self, metric: Union[Metric, Callable[..., float]], name: Optional[str] = None) -> Metric:
+    def add_metric(
+        self, metric: Union[Metric, Callable[..., float]], name: Optional[str] = None
+    ) -> Metric:
         """Add a metric to the suite."""
         if isinstance(metric, Metric):
             m_obj = metric
@@ -80,4 +85,6 @@ class Evaluator:
             results.append(scores)
 
         scores_df = pd.DataFrame(results)
-        return pd.concat([df.reset_index(drop=True), scores_df.reset_index(drop=True)], axis=1)
+        return pd.concat(
+            [df.reset_index(drop=True), scores_df.reset_index(drop=True)], axis=1
+        )

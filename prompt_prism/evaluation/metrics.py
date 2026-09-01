@@ -7,19 +7,25 @@ from __future__ import annotations
 import json
 import re
 from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union
+
 import numpy as np
 
 
 class Metric:
     """Abstract Base Metric."""
+
     name: str = "metric"
     higher_is_better: bool = True
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         """Compute the metric score for a single prediction and target."""
         raise NotImplementedError
 
-    def __call__(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def __call__(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         return self.compute(prediction, target, input_data)
 
 
@@ -48,7 +54,9 @@ class ExactMatch(Metric):
             s = re.sub(r"[^\w\s]", "", s)
         return re.sub(r"\s+", " ", s)
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         norm_pred = self._normalize(prediction)
         norm_target = self._normalize(target)
         return 1.0 if norm_pred == norm_target else 0.0
@@ -64,7 +72,9 @@ class F1Score(Metric):
     def _tokenize(self, text: Any) -> List[str]:
         return re.findall(r"\w+", str(text or "").lower())
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         pred_tokens = self._tokenize(prediction)
         target_tokens = self._tokenize(target)
 
@@ -74,13 +84,19 @@ class F1Score(Metric):
             return 0.0
 
         common = set(pred_tokens) & set(target_tokens)
-        num_same = sum(min(pred_tokens.count(t), target_tokens.count(t)) for t in common)
+        num_same = sum(
+            min(pred_tokens.count(t), target_tokens.count(t)) for t in common
+        )
         if num_same == 0:
             return 0.0
 
         precision = num_same / len(pred_tokens)
         recall = num_same / len(target_tokens)
-        f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+        f1 = (
+            (2 * precision * recall) / (precision + recall)
+            if (precision + recall) > 0
+            else 0.0
+        )
 
         if self.mode == "precision":
             return float(precision)
@@ -102,7 +118,12 @@ class JSONValidation(Metric):
         self.name = name
         self.required_keys = set(required_keys) if required_keys else set()
 
-    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self,
+        prediction: Any,
+        target: Any = None,
+        input_data: Optional[Dict[str, Any]] = None,
+    ) -> float:
         if isinstance(prediction, dict):
             parsed = prediction
         else:
@@ -162,14 +183,18 @@ class KeyValuesExtractionOverlap(Metric):
             return d if isinstance(d, dict) else {}
         except Exception:
             # Fallback regex key-value extraction
-            matches = re.findall(r'["\']?([\w_]+)["\']?\s*[:=]\s*["\']?([^,\n\}]+)["\']?', s)
+            matches = re.findall(
+                r'["\']?([\w_]+)["\']?\s*[:=]\s*["\']?([^,\n\}]+)["\']?', s
+            )
             return {k.strip(): v.strip() for k, v in matches}
 
     def _norm(self, s: Any) -> str:
         res = str(s or "").strip()
         return res if self.case_sensitive else res.lower()
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         pred_dict = self._parse_dict(prediction)
         target_dict = self._parse_dict(target)
 
@@ -196,7 +221,8 @@ class KeyValuesExtractionOverlap(Metric):
             if not shared_keys:
                 return 0.0
             val_matches = sum(
-                1 for k in shared_keys
+                1
+                for k in shared_keys
                 if self._norm(pred_keys[k]) == self._norm(target_keys[k])
                 or self._norm(pred_keys[k]) in self._norm(target_keys[k])
             )
@@ -210,7 +236,9 @@ class LevenshteinSimilarity(Metric):
     def __init__(self, name: str = "similarity"):
         self.name = name
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         s1 = str(prediction or "").strip()
         s2 = str(target or "").strip()
         if not s1 and not s2:
@@ -240,7 +268,12 @@ class RegexMatch(Metric):
         self.name = name
         self.pattern = re.compile(pattern, flags)
 
-    def compute(self, prediction: Any, target: Any = None, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self,
+        prediction: Any,
+        target: Any = None,
+        input_data: Optional[Dict[str, Any]] = None,
+    ) -> float:
         s = str(prediction or "")
         return 1.0 if bool(self.pattern.search(s)) else 0.0
 
@@ -258,7 +291,9 @@ class CustomMetric(Metric):
         self.name = name or getattr(score_fn, "__name__", "custom_metric")
         self.higher_is_better = higher_is_better
 
-    def compute(self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None) -> float:
+    def compute(
+        self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
+    ) -> float:
         try:
             return float(self.score_fn(prediction, target, input_data=input_data))
         except TypeError:
