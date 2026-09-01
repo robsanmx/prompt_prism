@@ -6,7 +6,9 @@ This tutorial demonstrates how to use PromptPrism with DeepEval in two distinct 
 2. Reference-Free Evaluation: Measuring Answer Relevancy and Faithfulness without ground truth labels.
 """
 
-from typing import Any, Dict, List
+import importlib.util
+import os
+
 from prompt_prism import (
     DeepEvalMetric,
     Experiment,
@@ -14,8 +16,6 @@ from prompt_prism import (
     JudgeCache,
     MockLLM,
     deepeval_metric,
-    plot_main_effects,
-    plot_pareto_effects,
 )
 
 
@@ -99,9 +99,11 @@ def main():
     # The JudgeCache prevents paying for duplicate judge evaluations across ANOVA reruns
     judge_cache = JudgeCache(db_path="judge_cache.db")
 
-    # Check if deepeval is installed, otherwise use simulated judge for tutorial demonstration
-    try:
-        import deepeval
+    has_openai_key = bool(os.environ.get("OPENAI_API_KEY")) and (
+        importlib.util.find_spec("deepeval") is not None
+    )
+
+    if has_openai_key:
         # Mode A: Reference-Based Metric (Uses the Golden "target" for factual truth alignment)
         factual_geval = deepeval_metric(
             "g_eval",
@@ -121,8 +123,9 @@ def main():
             threshold=0.7,
             cache=judge_cache,
         )
-    except ImportError:
-        # Simulated judge fallback for tutorial run without deepeval installed
+
+    if not has_openai_key:
+        # Simulated judge fallback for tutorial run without live OpenAI API keys
         class SimulatedGEvalJudge:
             def __init__(self):
                 self.score = 0.85
@@ -130,8 +133,8 @@ def main():
 
             def measure(self, test_case):
                 # Simulate higher score when persona and few-shot are active
-                has_persona = "Compliance Auditor" in test_case.input
-                has_few_shot = "Example 1" in test_case.input
+                has_persona = "Compliance Auditor" in str(test_case.input)
+                has_few_shot = "Example 1" in str(test_case.input)
                 base = 0.60
                 if has_persona:
                     base += 0.15
@@ -170,10 +173,16 @@ def main():
     # -----------------------------------------------------------------------
     # Step 5: Connect LLM Provider & Execute Trials
     # -----------------------------------------------------------------------
-    client = MockLLM(default_response="$50 cancellation fee applies within 14 days per Clause 4.1.")
+    client = MockLLM(
+        default_response="$50 cancellation fee applies within 14 days per Clause 4.1."
+    )
 
-    print(f"\n🚀 Running {len(exp.design.runs)} experimental runs across {len(golden_dataset)} golden cases...")
-    print(f"📊 Estimated judge calls: {exp.estimate_judge_calls(golden_dataset)} (cached in SQLite)")
+    print(
+        f"\n🚀 Running {len(exp.design.runs)} experimental runs across {len(golden_dataset)} golden cases..."
+    )
+    print(
+        f"📊 Estimated judge calls: {exp.estimate_judge_calls(golden_dataset)} (cached in SQLite)"
+    )
 
     results = exp.run(dataset=golden_dataset, client=client, max_workers=4)
     print(f"✅ Completed {len(results.trials)} trials successfully.")
@@ -193,9 +202,12 @@ def main():
     # Step 7: Export Configured Winning Prompt
     # -----------------------------------------------------------------------
     optimal_template = exp.get_optimal_prompt_template()
+    assert optimal_template is not None
     sample_prompt = exp.composer.compose_text(
         run_config=exp.design.runs[0].model_copy(
-            update={"factor_levels": report.optimal_recommendation.optimal_factor_levels}
+            update={
+                "factor_levels": report.optimal_recommendation.optimal_factor_levels
+            }
         ),
         data={
             "policy_text": "Clause 5: Returns accepted within 30 days.",

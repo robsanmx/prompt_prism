@@ -2,15 +2,14 @@
 Tutorial: Optimizing a Retrieval-Augmented Generation (RAG) Prompt with Fractional Factorial DoE.
 """
 
+import importlib.util
+
 from prompt_prism import (
     ExactMatch,
     Experiment,
     F1Score,
     Factor,
     MockLLM,
-    ROUGEMetric if False else F1Score,
-    plot_main_effects,
-    plot_pareto_effects,
 )
 
 
@@ -62,7 +61,7 @@ def main():
     # 2. Setup Experiment using 2^(6-2)IV (16 runs, Resolution IV)
     exp = Experiment.from_factors(
         factors=factors,
-        design="2(6-2)IV", # 16 runs instead of 64 runs!
+        design="2(6-2)IV",  # 16 runs instead of 64 runs!
         system_prompt="{{ system_role }}",
         data_template="Context:\n{{ xml_framing }}\n\nUser Question: {{ question }}",
         metrics=[F1Score(), ExactMatch()],
@@ -70,19 +69,26 @@ def main():
         title="Enterprise RAG Prompt Optimization",
     )
 
-    print(f"\n✅ Created Design: {exp.design.plan_id} with {exp.design.num_runs} runs across {exp.design.num_factors} factors.")
+    print(
+        f"\n✅ Created Design: {exp.design.plan_id} with {exp.design.num_runs} runs across {exp.design.num_factors} factors."
+    )
 
-    # 3. Test Dataset
+    # 3. Test Dataset with retrieval_context for judge field mapping
     dataset = [
         {
             "id": 1,
             "context": "Doc 1: Project Apollo was founded in 2021. Doc 2: Apollo budget was $5M.",
+            "retrieval_context": [
+                "Project Apollo was founded in 2021.",
+                "Apollo budget was $5M.",
+            ],
             "question": "When was Apollo founded and what was its budget?",
             "target": "Project Apollo was founded in 2021 with a budget of $5M [Doc 1] [Doc 2].",
         },
         {
             "id": 2,
             "context": "Doc 1: Python was created by Guido van Rossum in 1991.",
+            "retrieval_context": ["Python was created by Guido van Rossum in 1991."],
             "question": "Who created Python and when?",
             "target": "Python was created by Guido van Rossum in 1991 [Doc 1].",
         },
@@ -103,10 +109,39 @@ def main():
 
     client = MockLLM(response_generator=lambda p, kw: rag_llm(p))
 
-    # 5. Run & Analyze
+    # 5. Run & Analyze deterministic metrics
     results = exp.run(dataset=dataset, client=client, max_workers=2)
+    print(f"✅ Finished running {len(results.trials)} trials.")
     report = exp.analyze()
     print(report.to_markdown())
+
+    # 6. Optional DeepEval Judge metrics demonstration
+    if importlib.util.find_spec("deepeval") is not None:
+        from prompt_prism.evaluation.deepeval_metrics import deepeval_metric
+        from prompt_prism.evaluation.judge_cache import JudgeCache
+
+        print("\n" + "=" * 70)
+        print("🔍 DEEPEVAL LLM JUDGE EVALUATION (Faithfulness & Answer Relevancy)")
+        print("=" * 70)
+
+        judge_cache = JudgeCache()
+        faith_metric = deepeval_metric("faithfulness", cache=judge_cache)
+        rel_metric = deepeval_metric("answer_relevancy", cache=judge_cache)
+
+        deepeval_exp = Experiment.from_factors(
+            factors=factors,
+            design="2(6-2)IV",
+            system_prompt="{{ system_role }}",
+            data_template="Context:\n{{ xml_framing }}\n\nUser Question: {{ question }}",
+            metrics=[faith_metric, rel_metric, F1Score()],
+            target_metric="deepeval_faithfulness",
+            title="Enterprise RAG - DeepEval Judge Optimization",
+        )
+        print(f"Estimated Judge calls: {deepeval_exp.estimate_judge_calls(dataset)}")
+    else:
+        print(
+            "\nℹ️ [Note] DeepEval not installed. Install with `pip install prompt-prism[deepeval]` to enable LLM-as-judge metrics."
+        )
 
 
 if __name__ == "__main__":
