@@ -74,9 +74,7 @@ def test_runner_passes_prompt_in_context():
         seen_contexts.append(dict(input_data or {}))
         return 1.0
 
-    context_metric = CustomMetric(
-        inspect_context, name="inspect_ctx", wants_prompt=True
-    )
+    context_metric = CustomMetric(inspect_context, name="inspect_ctx")
     evaluator = Evaluator([context_metric])
 
     factors = [Factor.binary("f1", level_0_content="A", level_1_content="B")]

@@ -181,7 +181,6 @@ class DeepEvalMetric(Metric):
     """
 
     is_llm_judge: bool = True
-    wants_prompt: bool = True
 
     def __init__(
         self,

@@ -19,13 +19,11 @@ class Metric:
         name: Unique metric identifier used as column name in ANOVA tables.
         higher_is_better: Whether higher score represents better performance.
         is_llm_judge: Whether this metric is network-bound/LLM-based (default False).
-        wants_prompt: Whether this metric needs access to the composed prompt (__prompt__ in context).
     """
 
     name: str = "metric"
     higher_is_better: bool = True
     is_llm_judge: bool = False
-    wants_prompt: bool = False
 
     def compute(
         self, prediction: Any, target: Any, input_data: Optional[Dict[str, Any]] = None
@@ -325,7 +323,6 @@ class CustomMetric(Metric):
         name: Optional[str] = None,
         higher_is_better: bool = True,
         is_llm_judge: bool = False,
-        wants_prompt: bool = False,
         score_fn: Optional[Callable[..., float]] = None,
     ):
         if fn is None and score_fn is not None:
@@ -344,7 +341,6 @@ class CustomMetric(Metric):
         self.name = name or getattr(fn, "__name__", "custom_metric")
         self.higher_is_better = higher_is_better
         self.is_llm_judge = is_llm_judge
-        self.wants_prompt = wants_prompt
         self._caller = self._compile_caller(fn)
 
     @staticmethod
