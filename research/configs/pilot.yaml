@@ -1,0 +1,24 @@
+# Excluded-Data Pilot Configuration
+version: "1.0"
+date: "2026-09-26"
+
+pilot:
+  experiment_id: "pilot_schema_extraction_v1"
+  task: "schema_extraction"
+  model: "qwen2.5-7b-instruct"
+  num_items: 20
+  num_replicates: 1
+  num_configurations: 64  # Exhaustive 2^6 full factorial
+  item_id_prefix: "pilot_schema_"
+  data_exclusion_guarantee: "These 20 items are strictly excluded from the 160 confirmatory dataset items."
+  prompt_factors:
+    A: "role_framing"
+    B: "task_decomposition"
+    C: "demonstrations"
+    D: "output_contract"
+    E: "grounding_constraint"
+    F: "verification_pass"
+  decoding:
+    temperature: 0.0
+    seed: 42
+    max_tokens: 512

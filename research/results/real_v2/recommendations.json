@@ -1,0 +1,314 @@
+{
+  "status": "LOCKED_PRE_CONFIRMATION_UNLOCK",
+  "timestamp": "2026-09-26T21:49:30Z",
+  "recommendations_sha256": "0573456335dfd3c77b7be0e05756f20516f1a87a4022e8db0edae193a32d08ba",
+  "cells_count": 9,
+  "recommendations": {
+    "schema_extraction__claude-3-5-haiku-20241022": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": 1
+      },
+      "uniform_random_search": {
+        "A": 1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "ofat_ablation": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      }
+    },
+    "schema_extraction__gpt-4o-mini-2024-07-18": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": -1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": -1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": -1
+      }
+    },
+    "schema_extraction__meta-llama/Llama-3.1-8B-Instruct": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": -1
+      },
+      "uniform_random_search": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": -1,
+        "E": 1,
+        "F": -1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      }
+    },
+    "grounded_qa__claude-3-5-haiku-20241022": {
+      "prompt_prism_res_iv": {
+        "A": -1,
+        "B": -1,
+        "C": 1,
+        "D": -1,
+        "E": 1,
+        "F": 1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": 1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      }
+    },
+    "grounded_qa__gpt-4o-mini-2024-07-18": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 1,
+        "F": -1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": -1,
+        "C": 1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "ofat_ablation": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      }
+    },
+    "grounded_qa__meta-llama/Llama-3.1-8B-Instruct": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": -1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": 1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "ofat_ablation": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      }
+    },
+    "intent_classification__claude-3-5-haiku-20241022": {
+      "prompt_prism_res_iv": {
+        "A": -1,
+        "B": 1,
+        "C": 1,
+        "D": -1,
+        "E": 1,
+        "F": 1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": 1,
+        "B": 1,
+        "C": 1,
+        "D": 1,
+        "E": 1,
+        "F": 1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      }
+    },
+    "intent_classification__gpt-4o-mini-2024-07-18": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      }
+    },
+    "intent_classification__meta-llama/Llama-3.1-8B-Instruct": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "B": 1,
+        "C": -1,
+        "D": 1,
+        "E": 1,
+        "F": -1
+      },
+      "uniform_random_search": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      },
+      "exhaustive_oracle": {
+        "A": -1,
+        "B": -1,
+        "C": -1,
+        "D": -1,
+        "E": -1,
+        "F": -1
+      }
+    }
+  }
+}

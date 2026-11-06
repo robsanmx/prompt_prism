@@ -1,0 +1,276 @@
+{
+  "completeness": {
+    "complete": true,
+    "counts": {
+      "confirmation": 15360,
+      "discovery": 15360
+    },
+    "errors": 0,
+    "expected_per_split": 15360,
+    "finish_reasons": {
+      "MAX_TOKENS": 2,
+      "STOP": 30718
+    }
+  },
+  "confirmation_manifest_sha256": "88ab4d6d4f1f1f7efb1a3f9d198322df65579085b19090ec3d4ede80b34e7adc",
+  "discovery_manifest_sha256": "2510ed02d94a9e4254fe6911c8f939b4a82248903e84cb57b687ca0617190178",
+  "experiment_id": "prompt-prism-real-v3-gemini-2026-09-26",
+  "generated_at": "2026-09-26T23:48:31.427176+00:00",
+  "h2_effect_recovery": {
+    "grounded_qa": {
+      "oracle_effects": {
+        "A": -0.012698174721697653,
+        "B": -0.02748746961823456,
+        "C": 0.014227721089657752,
+        "D": 0.017204412158662974,
+        "E": -5.152850622847094e-05,
+        "F": 0.0006388611250223164
+      },
+      "prism_effects": {
+        "A": -0.012669312860045023,
+        "B": -0.03184894096229374,
+        "C": 0.014261472462887448,
+        "D": 0.017722947302379666,
+        "E": 0.006990321640439445,
+        "F": 0.0006311566585154305
+      },
+      "prism_rmse": 0.003388239365548197,
+      "prism_sign_agreement": 0.8333333333333334,
+      "random_mean_rmse": 0.01187683748354919,
+      "random_mean_sign_agreement": 0.7833333333333334
+    },
+    "intent_classification": {
+      "oracle_effects": {
+        "A": 0.019140625000000022,
+        "B": 0.010546875000000067,
+        "C": -0.027734374999999978,
+        "D": 0.004296874999999978,
+        "E": -0.005078124999999933,
+        "F": -0.007421875000000022
+      },
+      "prism_effects": {
+        "A": 0.021874999999999978,
+        "B": 0.012499999999999956,
+        "C": -0.03125,
+        "D": -0.0031250000000000444,
+        "E": -0.0031250000000000444,
+        "F": -0.009375000000000022
+      },
+      "prism_rmse": 0.0037939589282118265,
+      "prism_sign_agreement": 0.8333333333333334,
+      "random_mean_rmse": 0.010591732748985887,
+      "random_mean_sign_agreement": 0.7750000000000001
+    },
+    "schema_extraction": {
+      "oracle_effects": {
+        "A": -0.00043991988645375457,
+        "B": 0.01788712617684185,
+        "C": 0.0015245722683319696,
+        "D": -0.006015523541645751,
+        "E": 0.0005759850368500241,
+        "F": 0.0016128475403702214
+      },
+      "prism_effects": {
+        "A": -0.00581126725549147,
+        "B": 0.016656761120286634,
+        "C": 0.0003975408675001013,
+        "D": -0.013701856467191187,
+        "E": 0.0069910055329946985,
+        "F": 0.0036323743550910614
+      },
+      "prism_rmse": 0.004760008068504684,
+      "prism_sign_agreement": 1.0,
+      "random_mean_rmse": 0.005468277943608126,
+      "random_mean_sign_agreement": 0.6666666666666666
+    }
+  },
+  "h3_vs_baseline": {
+    "grounded_qa": {
+      "bh_adjusted_p_value": 0.4947526236881559,
+      "ci_95": [
+        -0.08250086805555555,
+        0.03650917658730157
+      ],
+      "mean_difference": -0.020471230158730157,
+      "raw_p_value": 0.4947526236881559
+    },
+    "intent_classification": {
+      "bh_adjusted_p_value": 0.40329835082458776,
+      "ci_95": [
+        0.0,
+        0.0625
+      ],
+      "mean_difference": 0.025,
+      "raw_p_value": 0.2688655672163918
+    },
+    "schema_extraction": {
+      "bh_adjusted_p_value": 0.40329835082458776,
+      "ci_95": [
+        -0.015888658490632174,
+        0.06889087894926707
+      ],
+      "mean_difference": 0.02768845189897821,
+      "raw_p_value": 0.1889055472263868
+    }
+  },
+  "model_requested": "gemini-2.5-flash",
+  "model_versions_returned": [
+    "gemini-2.5-flash"
+  ],
+  "primary": {
+    "alpha": 0.05,
+    "bootstrap_iterations": 2000,
+    "ci_95": [
+      -0.027337695348257446,
+      0.028686195621262147
+    ],
+    "estimand": "mean(random confirmation score - Prism confirmation score) across tasks",
+    "observed_delta": 0.0010989713524465206,
+    "one_sided_p_value": 0.4567716141929036,
+    "supports_h1": false
+  },
+  "protocol_hash": "46933473419012fe20b3a0229b46851bfcbaf292ab2e4f73d3c1f824646be416",
+  "recommendations_sha256": "cbd5c83c5d95dbfa2b4d1edbff3067450f285e127eb70f1870c8c7aca9be52c6",
+  "resources": {
+    "all_calls": {
+      "calls": 30720,
+      "cost_usd": 4.15212710000006,
+      "latency_seconds_sum": 16813.518429112155,
+      "tokens_input": 8551232,
+      "tokens_output": 634703,
+      "tokens_thoughts": 0
+    },
+    "exhaustive_discovery_cube": {
+      "calls": 15360,
+      "cost_usd": 2.0487381999999976,
+      "latency_seconds_sum": 8617.174195982077,
+      "tokens_input": 4239744,
+      "tokens_output": 310726,
+      "tokens_thoughts": 0
+    },
+    "mean_balanced_random_discovery_screen": {
+      "calls": 3840.0,
+      "cost_usd": 0.5100219250000001,
+      "latency_seconds_sum": 2152.949847723043,
+      "tokens_input": 1059936.0,
+      "tokens_output": 76816.45,
+      "tokens_thoughts": 0.0
+    },
+    "prism_call_fraction_of_exhaustive": 0.25,
+    "prism_discovery_screen": {
+      "calls": 3840,
+      "cost_usd": 0.5144183000000013,
+      "latency_seconds_sum": 2160.0352908800423,
+      "tokens_input": 1059936,
+      "tokens_output": 78575,
+      "tokens_thoughts": 0
+    }
+  },
+  "tasks": {
+    "grounded_qa": {
+      "baseline_score": 0.8976403478057889,
+      "confirmation_best_run_id_post_hoc": 8,
+      "delta_regret": -0.0016841975788548513,
+      "discovery_oracle_run_id": 6,
+      "fraction_of_oracle_uplift": null,
+      "oracle_score": 0.8800892857142856,
+      "prism_regret": 0.002920168067226947,
+      "prism_run_id": 16,
+      "prism_score": 0.8771691176470586,
+      "random_regret": 0.004604365646081798,
+      "random_score": 0.8754849200682038,
+      "random_winner_run_ids": [
+        12,
+        5,
+        12,
+        6,
+        45,
+        6,
+        6,
+        12,
+        43,
+        44,
+        8,
+        12,
+        9,
+        16,
+        5,
+        6,
+        6,
+        5,
+        16,
+        2
+      ]
+    },
+    "intent_classification": {
+      "baseline_score": 0.8375,
+      "confirmation_best_run_id_post_hoc": 37,
+      "delta_regret": 0.0006249999999998757,
+      "discovery_oracle_run_id": 50,
+      "fraction_of_oracle_uplift": 2.000000000000009,
+      "oracle_score": 0.85,
+      "prism_regret": -0.012500000000000067,
+      "prism_run_id": 49,
+      "prism_score": 0.8625,
+      "random_regret": -0.013124999999999942,
+      "random_score": 0.8631249999999999,
+      "random_winner_run_ids": [
+        52,
+        52,
+        50,
+        38,
+        52,
+        52,
+        35,
+        50,
+        23,
+        23,
+        34,
+        24,
+        52,
+        34,
+        52,
+        50,
+        52,
+        37,
+        23,
+        22
+      ]
+    },
+    "schema_extraction": {
+      "baseline_score": 0.4834160512367746,
+      "confirmation_best_run_id_post_hoc": 23,
+      "delta_regret": 0.004356111636194537,
+      "discovery_oracle_run_id": 20,
+      "fraction_of_oracle_uplift": 0.5620491337609199,
+      "oracle_score": 0.5326794523093864,
+      "prism_regret": 0.021574949173633562,
+      "prism_run_id": 28,
+      "prism_score": 0.5111045031357528,
+      "random_regret": 0.017218837537439025,
+      "random_score": 0.5154606147719474,
+      "random_winner_run_ids": [
+        52,
+        52,
+        20,
+        31,
+        52,
+        52,
+        58,
+        31,
+        58,
+        31,
+        20,
+        24,
+        52,
+        57,
+        52,
+        58,
+        52,
+        58,
+        23,
+        20
+      ]
+    }
+  }
+}

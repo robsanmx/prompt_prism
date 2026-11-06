@@ -101,6 +101,7 @@ class EffectAnalyzer:
         ols_bse = getattr(ols_model, "bse", {}) if ols_model else {}
         ols_tvalues = getattr(ols_model, "tvalues", {}) if ols_model else {}
         ols_pvalues = getattr(ols_model, "pvalues", {}) if ols_model else {}
+        has_ols_interactions = any(":" in str(k) for k in ols_params.keys())
 
         for fid in factor_cols:
             if fid not in df.columns:
@@ -114,18 +115,44 @@ class EffectAnalyzer:
             m1 = float(vals_1.mean()) if len(vals_1) > 0 else 0.0
 
             safe_name = col_to_safe.get(fid, fid)
-            # Look for categorical or numeric term in OLS model
+            # Look for categorical or numeric main-effect term in OLS model
             ols_term_key = None
             for key in ols_params.keys():
-                if safe_name in key:
+                if safe_name in key and ":" not in str(key):
                     ols_term_key = key
                     break
 
-            if ols_model and ols_term_key:
+            if ols_model and ols_term_key and not has_ols_interactions:
                 delta = float(ols_params[ols_term_key])
                 se = float(ols_bse.get(ols_term_key, 0.0))
                 t_stat = float(ols_tvalues.get(ols_term_key, 0.0))
                 pval = float(ols_pvalues.get(ols_term_key, 1.0))
+            elif (
+                ols_model
+                and has_ols_interactions
+                and hasattr(ols_model, "mse_resid")
+                and len(vals_0) > 0
+                and len(vals_1) > 0
+            ):
+                # When interaction terms are present in Patsy treatment coding,
+                # ols_params[C(f)[T.1]] is a simple effect at the reference corner (0,...,0).
+                # Use the true marginal main effect (m1 - m0) tested against OLS residual MSE.
+                delta = m1 - m0
+                mse_res = float(getattr(ols_model, "mse_resid", 0.0))
+                df_res = float(getattr(ols_model, "df_resid", 0.0))
+                se = (
+                    float(
+                        np.sqrt(max(0.0, mse_res) * (1.0 / len(vals_1) + 1.0 / len(vals_0)))
+                    )
+                    if mse_res > 0
+                    else 0.0
+                )
+                t_stat = float(delta / se) if se > 1e-12 else 0.0
+                pval = (
+                    float(2.0 * stats.t.sf(abs(t_stat), df=df_res))
+                    if (se > 1e-12 and df_res > 0)
+                    else 1.0
+                )
             else:
                 # Fallback to sample means and two-sample t-test
                 delta = m1 - m0

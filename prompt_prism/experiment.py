@@ -167,6 +167,7 @@ class Experiment:
         include_interactions: bool = False,
         alpha: float = 0.05,
         maximize: Optional[bool] = None,
+        strategy: str = "additive",
     ) -> AnalysisReport:
         """
         Perform ANOVA and Main Effects analysis on the experiment results using RCBD blocking.
@@ -196,6 +197,7 @@ class Experiment:
             alpha=alpha,
             title=f"{self.title} - ANOVA Analysis ({metric_name})",
             maximize=maximize,
+            strategy=strategy,
         )
         return self.last_report
 

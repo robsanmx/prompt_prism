@@ -1,0 +1,9 @@
+{
+  "total_records": 7680,
+  "unique_trials": 7680,
+  "has_duplicate_keys": false,
+  "discovery_count": 3840,
+  "confirmation_count": 3840,
+  "error_count": 0,
+  "manifest_hash": "5363e5fe21427157a603c808a3434ca08de2cb336c9678a1deead33917b2dcf0"
+}

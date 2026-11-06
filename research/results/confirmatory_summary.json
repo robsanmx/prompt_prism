@@ -1,0 +1,17 @@
+{
+  "analysis_status": "CONFIRMATORY_ANALYSIS_COMPLETE",
+  "git_commit": "d3020cd5f1f6e0d796980546ca09c9e642a9f67d",
+  "primary_hypothesis_h1": {
+    "hypothesis": "At 16 configurations, Resolution IV achieves lower mean held-out selection regret than budget-matched random search.",
+    "prompt_prism_mean_regret": 0.0,
+    "random_search_mean_regret": 0.0,
+    "mean_regret_reduction": 0.0,
+    "t_statistic": 0.0,
+    "p_value": 1.0,
+    "decision": "UNSUPPORTED"
+  },
+  "secondary_hypotheses": {
+    "h5_generalization": "SUPPORTED (all recommended prompts exceed baseline on confirmation items)",
+    "h6_efficiency": "SUPPORTED (captures >= 95% of exhaustive uplift using 25% of configuration budget)"
+  }
+}

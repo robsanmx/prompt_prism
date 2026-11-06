@@ -1,0 +1,46 @@
+# Frozen Model Snapshots and Provider Configurations
+version: "1.0"
+date: "2026-09-26"
+
+models:
+  open_weight_local:
+    id: "qwen2.5-7b-instruct"
+    name: "Qwen 2.5 7B Instruct"
+    provider: "local_vllm"
+    model_identifier: "Qwen/Qwen2.5-7B-Instruct"
+    endpoint_type: "vllm_local"
+    decoding:
+      temperature: 0.0
+      top_p: 1.0
+      seed: 42
+      max_tokens: 512
+    cost_per_1m_input_tokens_usd: 0.00
+    cost_per_1m_output_tokens_usd: 0.00
+    notes: "Primary reproducible open-weight model with fixed decoding seeds."
+
+  api_economical:
+    id: "gpt-4o-mini-2024-07-18"
+    name: "GPT-4o Mini Snapshot"
+    provider: "openai"
+    model_identifier: "gpt-4o-mini-2024-07-18"
+    endpoint_type: "chat_completions"
+    decoding:
+      temperature: 0.0
+      seed: 42
+      max_tokens: 512
+    cost_per_1m_input_tokens_usd: 0.15
+    cost_per_1m_output_tokens_usd: 0.60
+    notes: "Economical commercial API model snapshot."
+
+  api_frontier:
+    id: "claude-3-5-sonnet-20241022"
+    name: "Claude 3.5 Sonnet Snapshot"
+    provider: "anthropic"
+    model_identifier: "claude-3-5-sonnet-20241022"
+    endpoint_type: "messages"
+    decoding:
+      temperature: 0.0
+      max_tokens: 512
+    cost_per_1m_input_tokens_usd: 3.00
+    cost_per_1m_output_tokens_usd: 15.00
+    notes: "Frontier capability commercial model from distinct model family."

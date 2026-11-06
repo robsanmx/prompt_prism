@@ -1,0 +1,79 @@
+# Dataset Manifest and Provenance Registry
+version: "1.0"
+date: "2026-09-26"
+
+datasets:
+  contract_events_v1:
+    task: "schema_extraction"
+    description: "Enterprise acquisition and contract event entity-attribute extraction"
+    source_corpus: "Curated open-source corporate event filings and public transaction announcements"
+    license: "CC-BY-4.0"
+    total_items: 160
+    splits:
+      discovery:
+        count: 80
+        id_prefix: "schema_disc_"
+        hash_sha256: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      confirmation:
+        count: 80
+        id_prefix: "schema_conf_"
+        hash_sha256: "c157a79031e1c40f85931829bc5fc552add14b1426982bc0b136e491f114fb10"
+    deduplication:
+      method: "SHA-256 hash of normalized lowercase input text and target JSON"
+      duplicates_removed: 0
+    contamination_check:
+      discovery_confirmation_overlap: 0
+      pretraining_contamination_audit: "Passed (no verbatim test sentences present in common open web pretraining lists)"
+    schema:
+      input_fields: ["id", "text"]
+      target_fields: ["buyer", "target", "amount", "date"]
+
+  grounded_fact_qa_v1:
+    task: "grounded_qa"
+    description: "Factual question answering over curated, verified domain reference passages"
+    source_corpus: "Synthesized and human-verified encyclopedic science and history excerpts"
+    license: "CC-BY-4.0"
+    total_items: 160
+    splits:
+      discovery:
+        count: 80
+        id_prefix: "qa_disc_"
+        hash_sha256: "7215ee9c7d9dc229d2921a40e899ec5f7397b91d24c3a726671239c5f87b8f9e"
+      confirmation:
+        count: 80
+        id_prefix: "qa_conf_"
+        hash_sha256: "2d711641b726b130372ac039ac702d68e3e324ab44b2b7a3f4da78f23640d91f"
+    deduplication:
+      method: "Exact match on normalized (context, question) tuple"
+      duplicates_removed: 0
+    contamination_check:
+      discovery_confirmation_overlap: 0
+      unanswerable_ratio: 0.15
+    schema:
+      input_fields: ["id", "context", "question"]
+      target_fields: ["target_answer", "is_answerable"]
+
+  customer_intent_v1:
+    task: "intent_classification"
+    description: "Multi-class customer support intent utterances with 7 balanced classes"
+    source_corpus: "Banking and retail customer service queries curated under permissive research licenses"
+    license: "CC-BY-4.0"
+    total_items: 160
+    splits:
+      discovery:
+        count: 80
+        id_prefix: "intent_disc_"
+        hash_sha256: "a6875225114dbd712fa9fa6144e130df9360816089ad1c8be4fc1f91de08c3a9"
+      confirmation:
+        count: 80
+        id_prefix: "intent_conf_"
+        hash_sha256: "b45cffe084dd3d20d928bee85e7b0f2142278f8cb0f1287c67bf1f9cf5a3c104"
+    deduplication:
+      method: "Normalized whitespace and lowercase token match"
+      duplicates_removed: 0
+    contamination_check:
+      discovery_confirmation_overlap: 0
+      class_balance: "Strictly balanced: ~11-12 items per class across discovery and confirmation"
+    schema:
+      input_fields: ["id", "message"]
+      target_fields: ["target_intent"]

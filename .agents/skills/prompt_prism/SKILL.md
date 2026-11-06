@@ -3,7 +3,7 @@ name: prompt_prism
 description: >-
   Universal framework for optimizing and improving LLM prompts using Fractional Factorial
   Design of Experiments (DoE) and ANOVA. Use whenever the user wants to test multiple prompt
-  variations, identify statistically significant prompt factors, reduce evaluation costs by 90%+,
+  variations, identify statistically significant prompt factors, reduce the experiment search space by 90%+,
   eliminate prompt guesswork, or find the mathematically optimal prompt recipe.
 ---
 
@@ -12,7 +12,7 @@ description: >-
 Use this skill whenever you or the user need to:
 - **Systematically optimize an LLM prompt** across multiple design factors (persona, few-shot examples, chain-of-thought, output schemas, guardrails, constraints).
 - **Quantify the exact performance impact ($\Delta$)** of each prompt component with statistical confidence ($p$-values, $t$-statistics, effect sizes).
-- **Screen 5 to 23 candidate prompt factors** in a fraction of the cost ($90\%$ to $98\%$ cheaper than full factorial testing) using **Fractional Factorial ($2^{k-p}$)** or **Plackett-Burman** orthogonal designs.
+- **Screen 5 to 23 candidate prompt factors** with a fraction of the runs ($90\%$ to $98\%$ of the full factorial search space eliminated) using **Fractional Factorial ($2^{k-p}$)** or **Plackett-Burman** orthogonal designs.
 - **Isolate true factor effects from dataset noise** using **Randomized Complete Block Design (RCBD)**.
 - **Evaluate with Golden Datasets or Reference-Free LLM-as-a-Judge** (via DeepEval integration with `JudgeCache`).
 - **Generate the mathematically winning prompt** and produce publication-grade ANOVA tables, Pareto charts, and diagnostic reports.

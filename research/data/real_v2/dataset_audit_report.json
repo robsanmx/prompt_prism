@@ -1,0 +1,32 @@
+{
+  "schema_extraction.jsonl": {
+    "filename": "schema_extraction.jsonl",
+    "total_items": 180,
+    "pilot_count": 20,
+    "discovery_count": 80,
+    "confirmation_count": 80,
+    "discovery_hash": "8c626dad663c8b2acfa25ece4b9a51f64a22686cf846bf9e25038fc00d01bebf",
+    "confirmation_hash": "b8c60e5b40a4c458edd1e8c68afdda6c54e740b8d27e5e42e14dd2e83ed2ea39",
+    "status": "PASSED_INTEGRITY_AUDIT"
+  },
+  "grounded_qa.jsonl": {
+    "filename": "grounded_qa.jsonl",
+    "total_items": 180,
+    "pilot_count": 20,
+    "discovery_count": 80,
+    "confirmation_count": 80,
+    "discovery_hash": "8b1873cc334837c2818da444d21fdcf72b41cab5f1a33e5bc2476e083d64e64e",
+    "confirmation_hash": "1d7b1f09a63474dc464efb94453a646598600a702a2033dec166bbb4de274938",
+    "status": "PASSED_INTEGRITY_AUDIT"
+  },
+  "intent_classification.jsonl": {
+    "filename": "intent_classification.jsonl",
+    "total_items": 180,
+    "pilot_count": 20,
+    "discovery_count": 80,
+    "confirmation_count": 80,
+    "discovery_hash": "6d054a8134e2c1e529d1d17938b31b2159c38b7d642700d6f989cc7a4c3b4198",
+    "confirmation_hash": "c00d522c6c50a16a981a62a77b81b723a05c4f11fa6666713f6abbba7aac981b",
+    "status": "PASSED_INTEGRITY_AUDIT"
+  }
+}

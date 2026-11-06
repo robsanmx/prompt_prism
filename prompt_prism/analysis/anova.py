@@ -357,6 +357,17 @@ class ANOVAEngine:
         ]
         neutral = [e.factor_id for e in main_effects if not e.is_significant]
 
+        # Compute observed cell means across valid factors for screen-best selection
+        grouped_cells = clean_df.groupby(valid_factors, dropna=True)[target_col].mean()
+        cell_means: Dict[Tuple[int, ...], float] = {}
+        for k_cell, val in grouped_cells.items():
+            key_tuple = (
+                tuple(int(x) for x in k_cell)
+                if isinstance(k_cell, tuple)
+                else (int(k_cell),)
+            )
+            cell_means[key_tuple] = float(val)
+
         return ANOVAResult(
             target_metric=target_col,
             formula=human_formula,
@@ -382,6 +393,9 @@ class ANOVAEngine:
                 "ols_model": ols_model,
                 "target_min": float(clean_df[target_col].min()),
                 "target_max": float(clean_df[target_col].max()),
+                "valid_factors": list(valid_factors),
+                "cell_means": cell_means,
+                "grand_mean": float(clean_df[target_col].mean()),
                 # The direction main_effects[*].action_recommendation was computed under,
                 # so a consumer given a different one knows to re-derive.
                 "maximize": maximize,

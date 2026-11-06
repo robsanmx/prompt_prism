@@ -1,0 +1,62 @@
+{
+  "experiment_id": "promptprism_gemini_v2",
+  "model_id": "gemini-2.5-flash",
+  "date": "2026-09-26 22:41:29Z",
+  "total_calls": 7680,
+  "total_tokens_input": 1016128,
+  "total_tokens_output": 208839,
+  "total_cost_usd": 0.1388612999999997,
+  "mean_delta_regret": 0.033618233618233635,
+  "h1_decision": "UNSUPPORTED",
+  "h5_compute_savings": 0.75,
+  "task_results": [
+    {
+      "task_id": "schema_extraction",
+      "model_id": "gemini-2.5-flash",
+      "prism_score": 1.0,
+      "prism_regret": 0.0,
+      "rand_score": 1.0,
+      "rand_regret": 0.0,
+      "ofat_score": 1.0,
+      "ofat_regret": 0.0,
+      "oracle_score": 1.0,
+      "baseline_score": 1.0,
+      "delta_regret": 0.0,
+      "ci_lower": 0.0,
+      "ci_upper": 0.0,
+      "p_val": 1.0
+    },
+    {
+      "task_id": "grounded_qa",
+      "model_id": "gemini-2.5-flash",
+      "prism_score": 0.07222222222222222,
+      "prism_regret": 0.33777777777777784,
+      "rand_score": 0.12307692307692308,
+      "rand_regret": 0.28692307692307695,
+      "ofat_score": 0.16,
+      "ofat_regret": 0.25,
+      "oracle_score": 0.41000000000000003,
+      "baseline_score": 0.1037516339869281,
+      "delta_regret": 0.050854700854700896,
+      "ci_lower": -0.17222222222222217,
+      "ci_upper": 0.4,
+      "p_val": 0.647
+    },
+    {
+      "task_id": "intent_classification",
+      "model_id": "gemini-2.5-flash",
+      "prism_score": 0.05,
+      "prism_regret": 0.05,
+      "rand_score": 0.1,
+      "rand_regret": 0.0,
+      "ofat_score": 0.0,
+      "ofat_regret": 0.1,
+      "oracle_score": 0.1,
+      "baseline_score": 0.0,
+      "delta_regret": 0.05,
+      "ci_lower": -0.1,
+      "ci_upper": 0.15000000000000002,
+      "p_val": 0.9055
+    }
+  ]
+}

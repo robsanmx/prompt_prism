@@ -1,0 +1,95 @@
+{
+  "cache_snapshot": "~/.cache/huggingface/hub/models--mlx-community--Qwen3-8B-4bit/snapshots/545dc4251c05440727734bcd94334791f6ab0192",
+  "files": [
+    {
+      "name": "added_tokens.json",
+      "sha256": "c0284b582e14987fbd3d5a2cb2bd139084371ed9acbae488829a1c900833c680",
+      "size_bytes": 707
+    },
+    {
+      "name": "config.json",
+      "sha256": "e5485285fd7e289e76e9cffa112f6dc2e3426519082f7db9b69041589f81a218",
+      "size_bytes": 939
+    },
+    {
+      "name": "merges.txt",
+      "sha256": "8831e4f1a044471340f7c0a83d7bd71306a5b867e95fd870f74d0c5308a904d5",
+      "size_bytes": 1671853
+    },
+    {
+      "name": "model.safetensors",
+      "sha256": "f2d29621aab300336ad645567ff38c42aac755513006ef4e8a579cf7ef5256d8",
+      "size_bytes": 4607835174
+    },
+    {
+      "name": "model.safetensors.index.json",
+      "sha256": "3fb25463b4078b1fc27159daa605190029c2e965f533bf0b1b594f96cbfceb8a",
+      "size_bytes": 64065
+    },
+    {
+      "name": "special_tokens_map.json",
+      "sha256": "76862e765266b85aa9459767e33cbaf13970f327a0e88d1c65846c2ddd3a1ecd",
+      "size_bytes": 613
+    },
+    {
+      "name": "tokenizer.json",
+      "sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "size_bytes": 11422654
+    },
+    {
+      "name": "tokenizer_config.json",
+      "sha256": "253153d0738ceb4c668d2eff957714dd2bea0b56de772a9fdccd96cbf517e6a0",
+      "size_bytes": 9706
+    },
+    {
+      "name": "vocab.json",
+      "sha256": "ca10d7e9fb3ed18575dd1e277a2579c16d108e32f27439684afa0e10b1440910",
+      "size_bytes": 2776833
+    }
+  ],
+  "host_observation": {
+    "executables": {
+      "llama-cli": null,
+      "llama-server": null,
+      "mlx_lm": null,
+      "ollama": "/usr/local/bin/ollama",
+      "vllm": null
+    },
+    "machine": "arm64",
+    "ollama_qwen3_tags": [
+      "30b-a3b",
+      "4b"
+    ],
+    "python_modules_available": {
+      "mlx": false,
+      "mlx_lm": false,
+      "torch": false,
+      "transformers": false
+    },
+    "release": "27.0.0",
+    "system": "Darwin"
+  },
+  "model_config": {
+    "architectures": [
+      "Qwen3ForCausalLM"
+    ],
+    "max_position_embeddings": 40960,
+    "model_type": "qwen3",
+    "quantization": {
+      "bits": 4,
+      "group_size": 64
+    },
+    "torch_dtype": "bfloat16"
+  },
+  "observed_date": "2026-09-26",
+  "readiness_gaps": [
+    "Install and lock an MLX-compatible runtime.",
+    "Load the exact snapshot and complete the 100-call pilot.",
+    "Freeze chat-template, decoding, seed, hardware, and repeatability records."
+  ],
+  "repo_id": "mlx-community/Qwen3-8B-4bit",
+  "revision": "545dc4251c05440727734bcd94334791f6ab0192",
+  "schema_version": "1.0",
+  "status": "weights_cached_runtime_missing",
+  "total_size_bytes": 4623782544
+}

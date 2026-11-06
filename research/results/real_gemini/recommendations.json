@@ -1,0 +1,68 @@
+{
+  "schema_extraction": {
+    "prompt_prism_recipe": {
+      "A": 1,
+      "B": -1,
+      "C": 1,
+      "D": 1,
+      "E": 1,
+      "F": -1
+    },
+    "prompt_prism_run_id": 47,
+    "random_search_run_id": 11,
+    "ofat_run_id": 1,
+    "oracle_run_id": 1,
+    "estimated_effects": {
+      "A": 0.012500000000000067,
+      "B": -0.15000000000000002,
+      "C": 0.04999999999999993,
+      "D": 0.08750000000000002,
+      "E": 0.03749999999999998,
+      "F": -0.08750000000000002
+    }
+  },
+  "grounded_qa": {
+    "prompt_prism_recipe": {
+      "A": -1,
+      "B": -1,
+      "C": 1,
+      "D": -1,
+      "E": 1,
+      "F": 1
+    },
+    "prompt_prism_run_id": 12,
+    "random_search_run_id": 52,
+    "ofat_run_id": 5,
+    "oracle_run_id": 13,
+    "estimated_effects": {
+      "A": -0.008220390720390713,
+      "B": -0.03868006176829705,
+      "C": 0.05954822954822955,
+      "D": -0.010593981182216494,
+      "E": 0.03521798462974937,
+      "F": 0.004300976800976797
+    }
+  },
+  "intent_classification": {
+    "prompt_prism_recipe": {
+      "A": -1,
+      "B": -1,
+      "C": 1,
+      "D": 1,
+      "E": 1,
+      "F": -1
+    },
+    "prompt_prism_run_id": 15,
+    "random_search_run_id": 46,
+    "ofat_run_id": 1,
+    "oracle_run_id": 13,
+    "estimated_effects": {
+      "A": 0.0,
+      "B": -0.025,
+      "C": 0.012499999999999999,
+      "D": 0.025,
+      "E": 0.012499999999999999,
+      "F": -0.012499999999999999
+    }
+  }
+}

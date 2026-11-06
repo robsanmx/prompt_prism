@@ -70,6 +70,30 @@ graphify-out/
 .mypy_cache/
 .ipynb_checkpoints/
 
+# Credentials & secrets
+*.key
+*.pem
+*credentials*.json
+*secret*.json
+
+# Research artifacts & large response caches
+research/data/raw/
+research/experiments/cache/
+research/hf_multi_prompt/data/AlpacaEval_outputs/
+research/hf_multi_prompt/data/Ys.pickle
+research/results/*.jsonl
+research/results/**/*.jsonl
+research/*.db
+research/*.sqlite
+*.response_cache.db
+tmp/
+
+# Allow tracked paper assets
+!paper/figures/*.png
+!paper/figures/*.pdf
+!paper_hf/figures/*.png
+!paper_hf/figures/*.pdf
+
 # Agent & AI tool caches (keep skills tracked)
 .claude/
 .gemini/

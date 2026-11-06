@@ -1,0 +1,61 @@
+# Frozen Confirmatory Study Parameters (Checkpoint C Lock)
+version: "1.0-FROZEN"
+freeze_date: "2026-09-26"
+freeze_status: "LOCKED_PRE_CONFIRMATORY_DATA"
+
+confirmatory_matrix:
+  tasks:
+    - id: "schema_extraction"
+      primary_metric: "field_f1"
+      delta_sesoi: 0.030
+      num_items: 160
+      discovery_items: 80
+      confirmation_items: 80
+    - id: "grounded_qa"
+      primary_metric: "token_f1"
+      delta_sesoi: 0.025
+      num_items: 160
+      discovery_items: 80
+      confirmation_items: 80
+    - id: "intent_classification"
+      primary_metric: "macro_f1"
+      delta_sesoi: 0.020
+      num_items: 160
+      discovery_items: 80
+      confirmation_items: 80
+
+  models:
+    - id: "qwen2.5-7b-instruct"
+      family: "open_weight"
+      replicates: 2
+    - id: "gpt-4o-mini-2024-07-18"
+      family: "economical_api"
+      replicates: 1
+    - id: "claude-3-5-sonnet-20241022"
+      family: "frontier_api"
+      replicates: 1
+
+  screening_design:
+    plan_id: "2(6-2)IV"
+    runs: 16
+    generators: ["E=ABC", "F=BCD"]
+    defining_relation: "I = ABCE = BCDF = ADEF"
+
+  comparators:
+    - "uniform_random_search"
+    - "random_design_linear_model"
+    - "ofat_ablation"
+    - "exhaustive_oracle"
+
+  hypothesis_testing:
+    primary_hypothesis: "H1_held_out_selection_regret"
+    primary_alpha: 0.05
+    test_type: "paired_cluster_bootstrap_over_items"
+    fdr_control: "benjamini_hochberg"
+    fdr_target_q: 0.05
+
+frozen_material_hashes:
+  factors_yaml: "b08300d77163b98bcd32ccadaf5baf90fb1e534ec9db286677536e22cc315f6d"
+  tasks_yaml: "d03d15af5c5412fdb7258108053c40d38159529237a23371d1b1f136e7c426b9"
+  models_yaml: "0978493398389bf0bb297342920d5830ecf6346c103414f57e215c025ff460cf"
+  dataset_manifest_yaml: "52475eccb61d5c1c596ccd246e7a6149cffc33f31c8c3fa2e8f9ba8273e7785d"

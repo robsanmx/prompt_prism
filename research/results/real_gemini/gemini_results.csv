@@ -1,0 +1,4 @@
+task_id,model_id,prism_score,prism_regret,rand_score,rand_regret,ofat_score,ofat_regret,oracle_score,baseline_score,delta_regret,ci_lower,ci_upper,p_val
+schema_extraction,gemini-2.5-flash,1.0,0.0,1.0,0.0,1.0,0.0,1.0,1.0,0.0,0.0,0.0,1.0
+grounded_qa,gemini-2.5-flash,0.07222222222222222,0.33777777777777784,0.12307692307692308,0.28692307692307695,0.16,0.25,0.41000000000000003,0.1037516339869281,0.050854700854700896,-0.17222222222222217,0.4,0.647
+intent_classification,gemini-2.5-flash,0.05,0.05,0.1,0.0,0.0,0.1,0.1,0.0,0.05,-0.1,0.15000000000000002,0.9055

@@ -1,0 +1,57 @@
+# Factor Definitions and Verbatim Levels (v2)
+version: "2.0"
+date: "2026-09-26"
+experiment_id: "promptprism_real_v2"
+contrast_coding: "minus_one_plus_one" # -1: absent/default, +1: active/augmented
+
+design:
+  fraction: "2^(6-2)_IV"
+  runs: 16
+  base_factors: ["A", "B", "C", "D"]
+  generators:
+    E: "ABC"
+    F: "BCD"
+  defining_relation: "I = ABCE = BCDF = ADEF"
+
+factors:
+  A:
+    name: "Role Framing"
+    symbol: "A"
+    description: "Domain-expert persona directive vs generic assistant instruction"
+    level_minus_one: ""
+    level_plus_one: "You are a senior domain-expert specialist with deep expertise in accurate text parsing and precise factual compliance."
+
+  B:
+    name: "Task Decomposition"
+    symbol: "B"
+    description: "Step-by-step reasoning decomposition scaffold vs direct output"
+    level_minus_one: ""
+    level_plus_one: "Approach this task systematically by first analyzing each prerequisite element before producing your final answer."
+
+  C:
+    name: "Demonstrations"
+    symbol: "C"
+    description: "Two vetted domain input-output exemplars vs zero-shot execution"
+    level_minus_one: ""
+    level_plus_one: "exemplars_block" # Populated per-task with reviewed non-leaking exemplars
+
+  D:
+    name: "Output Contract"
+    symbol: "D"
+    description: "Strict machine-readable JSON schema constraint vs natural text"
+    level_minus_one: "Return your response in clear, concise language."
+    level_plus_one: "You must format your response strictly as a single valid JSON object adhering precisely to the specified target keys without Markdown wrapping or surrounding commentary."
+
+  E:
+    name: "Grounding Constraint"
+    symbol: "E"
+    description: "Explicit negative constraint forbidding extrapolation beyond context"
+    level_minus_one: ""
+    level_plus_one: "Ground your answer exclusively in the provided context. If the requested information is absent or cannot be verified directly from the text, state null or abstain explicitly."
+
+  F:
+    name: "Verification Pass"
+    symbol: "F"
+    description: "Pre-submission audit checklist directive vs immediate generation"
+    level_minus_one: ""
+    level_plus_one: "Before finalizing your output, audit each extracted field or answer against the source text to ensure complete factual precision."

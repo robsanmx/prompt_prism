@@ -1,0 +1,21 @@
+\begin{table*}[htbp]
+\centering
+\small
+\caption{Held-out confirmation results. The oracle is selected on discovery and evaluated unchanged on confirmation. $\Delta=Q-P$ is random minus \method\ score; negative values favor \method. Random is the mean over twenty frozen balanced screens.}
+\label{tab:primary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrrrrr}
+\toprule
+\textbf{Task} & \textbf{Prism run} & \textbf{Oracle run} & \textbf{Baseline} & $\boldsymbol{P}$ & $\boldsymbol{Q}$ & $\boldsymbol{O}$ & $\boldsymbol{\Delta}$\\
+\midrule
+Entity extraction & 28 & 20 & 0.48342 & 0.51110 & 0.51546 & 0.53268 & +0.00436\\
+Grounded QA & 16 & 6 & 0.89764 & 0.87717 & 0.87548 & 0.88009 & $-0.00168$\\
+Intent classification & 49 & 50 & 0.83750 & 0.86250 & 0.86312 & 0.85000 & +0.00062\\
+\midrule
+\multicolumn{7}{r}{Equal-weight mean $\Delta$} & \textbf{+0.00110}\\
+\multicolumn{7}{r}{Selection-aware bootstrap 95\% CI} & $[-0.02734,0.02869]$\\
+\multicolumn{7}{r}{One-sided $p$; registered decision} & $0.4568$; unsupported\\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

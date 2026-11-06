@@ -1,0 +1,133 @@
+{
+  "status": "LOCKED_PRE_CONFIRMATION_UNLOCK",
+  "timestamp": "2026-09-26T20:53:00Z",
+  "recommendations": {
+    "schema_extraction": {
+      "prompt_prism_res_iv": {
+        "D": 1,
+        "E": 0,
+        "F": 0,
+        "A": 1,
+        "C": 1,
+        "B": 0
+      },
+      "uniform_random_search": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 1,
+        "E": 0,
+        "F": 0
+      },
+      "random_linear_model": {
+        "A": 1,
+        "B": 0,
+        "C": 0,
+        "D": 1,
+        "E": 1,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 1,
+        "E": 0,
+        "F": 0
+      },
+      "exhaustive_oracle": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 1,
+        "E": 0,
+        "F": 0
+      }
+    },
+    "grounded_qa": {
+      "prompt_prism_res_iv": {
+        "A": 1,
+        "C": 1,
+        "B": 1,
+        "E": 0,
+        "F": 0,
+        "D": 0
+      },
+      "uniform_random_search": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      },
+      "random_linear_model": {
+        "A": 1,
+        "B": 0,
+        "C": 1,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      },
+      "ofat_ablation": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      },
+      "exhaustive_oracle": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      }
+    },
+    "intent_classification": {
+      "prompt_prism_res_iv": {
+        "F": 1,
+        "C": 1,
+        "A": 1,
+        "B": 1,
+        "D": 0,
+        "E": 0
+      },
+      "uniform_random_search": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      },
+      "random_linear_model": {
+        "A": 1,
+        "B": 0,
+        "C": 1,
+        "D": 0,
+        "E": 0,
+        "F": 1
+      },
+      "ofat_ablation": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      },
+      "exhaustive_oracle": {
+        "A": 0,
+        "B": 0,
+        "C": 0,
+        "D": 0,
+        "E": 0,
+        "F": 0
+      }
+    }
+  },
+  "recommendations_hash": "63b8878ca614e92bf1a86bfb8f754b88ae4c2a03c30557594aef02b8b1dce11f"
+}

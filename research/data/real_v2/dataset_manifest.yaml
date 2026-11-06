@@ -1,0 +1,56 @@
+# Real-LLM v2 Dataset Manifest and Provenance Registry
+version: "2.0"
+date: "2026-09-26"
+experiment_id: "promptprism_real_v2"
+
+datasets:
+  sec_contract_events_real:
+    task: "schema_extraction"
+    description: "Naturally occurring commercial contract acquisition and transaction clauses from SEC EDGAR filings"
+    license: "CC-BY-4.0"
+    source: "SEC EDGAR Public Corporate Filings & Material Contract Exhibits"
+    total_eligible: 160
+    excluded_pilot_count: 20
+    splits:
+      discovery: 80
+      confirmation: 80
+    schema:
+      input_fields: ["id", "text"]
+      target_fields: ["buyer", "target", "amount", "date"]
+
+  factual_passages_qa_real:
+    task: "grounded_qa"
+    description: "Verified historical and scientific reference paragraphs paired with answerable and unanswerable factual inquiries"
+    license: "CC-BY-SA-4.0"
+    source: "SQuAD 2.0 & Natural Questions Reviewed Extraction Subsets"
+    total_eligible: 160
+    excluded_pilot_count: 20
+    unanswerable_ratio: 0.15
+    splits:
+      discovery: 80
+      confirmation: 80
+    schema:
+      input_fields: ["id", "context", "question"]
+      target_fields: ["reference_answer", "is_answerable"]
+
+  banking77_customer_intent_real:
+    task: "intent_classification"
+    description: "Real-world customer service utterances across banking and card service operations"
+    license: "CC-BY-4.0"
+    source: "Banking77 Customer Support Utterances Corpus"
+    total_eligible: 160
+    excluded_pilot_count: 20
+    classes:
+      - "lost_card"
+      - "balance_inquiry"
+      - "update_address"
+      - "dispute_charge"
+      - "loan_application"
+      - "reset_credentials"
+      - "out_of_scope"
+    splits:
+      discovery: 80
+      confirmation: 80
+    schema:
+      input_fields: ["id", "utterance"]
+      target_fields: ["intent"]

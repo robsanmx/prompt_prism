@@ -1,0 +1,56 @@
+# Real-LLM Models Configuration (v2)
+version: "2.0"
+date: "2026-09-26"
+experiment_id: "promptprism_real_v2"
+
+models:
+  llama_3_1_8b_local:
+    display_name: "Meta-Llama-3.1-8B-Instruct"
+    exact_identifier: "meta-llama/Llama-3.1-8B-Instruct"
+    provider: "local_vllm"
+    role: "open_weight_anchor"
+    replicates_per_item: 2
+    decoding:
+      temperature: 0.0
+      top_p: 1.0
+      max_tokens: 512
+      seed: 42
+    pricing:
+      input_per_million: 0.0
+      output_per_million: 0.0
+      compute_time_tracked: true
+
+  gpt_4o_mini:
+    display_name: "GPT-4o-mini (Frozen Snapshot)"
+    exact_identifier: "gpt-4o-mini-2024-07-18"
+    provider: "openai"
+    role: "economical_api_model"
+    replicates_per_item: 1
+    decoding:
+      temperature: 0.0
+      top_p: 1.0
+      max_tokens: 512
+      seed: 42
+    pricing:
+      input_per_million: 0.150
+      output_per_million: 0.600
+
+  claude_3_5_haiku:
+    display_name: "Claude 3.5 Haiku (Frozen Snapshot)"
+    exact_identifier: "claude-3-5-haiku-20241022"
+    provider: "anthropic"
+    role: "alternative_provider_family"
+    replicates_per_item: 1
+    decoding:
+      temperature: 0.0
+      top_p: 1.0
+      max_tokens: 512
+    pricing:
+      input_per_million: 0.800
+      output_per_million: 4.000
+
+execution_policy:
+  max_retries: 3
+  backoff_factor: 2.0
+  timeout_seconds: 30.0
+  interleaved_randomization: true

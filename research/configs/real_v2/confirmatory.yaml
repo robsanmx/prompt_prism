@@ -1,0 +1,79 @@
+# Real-LLM v2 Confirmatory Experiment Configuration
+version: "2.0"
+experiment_id: "promptprism_real_v2_confirmatory"
+date: "2026-09-26"
+status: "FROZEN_PRE_REGISTRATION"
+
+design:
+  plan_id: "2(6-2)IV"
+  generators: ["E = ABC", "F = BCD"]
+  k: 6
+  runs_prompt_prism: 16
+  runs_comparator_random: 16
+  runs_oracle: 64
+  runs_ofat: 7
+  coding: "contrast" # -1 / +1
+  factors: ["A", "B", "C", "D", "E", "F"]
+
+sample_sizes:
+  tasks: 3
+  discovery_items_per_task: 80
+  confirmation_items_per_task: 80
+  total_items_per_task: 160
+  models: 3
+  model_replicate_weights:
+    "meta-llama/Llama-3.1-8B-Instruct": 2
+    "gpt-4o-mini-2024-07-18": 1
+    "claude-3-5-haiku-20241022": 1
+  total_confirmatory_calls: 122880
+
+tasks:
+  schema_extraction:
+    metric: "field_f1"
+    sesoi: 0.030
+    evaluator: "research.analysis.real_v2_metrics.evaluate_schema_extraction"
+    data_file: "research/data/real_v2/schema_extraction.jsonl"
+  grounded_qa:
+    metric: "token_f1"
+    sesoi: 0.025
+    evaluator: "research.analysis.real_v2_metrics.evaluate_grounded_qa"
+    data_file: "research/data/real_v2/grounded_qa.jsonl"
+  intent_classification:
+    metric: "macro_f1"
+    sesoi: 0.020
+    evaluator: "research.analysis.real_v2_metrics.evaluate_intent_classification"
+    data_file: "research/data/real_v2/intent_classification.jsonl"
+
+models:
+  open_weight_anchor:
+    model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    provider: "local_vllm"
+    temperature: 0.0
+    seed: 42
+    replicates: 2
+  api_openai:
+    model_id: "gpt-4o-mini-2024-07-18"
+    provider: "openai"
+    temperature: 0.0
+    seed: 42
+    replicates: 1
+  api_anthropic:
+    model_id: "claude-3-5-haiku-20241022"
+    provider: "anthropic"
+    temperature: 0.0
+    seed: 42
+    replicates: 1
+
+inference:
+  timeout_seconds: 60
+  max_retries: 5
+  backoff_factor: 2.0
+  cache_dir: "research/data/cache/real_v2"
+  randomize_order: true
+  interleave_models: true
+
+paths:
+  manifest: "research/results/real_v2/confirmatory_manifest.jsonl"
+  recommendations: "research/results/real_v2/recommendations.json"
+  summary: "research/results/real_v2/confirmatory_summary.json"
+  results_csv: "research/results/real_v2/confirmatory_results.csv"

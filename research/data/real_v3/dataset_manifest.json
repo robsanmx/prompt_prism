@@ -1,0 +1,176 @@
+{
+  "dataset_version": "real-v3",
+  "intent_labels": [
+    "card_arrival",
+    "card_delivery_estimate",
+    "card_not_working",
+    "virtual_card_not_working",
+    "pending_card_payment",
+    "declined_card_payment",
+    "card_payment_not_recognised",
+    "pending_cash_withdrawal",
+    "declined_cash_withdrawal",
+    "cash_withdrawal_not_recognised"
+  ],
+  "selection_seed": 42,
+  "source_file_sha256": {
+    "research/data/real_v3/sources/banking77/LICENSE": "7e7170e3cebf88a9f60c7b8421418323c09304da1af4d5e90f4da1dc1c8a2661",
+    "research/data/real_v3/sources/banking77/categories.json": "53261da888122daf2d120d925458631d9619e15d82e56052e7a42e535ce32b63",
+    "research/data/real_v3/sources/banking77/test.csv": "d12d6e3bc4c3103966ae786dc435913c0c563dfa328f5a3646d0e62cfeeb474d",
+    "research/data/real_v3/sources/re3d/Australian Department of Foreign Affairs/ATTRIBUTION": "d1356a873c20e052498a55600f68af3dfd2f50437b46ca9b4087ea1a89bfb7fd",
+    "research/data/real_v3/sources/re3d/Australian Department of Foreign Affairs/LICENSE": "ee17fdefdd4f362b0e7ffc858cc01217fd82d63e098ea0ac2baddd13f337d61e",
+    "research/data/real_v3/sources/re3d/Australian Department of Foreign Affairs/documents.json": "0a58f1c91925191a906240d8dba7cadf0f01b5aa0587beaee1dfa9529f3a8752",
+    "research/data/real_v3/sources/re3d/Australian Department of Foreign Affairs/entities.json": "c8741feaf0ccd225890db60e2b64400236dcbd23ea6a2edaaf2ab43774cbc5fc",
+    "research/data/real_v3/sources/re3d/Australian Department of Foreign Affairs/relations.json": "afd7d63792f0d5512297e11ff2f476ce6c91e99ef15d83cba427f01b96423175",
+    "research/data/real_v3/sources/re3d/BBC Online/ATTRIBUTION": "cac173880eacb46b11da9850a80fe314dde3b88a594d35b594473dc12887348f",
+    "research/data/real_v3/sources/re3d/BBC Online/LICENSE": "cd2fb27dcbe2e8937e16282b0efc48ad4e09e5bd4fd3c7eb720dc9c1a568de28",
+    "research/data/real_v3/sources/re3d/BBC Online/documents.json": "12738ecf14e0f201b305ee533db3e537011850a6de7162ec826b5a7c234c30db",
+    "research/data/real_v3/sources/re3d/BBC Online/entities.json": "18d802162811fe946d2db6e81aa8526dc5d22dfd8800a89de600024bf487b809",
+    "research/data/real_v3/sources/re3d/BBC Online/relations.json": "aac99db91952882660df7588eb9c0567388915912d52c25eb11271e4100fb72e",
+    "research/data/real_v3/sources/re3d/CENTCOM/ATTRIBUTION": "7c28ead726347d17bf12b6c691e8e75bd8039a8680ccb04c56e08f4a53034a9b",
+    "research/data/real_v3/sources/re3d/CENTCOM/LICENSE": "be278ab655fd3e21bb1eb6a901703abc014915497f7bc04f4407f9e284a9369e",
+    "research/data/real_v3/sources/re3d/CENTCOM/documents.json": "935467466e4f85f33f4800854bfa70a10fd7d5372e3bc97e5ff152ff7ec8ab60",
+    "research/data/real_v3/sources/re3d/CENTCOM/entities.json": "bdfc24002c5087166587f1f9e4f7400cccdb118acceca223a9a46769e1603e2a",
+    "research/data/real_v3/sources/re3d/CENTCOM/relations.json": "c3154377ac4b76b4e2afe88f9608ce95ae010c818d1fa931c66cde86f47b89cd",
+    "research/data/real_v3/sources/re3d/Delegation of the European Union to Syria/ATTRIBUTION": "b692fa25d65a45ad2ea1295e2049ac055889c0926ac03411dc23c73b6b25e0e0",
+    "research/data/real_v3/sources/re3d/Delegation of the European Union to Syria/LICENSE": "0220ce76a502ca959afec9379c886c61f22a10d7db36eabeafcb2283a0fb478f",
+    "research/data/real_v3/sources/re3d/Delegation of the European Union to Syria/documents.json": "f8b0122c2baec1041b60aebe98ace32bc4ed7ddf0f4b01e895a76c56836c713a",
+    "research/data/real_v3/sources/re3d/Delegation of the European Union to Syria/entities.json": "bcc67c58364181d53faa1c3185f2ebaa8df4f62f759306490589b4ea198d9ace",
+    "research/data/real_v3/sources/re3d/Delegation of the European Union to Syria/relations.json": "7309eb188b681d71971ce1dc9e456654df8f5046fc7d1f52da7db0c4538f7296",
+    "research/data/real_v3/sources/re3d/README.md": "c2a9ed3405cff326c595a6e4770cb7c14850d945e120fa53d39c385a40643ca3",
+    "research/data/real_v3/sources/re3d/UK Government/ATTRIBUTION": "89a5d7dbde7526142bb932970af276dfddc3c93b4c2480b18d4b342952bdd5ad",
+    "research/data/real_v3/sources/re3d/UK Government/LICENSE": "11e265d5876c4dcb72708d360081dd0b020b2e6bbe7f96ad042742e8a8fc3142",
+    "research/data/real_v3/sources/re3d/UK Government/documents.json": "eb2eca69a38bd355cb86eb75ade5952d80cbb8335835190c4468b31f7a7a80b1",
+    "research/data/real_v3/sources/re3d/UK Government/entities.json": "a17356f2dfa67fa98e3abcf8c9917c134ec519b29ca9afaa0723d7ef906bbdf6",
+    "research/data/real_v3/sources/re3d/UK Government/relations.json": "b99674c9b458411c9d47f0833d5ce400609f0e4103dd1c1e7e6f67f948675aae",
+    "research/data/real_v3/sources/re3d/US State Department/ATTRIBUTION": "91d786641e148a418ea69bfc44bd404e8cbbe5e69b5358e5455d853e2dd47ff3",
+    "research/data/real_v3/sources/re3d/US State Department/LICENSE": "f41ae37c384e92283851224bb29c9659737cb186425097b7eec891424b63e527",
+    "research/data/real_v3/sources/re3d/US State Department/documents.json": "ab256bc199d2ba1d7e31f0d3cea4b08e999b347d05b74aab47a5e3b776195300",
+    "research/data/real_v3/sources/re3d/US State Department/entities.json": "b114f4ea68febeb61ab3d8b5c5a7ddc12a4b27d6dff2cb816c49b23dff1d0bb7",
+    "research/data/real_v3/sources/re3d/US State Department/relations.json": "68db04478824095005c9ddf8fdd62d937651aab874543eb082a96e439bb36ee4",
+    "research/data/real_v3/sources/re3d/Wikipedia/ATTRIBUTION": "a8f46c5c2b3283e8f4149e39fb4f543e13bc29e3a663ed91bbd80084fea1d5db",
+    "research/data/real_v3/sources/re3d/Wikipedia/LICENSE": "d1e7627f430c11c556bffb427695d93facc0b1a515c86607f61d58b794d549f1",
+    "research/data/real_v3/sources/re3d/Wikipedia/documents.json": "cea1dba8fe8f2271c30a32c27ae1a0a0b662898e766e5a01d3e88dd76b22a095",
+    "research/data/real_v3/sources/re3d/Wikipedia/entities.json": "b8d9d60426547f22ac7dfa7fbc849f5222776abd9e5295839b641434a79ecf95",
+    "research/data/real_v3/sources/re3d/Wikipedia/relations.json": "9fea296ada1641eca68f5f054e58390369e05097d3db5833de87bb4b34769812",
+    "research/data/real_v3/sources/squad2/dev-v2.0.json": "80a5225e94905956a6446d296ca1093975c4d3b3260f1d6c8f68bc2ab77182d8"
+  },
+  "sources": {
+    "banking77": {
+      "commit": "57ec275d8078af65b7731c2a98be812d844a6d6b",
+      "license": "CC BY 4.0",
+      "repository": "https://github.com/PolyAI-LDN/task-specific-datasets"
+    },
+    "re3d": {
+      "commit": "b061ff06713cad4df7e5cfaed3fd07bf15b2598c",
+      "license": "per-source licenses retained beside source files",
+      "repository": "https://github.com/dstl/re3d"
+    },
+    "squad2": {
+      "license": "CC BY-SA 4.0",
+      "sha256": "80a5225e94905956a6446d296ca1093975c4d3b3260f1d6c8f68bc2ab77182d8",
+      "url": "https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v2.0.json"
+    }
+  },
+  "split_file_sha256": {
+    "research/data/real_v3/splits/grounded_qa_confirmation.jsonl": "cb011738aca431b7e622d64c97277ae5c96b6b320d60ec4b5a5845ad69d04852",
+    "research/data/real_v3/splits/grounded_qa_discovery.jsonl": "b45b4a5acd242e52055744b1d85ff28c1c72574c365f9f6d9bd467d15aae065b",
+    "research/data/real_v3/splits/grounded_qa_pilot.jsonl": "64b1d7ec7cd4a96bf939f459d2a55a83d601cb179c5cb920c0ddb42af748a73d",
+    "research/data/real_v3/splits/intent_classification_confirmation.jsonl": "c5b9c7c89d8c5d8791723c66dd02105cf77546ab3ee40c41c4ad5a747f106f88",
+    "research/data/real_v3/splits/intent_classification_discovery.jsonl": "7259a0fcbc47dde79624a025e2ce9a2a1a85a015533f55f5ea6703b759a6f614",
+    "research/data/real_v3/splits/intent_classification_pilot.jsonl": "d55e0e88aee469864470738cb52744f73feda87c6d9062f241c48658a9ec6bae",
+    "research/data/real_v3/splits/schema_extraction_confirmation.jsonl": "f7b0caa52fefd622cd957ec230332c224e608e30754c1ad375289f7b881263db",
+    "research/data/real_v3/splits/schema_extraction_discovery.jsonl": "45ff26a27de7207b71e99949b2d4966f042743d56b217b5bdfe6e6b5b5565cae",
+    "research/data/real_v3/splits/schema_extraction_pilot.jsonl": "3dffa2218b54675ed52905ceb84e05017eae657ae33ea3041b4676266dd97a05"
+  },
+  "split_sizes": {
+    "confirmation": 80,
+    "discovery": 80,
+    "pilot": 20
+  },
+  "summaries": {
+    "grounded_qa": {
+      "confirmation": {
+        "count": 80,
+        "groups": 80,
+        "sources": {
+          "SQuAD 2.0 dev": 80
+        }
+      },
+      "discovery": {
+        "count": 80,
+        "groups": 80,
+        "sources": {
+          "SQuAD 2.0 dev": 80
+        }
+      },
+      "pilot": {
+        "count": 20,
+        "groups": 20,
+        "sources": {
+          "SQuAD 2.0 dev": 20
+        }
+      }
+    },
+    "intent_classification": {
+      "confirmation": {
+        "count": 80,
+        "groups": 80,
+        "sources": {
+          "Banking77 official test split": 80
+        }
+      },
+      "discovery": {
+        "count": 80,
+        "groups": 80,
+        "sources": {
+          "Banking77 official test split": 80
+        }
+      },
+      "pilot": {
+        "count": 20,
+        "groups": 20,
+        "sources": {
+          "Banking77 official test split": 20
+        }
+      }
+    },
+    "schema_extraction": {
+      "confirmation": {
+        "count": 80,
+        "groups": 33,
+        "sources": {
+          "Australian Department of Foreign Affairs": 3,
+          "BBC Online": 22,
+          "CENTCOM": 26,
+          "UK Government": 13,
+          "US State Department": 8,
+          "Wikipedia": 8
+        }
+      },
+      "discovery": {
+        "count": 80,
+        "groups": 33,
+        "sources": {
+          "Australian Department of Foreign Affairs": 1,
+          "BBC Online": 29,
+          "CENTCOM": 12,
+          "Delegation of the European Union to Syria": 1,
+          "UK Government": 23,
+          "US State Department": 7,
+          "Wikipedia": 7
+        }
+      },
+      "pilot": {
+        "count": 20,
+        "groups": 8,
+        "sources": {
+          "CENTCOM": 6,
+          "UK Government": 8,
+          "US State Department": 3,
+          "Wikipedia": 3
+        }
+      }
+    }
+  }
+}

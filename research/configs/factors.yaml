@@ -1,0 +1,142 @@
+# Factor Catalog for Scientific Validation Study
+# Core 6-Factor Design (k = 6 binary factors)
+# Defining relation: I = ABCE = BCDF = ADEF (Resolution IV, 16 runs)
+
+version: "1.0"
+date: "2026-09-26"
+
+factors:
+  A:
+    id: "A"
+    name: "role_framing"
+    description: "Task-specific expert role assignment vs. neutral instruction"
+    position: 1
+    tasks:
+      schema_extraction:
+        level_0: ""
+        level_1: "You are an expert computational linguist and enterprise data extraction specialist."
+      grounded_qa:
+        level_0: ""
+        level_1: "You are an expert investigative analyst and meticulous fact-checking specialist."
+      intent_classification:
+        level_0: ""
+        level_1: "You are an expert customer operations specialist and policy compliance auditor."
+
+  B:
+    id: "B"
+    name: "task_decomposition"
+    description: "Step-by-step reasoning decomposition vs. direct instruction"
+    position: 2
+    tasks:
+      schema_extraction:
+        level_0: "Extract the required attributes directly from the input text."
+        level_1: "Before producing the final structured output, carefully analyze the text: (1) identify all entity mentions, (2) verify attribute boundaries, and (3) validate relations against context."
+      grounded_qa:
+        level_0: "Answer the question directly based on the provided context."
+        level_1: "Before answering, break down the inquiry: (1) identify key sub-questions, (2) locate matching evidence sentences in the context, and (3) synthesize the evidence step by step."
+      intent_classification:
+        level_0: "Classify the user intent into one of the allowed categories."
+        level_1: "Follow this evaluation procedure: (1) identify the primary action requested, (2) eliminate inapplicable categories, and (3) select the single best matching category."
+
+  C:
+    id: "C"
+    name: "demonstrations"
+    description: "Three fixed few-shot in-context demonstrations vs. zero-shot"
+    position: 3
+    tasks:
+      schema_extraction:
+        level_0: ""
+        level_1: |
+          ### Examples:
+          Example 1:
+          Input: "Acme Corp acquired Beta LLC for $50M on Jan 12, 2024."
+          Output: {"buyer": "Acme Corp", "target": "Beta LLC", "amount": "$50M", "date": "2024-01-12"}
+
+          Example 2:
+          Input: "Globex sold its logistics unit to Initech on March 3."
+          Output: {"buyer": "Initech", "target": "Globex logistics unit", "amount": null, "date": "March 3"}
+
+          Example 3:
+          Input: "No acquisitions occurred in Q3 for Umbrella Corp."
+          Output: {"buyer": null, "target": null, "amount": null, "date": null}
+      grounded_qa:
+        level_0: ""
+        level_1: |
+          ### Examples:
+          Example 1:
+          Context: "The Apollo 11 mission landed on July 20, 1969, with astronauts Neil Armstrong and Buzz Aldrin."
+          Question: "Who landed on the Moon in Apollo 11?"
+          Answer: "Neil Armstrong and Buzz Aldrin landed on the Moon on July 20, 1969."
+
+          Example 2:
+          Context: "The treaty was signed in Paris in 1898, ending the Spanish-American conflict."
+          Question: "Where was the treaty signed?"
+          Answer: "The treaty was signed in Paris in 1898."
+
+          Example 3:
+          Context: "Water boils at 100 degrees Celsius at standard atmospheric pressure."
+          Question: "What is the boiling point of ethanol?"
+          Answer: "The provided context does not state the boiling point of ethanol."
+      intent_classification:
+        level_0: ""
+        level_1: |
+          ### Examples:
+          Example 1:
+          Input: "I lost my credit card yesterday, can you freeze it?"
+          Intent: "lost_card"
+
+          Example 2:
+          Input: "What is my current checking account balance?"
+          Intent: "balance_inquiry"
+
+          Example 3:
+          Input: "How do I update my billing address?"
+          Intent: "update_address"
+
+  D:
+    id: "D"
+    name: "output_contract"
+    description: "Explicit schema/format contract vs. informal request"
+    position: 4
+    tasks:
+      schema_extraction:
+        level_0: "Return the result formatted clearly."
+        level_1: "CRITICAL: Output must be a strictly valid JSON object conforming exactly to the requested schema. Do not enclose in markdown code blocks. Do not include explanatory text before or after the JSON."
+      grounded_qa:
+        level_0: "Provide your answer clearly."
+        level_1: "OUTPUT SPECIFICATION: Respond with a concise factual statement of no more than two sentences. Provide only verified facts directly answering the question."
+      intent_classification:
+        level_0: "State the intent name."
+        level_1: "OUTPUT SPECIFICATION: Respond ONLY with the exact label string chosen from the allowed list. Do not output punctuation, quotes, or additional commentary."
+
+  E:
+    id: "E"
+    name: "grounding_constraint"
+    description: "Explicit evidence/abstention constraint vs. unconstrained"
+    position: 5
+    tasks:
+      schema_extraction:
+        level_0: ""
+        level_1: "CONSTRAINT: Extract only information explicitly stated in the context. Never infer, extrapolate, or normalize entities beyond the source text."
+      grounded_qa:
+        level_0: ""
+        level_1: "CONSTRAINT: Answer strictly using facts from the provided text. If the text does not contain sufficient information to answer definitively, reply: 'Insufficient evidence in context.'"
+      intent_classification:
+        level_0: ""
+        level_1: "CONSTRAINT: Base classification strictly on the explicit words in the input. If the input is ambiguous or out of scope, classify as 'out_of_scope'."
+
+  F:
+    id: "F"
+    name: "verification_pass"
+    description: "Internal verification and self-critique check vs. direct output"
+    position: 6
+    tasks:
+      schema_extraction:
+        level_0: ""
+        level_1: "VERIFICATION: Before finalizing output, cross-check each extracted value against the input text to ensure zero hallucination and correct JSON formatting."
+      grounded_qa:
+        level_0: ""
+        level_1: "VERIFICATION: Review your draft answer against the source context to verify that every claimed fact has an exact supporting citation."
+      intent_classification:
+        level_0: ""
+        level_1: "VERIFICATION: Review the selected label against alternative definitions to confirm it is the single most precise intent."

@@ -1,0 +1,26 @@
+{
+  "status": "VALID_AND_RECONCILED",
+  "experiment_id": "promptprism_real_v2_confirmatory",
+  "timestamp": "2026-09-26T21:35:00Z",
+  "git_commit": "d3020cd5f1f6e0d796980546ca09c9e642a9f67d",
+  "total_calls_expected": 122880,
+  "total_calls_collected": 122880,
+  "discovery_calls": 61440,
+  "confirmation_calls": 61440,
+  "unique_cache_keys": 122880,
+  "terminal_failures": 0,
+  "manifest_sha256": "b3d21cbfa2af6b45622c679d63dc64b2033e877e92e1b288eff8048e27d0d391",
+  "tasks": [
+    "schema_extraction",
+    "grounded_qa",
+    "intent_classification"
+  ],
+  "models": [
+    "meta-llama/Llama-3.1-8B-Instruct",
+    "gpt-4o-mini-2024-07-18",
+    "claude-3-5-haiku-20241022"
+  ],
+  "configurations_per_item": 64,
+  "discovery_items_per_task": 80,
+  "confirmation_items_per_task": 80
+}

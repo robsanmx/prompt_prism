@@ -1,0 +1,18 @@
+{
+  "experiment_id": "prompt-prism-real-v3-gemini-2026-09-26",
+  "files": {
+    "research/data/real_v3/dataset_manifest.json": "a63002f25a46425f3a08c8156f5435cc8e221cfd2ee0688292e6069dcf4f045f",
+    "research/experiments/providers.py": "fd4e133d5b6137e425f3aae6136ee1ec3459932de87ae53e2da6de383bed50d7",
+    "research/protocol/real_v3/design_registry.json": "2255e34ee0911c631de62b84e9dc9e509a11744882160c3434d006201987c136",
+    "research/protocol/real_v3/preregistration.md": "e64ca56b4eb6a8325567be2fb6ffae5e4fb77cc140d5ed382445a2616a45ea49",
+    "research/protocol/real_v3/statistical_analysis_plan.md": "850dfd1038b7e5ad754cea53fd6a442328d9483ff165e9a49eefac6bac7f2caa",
+    "research/real_v3/analysis.py": "c58de4f9fd0e3b37d66ca6ada950b3ea92be63e9cd9ff8c97c45040b75a85bd4",
+    "research/real_v3/datasets.py": "a6bfd033849af1ae6ab01146cdb960e345b1869186b14551cd6d378f130d3a47",
+    "research/real_v3/design.py": "259163746701bffbb4c35ba4b002078d8efbc7232144b3e2df11babb6cad8927",
+    "research/real_v3/metrics.py": "fe9390e07bcd46b71f54f93b7ddc1cd48f54dc823eecf130fe62994cc6924a6c",
+    "research/real_v3/prompts.py": "d7dc2cbebe6f158ca3202070c7eefb531b9c45372b3520635286902c1465bf7a",
+    "research/real_v3/runner.py": "a8d7ca90aa7bbf908514632fbf077e77bc0d40a967f671c5781c1853f15fea08"
+  },
+  "locally_frozen_at": "2026-09-26T23:24:39.122305+00:00",
+  "protocol_hash": "46933473419012fe20b3a0229b46851bfcbaf292ab2e4f73d3c1f824646be416"
+}

@@ -5,10 +5,10 @@
 [![CI](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml/badge.svg)](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 94 Passed](https://img.shields.io/badge/tests-94%20passed-brightgreen.svg)](tests/)
+[![Tests: 150 Passed](https://img.shields.io/badge/tests-150%20passed-brightgreen.svg)](tests/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**`prompt_prism`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to isolate, quantify, and optimize LLM prompts with 90%+ cost reduction and zero guesswork.
+**`prompt_prism`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to isolate, quantify, and optimize LLM prompts with 90%+ fewer runs (and the compute that follows) and zero guesswork.
 
 ---
 
@@ -26,12 +26,12 @@ In Prompt Engineering, a prompt is composed of multiple candidate factors:
 Testing $k = 10$ binary prompt factors via Full Factorial requires **$2^{10} = 1,024$ prompt variants**. Across a 50-item benchmark dataset, that means **$51,200$ LLM calls** costing hundreds of dollars and hours of latency.
 
 ### The Fractional Factorial Solution
-Using **$2^{10-6}_{\text{III}}$ Fractional Factorial Design**, `prompt_prism` tests all 10 factors in **just 16 runs** ($98.4\%$ cost reduction!), while ANOVA mathematically isolates the true individual effect ($\Delta$), standard error, $t$-statistic, and $p$-value for every single factor.
+Using **$2^{10-6}_{\text{III}}$ Fractional Factorial Design**, `prompt_prism` tests all 10 factors in **just 16 runs** ($98.4\%$ of the search space eliminated!), while ANOVA mathematically isolates the true individual effect ($\Delta$), standard error, $t$-statistic, and $p$-value for every single factor.
 
 ```
 Full Factorial (10 factors):             1,024 runs  💸 ($$$)
-Fractional Factorial 2^(10-6)_III:          16 runs  ⚡ (-98.4% cost!)
-Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% cost!)
+Fractional Factorial 2^(10-6)_III:          16 runs  ⚡ (-98.4% of search space!)
+Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% of search space!)
 ```
 
 ---
@@ -313,8 +313,20 @@ pytest
 ```
 
 ```
-============================== 94 passed in 15.2s ==============================
+============================== 150 passed in 18.7s ==============================
 ```
+
+---
+
+## 📄 Research Papers & Reproducible Benchmarks
+
+- **Multi-Model Hugging Face Factorial Benchmark Study (`paper_hf/main.pdf`)**:
+  - *"Factorial Prompt Engineering at Scale: Evaluating Fractional Designs, Epistatic Interactions, and RCBD Blocking Across 1,033 Multi-Prompt LLM Benchmark Cubes"*
+  - Evaluates $7{,}024{,}960$ cell–item outcomes across 15 LLMs on MMLU (`PromptEval/PromptEval_MMLU_full`, $2^5=32$ cubes) and 11–16 LLMs on `BBH` & `LMentry` (`SLAB-NLP`, $2^4=16$ cubes). Demonstrates a **$23.8\times$ reduction in pairwise interaction ($2\text{FI}$) RMSE** with Resolution V ($2^{5-1}_{\text{V}}$), **$86.1\%\text{–}86.4\%$ oracle uplift recovery** at $50\%$ budget via `ScreenBest`, and a **$5.9\times$ increase in FDR-significant factor discoveries** via RCBD item blocking.
+  - Reproduce in `research/hf_multi_prompt/run_experiments.py`.
+- **Prospective & Monte Carlo Calibration Study (`paper/main.tex`)**:
+  - *"Factorial Prompt Engineering: Testing Fractional Designs for Efficient and Interpretable Prompt Optimization"*
+  - Preregistered simulation and prospective confirmatory study in `research/reproduce.py`.
 
 ---
 

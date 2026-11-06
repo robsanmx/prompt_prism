@@ -1,0 +1,39 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Cross-cohort comparison of factorial effect attribution, held-out prompt selection, and RCBD item-blocking power across 1,033 complete factorial cubes ($855$ MMLU $2^5$ cubes and $178$ SLAB-NLP BBH/LMentry $2^4$ cubes).}
+\label{tab:cross_cohort}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcc}
+\toprule
+\textbf{Metric / Experimental Estimand} & \textbf{Cohort 1: MMLU ($2^5=32$)} & \textbf{Cohort 2: BBH \& LMentry ($2^4=16$)} \\
+\midrule
+Evaluated Model--Task Factorial Cubes & 855 (15 LLMs $\times$ 57 tasks) & 178 (11--16 LLMs $\times$ 13 tasks) \\
+Total Cell--Item Evaluations & 6,740,160 & 284,800 \\
+\midrule
+\multicolumn{3}{l}{\textit{Part A: Main-Effect \& Interaction Estimation Error (RMSE vs. Full Cube)}} \\
+\method\ Half-Fraction ($2^{k-1}$, 50\% budget) Main RMSE & \textbf{0.00738} ($2^{5-1}_{\mathrm{V}}$) & \textbf{0.06067} ($2^{4-1}_{\mathrm{IV}}$) \\
+Balanced Random Half-Fraction (50\% budget) Main RMSE & 0.00840 & 0.08415 ($1.39\times$ higher) \\
+One-Factor-at-a-Time (OFAT) Main RMSE & 0.02786 ($3.78\times$ higher) & 0.14437 ($2.38\times$ higher) \\
+\method\ Quarter-Fraction ($2^{5-2}_{\mathrm{III}}$, 75\% savings) Main RMSE & \textbf{0.01168} & --- \\
+Balanced Random Quarter-Fraction (8 runs) Main RMSE & 0.01813 ($1.55\times$ higher) & --- \\
+\method\ $2^{5-1}_{\mathrm{V}}$ Pairwise 2FI RMSE (Pooled) & \textbf{0.00227} & --- \\
+Balanced Random-16 Pairwise 2FI RMSE (Pooled) & 0.05397 (\textbf{$23.8\times$ higher}) & --- \\
+\midrule
+\multicolumn{3}{l}{\textit{Part B: Held-Out Confirmation Prompt Selection Accuracy}} \\
+Untuned Baseline Configuration (Run 1) & 0.60792 & 0.38115 \\
+One-Factor-at-a-Time (OFAT) Selected Recipe & 0.61021 & 0.42846 \\
+Additive Main-Effect Sign Recipe (\method-Main) & 0.60770 & 0.43092 \\
+Interaction-Aware 2FI Model Recipe (\method-$2^{5-1}_{\mathrm{V}}$-2FI) & \textbf{0.60947} (vs. 0.60696 Rand-2FI) & --- \\
+Orthogonal Screen Best-Observed (\method-ScreenBest, 50\% cost) & \textbf{0.61108} & \textbf{0.50955} \\
+Exhaustive Full-Cube Discovery Oracle (100\% cost) & 0.61159 & 0.52970 \\
+\midrule
+\multicolumn{3}{l}{\textit{Part C: RCBD Item Blocking (\texttt{block\_by=sample\_id}) vs. Unblocked ANOVA}} \\
+Mean Residual Variance ($\mathrm{MSE}_{\mathrm{resid}}$) Reduction & \textbf{80.85\%} & \textbf{24.83\%} \\
+Mean Factor $F$-Statistic Multiplier & \textbf{7.27$\times$} & \textbf{1.69$\times$} \\
+Mean Model $R^2$ (Unblocked $\to$ RCBD Blocked) & 0.0006 $\to$ \textbf{0.8146} & 0.0583 $\to$ \textbf{0.3438} \\
+FDR-Significant Main Effects ($\alpha=0.05$) & 95 $\to$ \textbf{565} (\textbf{$5.9\times$}) & 322 $\to$ \textbf{361} (\textbf{$1.12\times$}) \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}

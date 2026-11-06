@@ -1,0 +1,40 @@
+{
+  "experiment_id": "real_v2_manifest",
+  "status": "COMPLETED",
+  "timestamp": "2026-09-26T21:49:31Z",
+  "primary_hypothesis_h1": {
+    "n_cells": 9,
+    "n_bootstraps": 2000,
+    "mean_delta_regret_agg": 0.269954140625,
+    "se_delta_regret_agg": 0.011217374231532969,
+    "ci_95_delta_agg": [
+      0.26305555555555554,
+      0.28994791666666664
+    ],
+    "one_sided_p_value": 1.0,
+    "h1_decision": "UNSUPPORTED"
+  },
+  "secondary_hypothesis_h2_effect_recovery": {
+    "mean_rmse": 0.0,
+    "mean_sign_accuracy_above_sesoi": 1.0,
+    "is_supported": true
+  },
+  "secondary_hypothesis_h3_baseline_generalization": {
+    "mean_uplift_over_baseline": 0.16628472222222224,
+    "cells_passing_bh_fdr": 4,
+    "total_cells": 9,
+    "is_supported": true
+  },
+  "secondary_hypothesis_h4_uplift_efficiency": {
+    "mean_efficiency": 0.7055269922879177,
+    "sesoi_exclusions_count": 4,
+    "is_supported": false
+  },
+  "secondary_hypothesis_h5_resource_efficiency": {
+    "config_savings": 0.75,
+    "empirical_token_savings": 0.75,
+    "empirical_cost_savings": 0.75,
+    "is_supported": true
+  },
+  "recommendations_sha256": "0573456335dfd3c77b7be0e05756f20516f1a87a4022e8db0edae193a32d08ba"
+}

@@ -1,0 +1,151 @@
+# Task Definitions and Metrics Configuration
+version: "1.0"
+date: "2026-09-26"
+
+tasks:
+  schema_extraction:
+    name: "Schema-Bound Information Extraction"
+    domain: "Enterprise contracts and business event extraction"
+    dataset: "contract_events_v1"
+    split_counts:
+      total_eligible: 160
+      discovery: 80
+      confirmation: 80
+    prompt_template: |
+      {{ role_framing }}
+
+      {{ task_decomposition }}
+
+      {{ demonstrations }}
+
+      Context Text:
+      """
+      {{ text }}
+      """
+
+      Target Schema:
+      - buyer: string (or null)
+      - target: string (or null)
+      - amount: string (or null)
+      - date: string (or null)
+
+      {{ output_contract }}
+
+      {{ grounding_constraint }}
+
+      {{ verification_pass }}
+    primary_metric:
+      name: "field_f1"
+      type: "deterministic"
+      description: "Macro-averaged F1 score across all schema key-value pairs"
+      direction: "maximize"
+      delta_sesoi: 0.030
+      delta_justification: "A 3.0 percentage point improvement in field F1 translates to a material decrease in human-in-the-loop manual review exceptions in automated ingestion pipelines."
+    secondary_metrics:
+      - name: "json_validity"
+        type: "deterministic"
+        direction: "maximize"
+        failure_score: 0.0
+      - name: "exact_match"
+        type: "deterministic"
+        direction: "maximize"
+        failure_score: 0.0
+    failure_handling:
+      malformed_json_score: 0.0
+      timeout_score: 0.0
+
+  grounded_qa:
+    name: "Grounded Question Answering"
+    domain: "Factual question answering over reviewed reference paragraphs"
+    dataset: "grounded_fact_qa_v1"
+    split_counts:
+      total_eligible: 160
+      discovery: 80
+      confirmation: 80
+    prompt_template: |
+      {{ role_framing }}
+
+      {{ task_decomposition }}
+
+      {{ demonstrations }}
+
+      Reference Context:
+      """
+      {{ context }}
+      """
+
+      Inquiry Question:
+      {{ question }}
+
+      {{ output_contract }}
+
+      {{ grounding_constraint }}
+
+      {{ verification_pass }}
+    primary_metric:
+      name: "token_f1"
+      type: "deterministic"
+      description: "Token-level unigram F1 score between model response and canonical reference answer"
+      direction: "maximize"
+      delta_sesoi: 0.025
+      delta_justification: "A 2.5 percentage point change in token F1 on grounded benchmarks reflects genuine factual precision gains rather than superficial phrasing shifts."
+    secondary_metrics:
+      - name: "exact_match"
+        type: "deterministic"
+        direction: "maximize"
+        failure_score: 0.0
+      - name: "abstention_accuracy"
+        type: "deterministic"
+        direction: "maximize"
+        failure_score: 0.0
+    failure_handling:
+      refusal_or_timeout_score: 0.0
+
+  intent_classification:
+    name: "Intent and Policy Classification"
+    domain: "Multi-class customer support and service intent routing"
+    dataset: "customer_intent_v1"
+    split_counts:
+      total_eligible: 160
+      discovery: 80
+      confirmation: 80
+    prompt_template: |
+      {{ role_framing }}
+
+      {{ task_decomposition }}
+
+      {{ demonstrations }}
+
+      Allowed Intent Categories:
+      - lost_card
+      - balance_inquiry
+      - update_address
+      - dispute_charge
+      - loan_application
+      - reset_credentials
+      - out_of_scope
+
+      Customer Message:
+      """
+      {{ message }}
+      """
+
+      {{ output_contract }}
+
+      {{ grounding_constraint }}
+
+      {{ verification_pass }}
+    primary_metric:
+      name: "macro_f1"
+      type: "deterministic"
+      description: "Unweighted macro-averaged F1 score across all intent classes"
+      direction: "maximize"
+      delta_sesoi: 0.020
+      delta_justification: "A 2.0 percentage point gain in macro-F1 directly curtails misrouting rate in mission-critical customer operations."
+    secondary_metrics:
+      - name: "accuracy"
+        type: "deterministic"
+        direction: "maximize"
+        failure_score: 0.0
+    failure_handling:
+      unrecognized_class_score: 0.0

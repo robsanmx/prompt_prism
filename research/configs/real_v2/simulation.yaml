@@ -1,0 +1,132 @@
+# Real-LLM v2 Simulation Configuration Grid for Monte Carlo Calibration & Power Analysis
+version: "2.0"
+experiment_id: "promptprism_real_v2_calibration"
+date: "2026-09-26"
+replications_per_scenario: 2000
+
+design:
+  plan_id: "2(6-2)IV"
+  k: 6
+  runs: 16
+  generators: ["E = ABC", "F = BCD"]
+  coding: "contrast" # -1 / +1
+  factors: ["A", "B", "C", "D", "E", "F"]
+
+registered_sesois:
+  schema_extraction: 0.030
+  grounded_qa: 0.025
+  intent_classification: 0.020
+
+sample_sizes:
+  discovery_items: 80
+  confirmation_items: 80
+  replicates_per_item: 1
+
+scenarios:
+  scenario_1_additive_canonical:
+    description: "Purely additive main effects matching real_v2 80-item partition and contrast coding"
+    k: 6
+    num_items: 160 # 80 discovery + 80 confirmation
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.060
+      B: 0.040
+      C: 0.000
+      D: -0.050
+      E: 0.030
+      F: 0.000
+    two_factor_interactions: {}
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+    seed: 10001
+
+  scenario_2_sparse_synergy:
+    description: "Sparse two-factor interactions with moderate magnitude"
+    k: 6
+    num_items: 160
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.050
+      B: 0.040
+      C: 0.000
+      D: -0.040
+      E: 0.030
+      F: 0.000
+    two_factor_interactions:
+      "A,B": 0.035
+      "C,D": -0.040
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+    seed: 20001
+
+  scenario_3_dense_confounded:
+    description: "Dense two-factor interactions testing Resolution IV two-factor alias robustness"
+    k: 6
+    num_items: 160
+    num_replicates: 1
+    baseline_intercept: 0.55
+    main_effects:
+      A: 0.040
+      B: 0.030
+      C: 0.010
+      D: -0.030
+      E: 0.020
+      F: 0.000
+    two_factor_interactions:
+      "A,B": 0.030
+      "A,C": -0.025
+      "B,D": 0.035
+      "C,E": -0.030
+      "E,F": 0.025
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+    seed: 30001
+
+  scenario_4_aliased_trap:
+    description: "Interaction placed on Resolution III alias word to prove Resolution IV immunity"
+    k: 6
+    num_items: 160
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.000 # True null
+      B: 0.040
+      C: 0.000
+      D: 0.040
+      E: 0.000
+      F: 0.000
+    two_factor_interactions:
+      "B,D": 0.080 # In Res IV, main effects are unaliased with 2FIs
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+    seed: 40001
+
+  scenario_5_extreme_heterogeneity:
+    description: "High item difficulty variance verifying RCBD item-cluster power"
+    k: 6
+    num_items: 160
+    num_replicates: 1
+    baseline_intercept: 0.50
+    main_effects:
+      A: 0.040
+      B: 0.030
+      C: 0.000
+      D: -0.030
+      E: 0.020
+      F: 0.000
+    two_factor_interactions: {}
+    item_sd: 0.30
+    noise_sd: 0.03
+    outcome_type: "bounded"
+    missing_rate: 0.0
+    seed: 50001

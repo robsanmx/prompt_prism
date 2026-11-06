@@ -1,0 +1,24 @@
+[
+  {
+    "task_id": "code_docstring_synthesis",
+    "model_id": "qwen2.5-7b-instruct",
+    "baseline_score": 0.6042080211685258,
+    "prompt_prism_score": 0.765821010497975,
+    "random_search_score": 0.7732492410881092,
+    "prism_uplift_over_baseline": 0.16161298932944923,
+    "prism_gain_over_random": -0.007428230590134199,
+    "prism_beats_baseline": true,
+    "prism_beats_random": false
+  },
+  {
+    "task_id": "financial_sentiment_analysis",
+    "model_id": "qwen2.5-7b-instruct",
+    "baseline_score": 0.5982798927118399,
+    "prompt_prism_score": 0.7760515622086626,
+    "random_search_score": 0.7624419948492429,
+    "prism_uplift_over_baseline": 0.17777166949682266,
+    "prism_gain_over_random": 0.01360956735941965,
+    "prism_beats_baseline": true,
+    "prism_beats_random": true
+  }
+]

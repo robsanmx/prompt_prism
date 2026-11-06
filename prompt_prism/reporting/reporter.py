@@ -43,6 +43,7 @@ class AnalysisReport:
         alpha: float = 0.05,
         title: str = "Prompt Design of Experiments (DoE) & ANOVA Analysis Report",
         maximize: bool = True,
+        strategy: str = "additive",
     ) -> AnalysisReport:
         """
         Generate a complete AnalysisReport from ExperimentResults with RCBD blocking and aliasing.
@@ -75,6 +76,7 @@ class AnalysisReport:
             anova_result=anova_res,
             factor_names_map=factor_name_map,
             maximize=maximize,
+            strategy=strategy,
         )
 
         return cls(

@@ -1,0 +1,23 @@
+{
+  "experiment_id": "promptprism_real_v2",
+  "registration_tag": "v2.0-confirmatory-freeze",
+  "timestamp": "2026-09-26T21:00:00Z",
+  "author": "trev21mx@gmail.com",
+  "artifact_hashes": {
+    "research/configs/real_v2/experiment.yaml": "1801fca728427543203f6e3a6e3873a3e54c787e798e8df0b6b0aed388a6b31d",
+    "research/configs/real_v2/tasks.yaml": "14a0a5caef5e34dae173bafc10d10af5995856ce5c49067cbbe9c7382cba254e",
+    "research/configs/real_v2/models.yaml": "944267aaaa432410ee66f3f00fc3c4409a8b869676f7f3a81abab4bdc260cf87",
+    "research/configs/real_v2/factors.yaml": "0f5af9331587f0bd3edb2ca928e13b8a7e28cb7a0fac8f69a614cce4a34f46f9",
+    "research/configs/real_v2/simulation.yaml": "cc2d700b8845f3a0af9e4918737e2443ff8035017dedf8a73cece50b975e43f1",
+    "research/configs/real_v2/pilot.yaml": "02fdc3ecb1f72c73a6d60c2acc51ba8e009ea9becdac1abce4e42bb7cbf37821",
+    "research/configs/real_v2/confirmatory.yaml": "d1a4c86b16622ef7a330c2b21aac6cb84561bf5044282b531d62bec74bcb3fe3",
+    "research/data/real_v2/dataset_manifest.yaml": "f6d75b2ff6f205efdc8ffb74b7ecc8940b21cc0ec7360c88128d7c1a21e5821a",
+    "research/data/real_v2/dataset_audit_report.json": "6c104163195c20572d6f15386b9fa68b4c6603be4e1cde57948b5b29cfd7c754",
+    "research/protocol/real_v2/preregistration.md": "5e2595c03396dc0fe214fae3452daa1b01d0cbbc611770839a95058a31405def",
+    "research/protocol/real_v2/statistical_analysis_plan.md": "0dcb5cba2cdbdf9a378f21b89730733b4ff6051d56332603924a71bab2a54d03",
+    "research/analysis/real_v2_confirmatory.py": "3fc24e685f072e645f5fa1f1aae189bbcbeba8b325decaf07b26eea5197057d8",
+    "research/analysis/real_v2_metrics.py": "6c6ebd9695f93bc290516b4e8005e3592a6facac1462b4683c94c2cce929ac87",
+    "docs/research/real-v2-calibration-report.md": "50aea1d52b13de95ffa7f37d2380024ba5cf133a7d81c17ec51e25a49dc9384e",
+    "docs/research/real-v2-pilot-report.md": "844483c8c0ad62a58396e000d70a2916c162ffa8617223cd26f2bf6649401b18"
+  }
+}

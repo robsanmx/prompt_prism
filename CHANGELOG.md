@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.2.0] - 2026-11-06
+
+### Added
+- **Multi-Model Hugging Face Factorial Benchmark Study (`paper_hf/` & `research/hf_multi_prompt/`)**:
+  - Large-scale evaluation across **1,033 complete factorial cubes** ($7{,}024{,}960$ cell–item evaluations) combining `PromptEval/PromptEval_MMLU_full` ($855$ $2^5=32$ cubes across 15 LLMs and 57 MMLU subjects) and the `SLAB-NLP` multi-prompt benchmark suite ($178$ $2^4=16$ cubes across `BBH` and `LMentry`).
+  - Standalone manuscript (`paper_hf/main.tex`, `paper_hf/main.pdf`), publication figures (`paper_hf/figures/`), LaTeX tables (`paper_hf/tables/`), and reproducible runner (`research/hf_multi_prompt/run_experiments.py`).
+- **Epistasis-Aware & Screen-Anchored Prompt Selection (`OptimalPromptFinder`)**:
+  - Added `strategy` support (`"additive"`, `"screen_best"`, `"interaction_2fi"`, and `"auto"`) to `OptimalPromptFinder.find_optimal_prompt`, `AnalysisReport.generate`, and `Experiment.analyze` to resolve the Sign-Composition Paradox when prompt factors interact epistatically.
+  - `ANOVAEngine.run_anova` now records observed cell means (`cell_means`) and grand mean in `ANOVAResult.metadata`.
+  - Fixed marginal main-effect extraction in `EffectAnalyzer.compute_main_effects` when interaction terms (`include_interactions=True`) are included in Patsy treatment-coded OLS models.
+
+---
+
+## [1.1.0] - 2026-09-26
+
+### Added
+- **Scientific Validation Package & Empirical Suite**:
+  - Full implementation of preregistered empirical protocol (`research/protocol/`) covering Study A (Monte Carlo simulations across 8 regimes), Study B (7,680 confirmatory evaluations across 3 tasks), Study C (prospective holdout validation), and Study D (judge validation against blinded human ratings).
+  - Synthetic Data Generating Process (`research/simulation/dgp.py`) with continuous, bounded, and binary outcome generators, repeated-measures item variance, interaction density, and judge noise.
+  - Monte Carlo simulation engine and calibration reporting (`research/simulation/run.py`, `summarize_simulation.py`).
+  - Content-addressed execution runner and manifest tracking (`research/experiments/manifest.py`, `run.py`).
+  - Two-One-Sided-Tests (TOST) equivalence testing against Smallest Effect Size of Interest (SESOI $\delta \in \{0.020, 0.025, 0.030\}$).
+  - Human vs. LLM judge agreement validation (`research/analysis/judge_validation.py`) reporting Spearman $\rho$, Pearson $r$, Bland-Altman limits of agreement, and systematic bias.
+  - Reproducibility pipeline script (`research/reproduce.py`) executing complete offline verification in $\sim 6$ seconds with zero paid API calls.
+  - Research artifact manifest (`research/artifact_manifest.json`) cataloging cryptographic SHA-256 digests and file sizes for all research artifacts.
+- **Preprint Manuscript & Documentation**:
+  - Scientific paper (*"Factorial Prompt Engineering: Testing Fractional Designs for Efficient and Interpretable Prompt Optimization"*) in `paper/main.tex` with verified `paper/references.bib`, `paper/tables/results.tex`, and publication figures in `paper/figures/`.
+  - Independent statistical review (`docs/research/statistical-review.md`) and fresh-context adversarial review (`docs/research/adversarial-review.md`).
+  - Venue submission checklist (`paper/venue_checklist.md`).
+  - Diagnostic failure mode reports on aliased collisions and antagonistic cliff regimes (`docs/research/failure-mode-report.md`, `calibration-remediation.md`).
+
+---
+
 ## [1.0.0] - 2026-09-01
 
 ### Added

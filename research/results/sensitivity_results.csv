@@ -1,0 +1,14 @@
+analysis_dimension,condition,variant,budget_configs,rmse,sign_accuracy,held_out_regret,optimal_selected
+resolution_vs_interaction,additive,Res III (8 runs),8,0.007186141184214769,1.0,0.0,1
+resolution_vs_interaction,additive,Res IV (16 runs),16,0.0031097134062253976,1.0,0.0,1
+resolution_vs_interaction,sparse_2fi,Res III (8 runs),8,0.010948854429016068,1.0,0.0,1
+resolution_vs_interaction,sparse_2fi,Res IV (16 runs),16,0.0031097134062253967,1.0,0.0,1
+resolution_vs_interaction,dense_2fi,Res III (8 runs),8,0.015689266604153134,1.0,0.013645082591648205,0
+resolution_vs_interaction,dense_2fi,Res IV (16 runs),16,0.0031097134062253954,1.0,0.013645082591648205,0
+resolution_vs_interaction,aliased_collision,Res III (8 runs),8,0.015820756643513737,1.0,0.038022846380837416,0
+resolution_vs_interaction,aliased_collision,Res IV (16 runs),16,0.0031097134062253707,1.0,0.038022846380837416,0
+item_sample_size,N_items=10,PromptPrism Res IV,16,0.009401602245552306,1.0,-0.027130227358427295,0
+item_sample_size,N_items=20,PromptPrism Res IV,16,0.008109463125613814,1.0,0.004246290246342266,0
+item_sample_size,N_items=40,PromptPrism Res IV,16,0.008802079564942507,1.0,0.0,1
+item_sample_size,N_items=80,PromptPrism Res IV,16,0.004555002500362152,1.0,-0.0034202763770960765,0
+item_sample_size,N_items=160,PromptPrism Res IV,16,0.002012017291517346,1.0,0.0,1

@@ -1,0 +1,85 @@
+# Real-LLM Tasks Configuration (v2)
+version: "2.0"
+date: "2026-09-26"
+experiment_id: "promptprism_real_v2"
+
+tasks:
+  schema_extraction:
+    name: "Schema-Bound Information Extraction"
+    domain: "Naturally occurring enterprise contracts and commercial disclosures"
+    dataset_name: "sec_contract_events_real"
+    split_counts:
+      total_eligible: 160
+      discovery: 80
+      confirmation: 80
+      excluded_pilot: 20
+    primary_metric:
+      name: "field_f1"
+      type: "deterministic"
+      description: "Micro-averaged field-level F1 score computed per item across canonical target keys"
+      direction: "maximize"
+      delta_sesoi: 0.030
+      delta_justification: "A 3.0 percentage point gain reduces human manual triage exceptions in enterprise automation."
+    secondary_metrics:
+      - name: "exact_record_match"
+        type: "deterministic"
+        direction: "maximize"
+      - name: "schema_validity_rate"
+        type: "deterministic"
+        direction: "maximize"
+    failure_handling:
+      malformed_json_score: 0.0
+      unparsable_score: 0.0
+      timeout_score: 0.0
+
+  grounded_qa:
+    name: "Grounded Question Answering"
+    domain: "Reviewed factual reference passages with answerable and unanswerable inquiries"
+    dataset_name: "factual_passages_qa_real"
+    split_counts:
+      total_eligible: 160
+      discovery: 80
+      confirmation: 80
+      excluded_pilot: 20
+    primary_metric:
+      name: "token_f1"
+      type: "deterministic"
+      description: "Normalized unigram token F1 score between model extraction and canonical answer"
+      direction: "maximize"
+      delta_sesoi: 0.025
+      delta_justification: "A 2.5 percentage point difference reflects true factual precision rather than superficial surface wording."
+    secondary_metrics:
+      - name: "exact_match"
+        type: "deterministic"
+        direction: "maximize"
+      - name: "abstention_accuracy"
+        type: "deterministic"
+        direction: "maximize"
+    failure_handling:
+      refusal_or_timeout_score: 0.0
+
+  intent_classification:
+    name: "Intent and Policy Classification"
+    domain: "Real customer service routing corpus across stable multiclass intent categories"
+    dataset_name: "banking77_customer_intent_real"
+    split_counts:
+      total_eligible: 160
+      discovery: 80
+      confirmation: 80
+      excluded_pilot: 20
+    primary_metric:
+      name: "macro_f1"
+      type: "deterministic"
+      description: "Macro-averaged F1 score aggregated across all valid intent classes"
+      direction: "maximize"
+      delta_sesoi: 0.020
+      delta_justification: "A 2.0 percentage point gain directly prevents operational ticket misrouting."
+    secondary_metrics:
+      - name: "accuracy"
+        type: "deterministic"
+        direction: "maximize"
+      - name: "invalid_label_rate"
+        type: "deterministic"
+        direction: "minimize"
+    failure_handling:
+      invalid_label_score: 0.0

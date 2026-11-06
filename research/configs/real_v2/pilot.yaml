@@ -1,0 +1,48 @@
+# Real-LLM v2 Pilot Experiment Configuration
+version: "2.0"
+experiment_id: "promptprism_real_v2_pilot"
+date: "2026-09-26"
+purpose: "Measure token length variance, nondeterminism, latency, and calibrate cost before confirmatory freeze"
+
+design:
+  type: "full_factorial" # 64 configs to test complete rendering space
+  factors: ["A", "B", "C", "D", "E", "F"]
+  num_configs: 64
+  coding: "contrast"
+
+pilot_partition:
+  partition: "pilot"
+  items_per_task: 20
+  replicates: 2 # 2 replicates per configuration to measure temperature-0 variance
+  tasks:
+    - "schema_extraction"
+    - "grounded_qa"
+    - "intent_classification"
+
+models:
+  anchor_model:
+    model_id: "meta-llama/Llama-3.1-8B-Instruct"
+    provider: "local_vllm"
+    temperature: 0.0
+    seed: 42
+    replicates: 2
+  api_model_openai:
+    model_id: "gpt-4o-mini-2024-07-18"
+    provider: "openai"
+    temperature: 0.0
+    seed: 42
+    replicates: 1
+  api_model_anthropic:
+    model_id: "claude-3-5-haiku-20241022"
+    provider: "anthropic"
+    temperature: 0.0
+    seed: 42
+    replicates: 1
+
+cache:
+  directory: "research/data/cache/real_v2_pilot"
+  enforce_content_addressing: true
+
+output:
+  manifest_path: "research/results/real_v2/pilot_manifest.jsonl"
+  report_path: "docs/research/real-v2-pilot-report.md"

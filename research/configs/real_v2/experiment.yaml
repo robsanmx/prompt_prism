@@ -1,0 +1,52 @@
+# Experiment Configuration: Real-LLM PromptPrism Confirmatory Study
+experiment_id: "promptprism_real_v2"
+version: "2.0"
+date: "2026-09-26"
+status: "PREREGISTRATION_READY"
+provenance_tier: "empirical_real_v2"
+
+protocol:
+  central_question: >
+    Across preregistered task-model cells, does a 16-configuration Resolution IV
+    fractional factorial design estimate full-factorial marginal prompt effects and
+    select a prompt with lower held-out regret than a budget-matched random design?
+  preregistered_fraction: "2^(6-2)_IV"
+  generators: ["E = ABC", "F = BCD"]
+  defining_relation: "I = ABCE = BCDF = ADEF"
+  contrast_coding: "minus_one_plus_one" # {-1, +1}
+  primary_hypothesis: "H1_held_out_selection_regret"
+
+matrix:
+  tasks:
+    - "schema_extraction"
+    - "grounded_qa"
+    - "intent_classification"
+  models:
+    - id: "meta-llama/Llama-3.1-8B-Instruct"
+      role: "open_weight_anchor"
+      replicates_per_item: 2
+    - id: "gpt-4o-mini-2024-07-18"
+      role: "economical_api_model"
+      replicates_per_item: 1
+    - id: "claude-3-5-haiku-20241022"
+      role: "alternative_provider_family"
+      replicates_per_item: 1
+  configurations_per_cell: 64
+  eligible_items_per_task: 160
+  discovery_items_per_task: 80
+  confirmation_items_per_task: 80
+
+call_budget:
+  formula: "3_tasks * 64_configs * 160_items * (2 + 1 + 1 replicates)"
+  total_confirmatory_generation_calls: 122880
+  judge_calls: 0 # Primary endpoints are 100% deterministic
+
+paths:
+  data_dir: "research/data/real_v2"
+  results_dir: "research/results/real_v2"
+  manifest_path: "research/results/real_v2/confirmatory_manifest.jsonl"
+  pilot_manifest_path: "research/results/real_v2/pilot_manifest.jsonl"
+  recommendations_path: "research/results/real_v2/recommendations.json"
+  confirmatory_results_path: "research/results/real_v2/confirmatory_results.csv"
+  confirmatory_summary_path: "research/results/real_v2/confirmatory_summary.json"
+  protocol_dir: "research/protocol/real_v2"

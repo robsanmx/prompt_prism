@@ -249,3 +249,91 @@ def test_both_plots_agree_on_direction_when_minimizing():
         _action_color(effect.action_recommendation, neutral="#495057") == ENABLE_COLOR
     )
     assert _action_color("DISABLE", neutral="#868e96") == DISABLE_COLOR
+
+
+def test_optimizer_resolves_sign_composition_paradox_with_epistasis():
+    """
+    When two positive factors (A and B) clash epistatically when enabled together (A=1, B=1),
+    additive sign composition selects the suboptimal corner (A=1, B=1), whereas 'screen_best',
+    'interaction_2fi', and 'auto' avoid the antagonistic trap and recover the true optimum.
+    """
+    design = FractionalFactorialGenerator.from_plan_id("2(5-1)V")
+    base_df = design.to_dataframe()
+
+    # Cell values for (A, B):
+    # (0, 0) -> 0.50
+    # (1, 0) -> 0.85  <-- True optimum!
+    # (0, 1) -> 0.80
+    # (1, 1) -> 0.55  <-- Antagonistic clash when both A and B are enabled!
+    # Marginal means:
+    # A=0: (0.50 + 0.80)/2 = 0.65, A=1: (0.85 + 0.55)/2 = 0.70 -> delta_A = +0.05 > 0
+    # B=0: (0.50 + 0.85)/2 = 0.675, B=1: (0.80 + 0.55)/2 = 0.675 + 0.025 -> let's make (0, 1) = 0.84 so delta_B = +0.045 > 0
+    cell_scores = {
+        (0, 0): 0.50,
+        (1, 0): 0.88,
+        (0, 1): 0.84,
+        (1, 1): 0.56,
+    }
+    # Check marginal means:
+    # A=0 mean = (0.50 + 0.84)/2 = 0.67; A=1 mean = (0.88 + 0.56)/2 = 0.72 -> delta_A = +0.05 (positive!)
+    # B=0 mean = (0.50 + 0.88)/2 = 0.69; B=1 mean = (0.84 + 0.56)/2 = 0.70 -> delta_B = +0.01 (or make (0,0)=0.44 so B=0 is 0.66, B=1 is 0.70 -> delta_B = +0.04!)
+    cell_scores[(0, 0)] = 0.44
+
+    records = []
+    np.random.seed(7)
+    for s_id in range(25):
+        item_offset = (s_id - 12) * 0.005
+        for _, row in base_df.iterrows():
+            a, b = int(row["A"]), int(row["B"])
+            score = cell_scores[(a, b)] + item_offset + np.random.normal(0, 0.005)
+            records.append(
+                {
+                    "sample_id": s_id,
+                    "run_id": row["run_id"],
+                    "A": a,
+                    "B": b,
+                    "C": int(row["C"]),
+                    "D": int(row["D"]),
+                    "E": int(row["E"]),
+                    "accuracy": float(np.clip(score, 0.0, 1.0)),
+                }
+            )
+
+    df = pd.DataFrame(records)
+    anova_res = ANOVAEngine.run_anova(
+        data=df,
+        factor_cols=["A", "B", "C", "D", "E"],
+        target_col="accuracy",
+        block_col="sample_id",
+        include_interactions=True,
+    )
+
+    # 1. Naive additive strategy enables both A=1 and B=1, falling into the (1, 1) trap
+    opt_add = OptimalPromptFinder.find_optimal_prompt(anova_res, strategy="additive")
+    assert opt_add.optimal_factor_levels["A"] == 1
+    assert opt_add.optimal_factor_levels["B"] == 1
+
+    # 2. Screen-Best strategy selects (A=1, B=0) with ~0.88 accuracy
+    opt_screen = OptimalPromptFinder.find_optimal_prompt(
+        anova_res, strategy="screen_best"
+    )
+    assert opt_screen.optimal_factor_levels["A"] == 1
+    assert opt_screen.optimal_factor_levels["B"] == 0
+    assert opt_screen.predicted_optimal_score > 0.85
+
+    # 3. Interaction-2FI strategy models the antagonistic A:B interaction and selects (A=1, B=0)
+    opt_2fi = OptimalPromptFinder.find_optimal_prompt(
+        anova_res, strategy="interaction_2fi"
+    )
+    assert opt_2fi.optimal_factor_levels["A"] == 1
+    assert opt_2fi.optimal_factor_levels["B"] == 0
+    assert opt_2fi.predicted_optimal_score > 0.85
+
+    # 4. Auto strategy detects strong epistasis in Res V and selects interaction_2fi
+    opt_auto = OptimalPromptFinder.find_optimal_prompt(anova_res, strategy="auto")
+    assert opt_auto.strategy == "interaction_2fi"
+    assert opt_auto.optimal_factor_levels["A"] == 1
+    assert opt_auto.optimal_factor_levels["B"] == 0
+
+    with pytest.raises(ValueError, match="Unknown strategy"):
+        OptimalPromptFinder.find_optimal_prompt(anova_res, strategy="invalid_mode")

@@ -1,0 +1,33 @@
+\begin{table*}[t]
+\centering
+\small
+\caption{Cohort 1 (\texttt{PromptEval/PromptEval\_MMLU\_full}): $2^5=32$ factorial evaluation across 15 LLMs and 57 MMLU subjects ($14{,}042$ items per model). \method's 16-run Resolution V design ($2^{5-1}_{\mathrm{V}}$) unaliases all 5 main effects and all 10 two-factor interactions ($2\mathrm{FI}$), reducing $2\mathrm{FI}$ RMSE by $23.8\times$ over equal-budget balanced random screening while RCBD item blocking increases FDR-significant factor detections by $5.9\times$.}
+\label{tab:mmlu_models}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llccccccc}
+\toprule
+\textbf{Model} & \textbf{Type} & \textbf{Mean} & \textbf{Spread} & \multicolumn{2}{c}{\textbf{2FI RMSE (16 runs)}} & \multicolumn{2}{c}{\textbf{Held-Out Conf. Acc.}} & \textbf{FDR Sig. (Unb. $\to$ RCBD)} \\
+\cmidrule(lr){5-6} \cmidrule(lr){7-8}
+ & & \textbf{Acc.} & \textbf{(pp)} & \textbf{$2^{5-1}_{\mathrm{V}}$} & \textbf{Rand-16} & \textbf{$2^{5-1}_{\mathrm{V}}$ Best} & \textbf{Oracle-32} & \textbf{(out of 285 tests)} \\
+\midrule
+Llama-3-8B (Base) & Base & 0.6234 & 4.26 & \textbf{0.0037} & 0.0584 & 0.6498 & 0.6507 & 3 $\to$ \textbf{25} \\
+Llama-3-8B-Instruct & Instruct & 0.6413 & 2.19 & \textbf{0.0023} & 0.0575 & 0.6575 & 0.6596 & 2 $\to$ \textbf{22} \\
+Llama-3-70B-Instruct & Instruct & 0.7934 & 1.94 & \textbf{0.0020} & 0.0702 & 0.7980 & 0.7966 & 1 $\to$ \textbf{28} \\
+CodeLlama-34B-Instruct & Instruct & 0.5042 & 3.83 & \textbf{0.0033} & 0.0494 & 0.5365 & 0.5338 & 8 $\to$ \textbf{48} \\
+Flan-T5-XL (3B) & Instruct & 0.4857 & 1.54 & \textbf{0.0012} & 0.0422 & 0.5043 & 0.5045 & 3 $\to$ \textbf{30} \\
+Flan-T5-XXL (11B) & Instruct & 0.5447 & 0.92 & \textbf{0.0007} & 0.0465 & 0.5535 & 0.5523 & 0 $\to$ \textbf{25} \\
+Flan-UL2 (20B) & Instruct & 0.5482 & 0.81 & \textbf{0.0012} & 0.0476 & 0.5492 & 0.5514 & 0 $\to$ \textbf{10} \\
+Merlinite-7B & Instruct & 0.6135 & 3.35 & \textbf{0.0012} & 0.0541 & 0.6389 & 0.6353 & 7 $\to$ \textbf{40} \\
+Mixtral-8x7B-Instruct & Instruct & 0.6883 & 2.68 & \textbf{0.0018} & 0.0620 & 0.7022 & 0.6993 & 1 $\to$ \textbf{19} \\
+Mistral-7B-Instruct-v0.2 & Instruct & 0.5696 & 4.39 & \textbf{0.0040} & 0.0568 & 0.5893 & 0.5935 & 5 $\to$ \textbf{39} \\
+Gemma-7B (Base) & Base & 0.6096 & 3.43 & \textbf{0.0025} & 0.0558 & 0.6426 & 0.6424 & 10 $\to$ \textbf{41} \\
+Gemma-7B-IT & Instruct & 0.4729 & 6.17 & \textbf{0.0037} & 0.0482 & 0.5046 & 0.5104 & 28 $\to$ \textbf{58} \\
+Falcon-40B (Base) & Base & 0.5306 & 1.75 & \textbf{0.0019} & 0.0474 & 0.5422 & 0.5450 & 2 $\to$ \textbf{38} \\
+Mistral-7B-v0.1 (Base) & Base & 0.5816 & 4.80 & \textbf{0.0022} & 0.0535 & 0.6093 & 0.6109 & 21 $\to$ \textbf{96} \\
+Falcon-180B (Base) & Base & 0.6751 & 3.08 & \textbf{0.0021} & 0.0602 & 0.6883 & 0.6880 & 4 $\to$ \textbf{46} \\
+\midrule
+\textbf{Mean / Total (15 LLMs)} & --- & 0.5921 & 3.01 & \textbf{0.0023} & 0.0540 & 0.6111 & 0.6116 & 95 $\to$ \textbf{565} \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}

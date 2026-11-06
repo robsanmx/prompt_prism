@@ -1,0 +1,170 @@
+# Simulation Configuration Grid for Study A (Monte Carlo Validation)
+version: "1.0"
+date: "2026-09-26"
+replications_per_scenario: 2000
+
+scenarios:
+  scenario_1_additive:
+    description: "Purely additive main effects with moderate item difficulty variance and bounded [0, 1] noise"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.060
+      B: 0.040
+      C: 0.000
+      D: -0.050
+      E: 0.030
+      F: 0.000
+    two_factor_interactions: {}
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+
+  scenario_2_sparse_interactions:
+    description: "Sparse two-factor interactions with moderate magnitude"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.050
+      B: 0.040
+      C: 0.000
+      D: -0.040
+      E: 0.030
+      F: 0.000
+    two_factor_interactions:
+      "A,B": 0.035
+      "C,D": -0.040
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+
+  scenario_3_dense_interactions:
+    description: "Dense synergistic and conflicting two-factor interactions"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.55
+    main_effects:
+      A: 0.040
+      B: 0.030
+      C: 0.010
+      D: -0.030
+      E: 0.020
+      F: 0.000
+    two_factor_interactions:
+      "A,B": 0.030
+      "A,C": -0.025
+      "B,D": 0.035
+      "C,E": -0.030
+      "E,F": 0.025
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+
+  scenario_4_aliased_collision:
+    description: "Interaction placed precisely on generator alias word to test Resolution III aliasing trap"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.000  # Null main effect
+      B: 0.040
+      C: 0.000
+      D: 0.040
+      E: 0.000
+      F: 0.000
+    two_factor_interactions:
+      "B,D": 0.080  # Collides with factor A under certain Res III plans
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+
+  scenario_5_antagonistic_cliff:
+    description: "Severe negative interaction where individually positive factors destroy performance when paired"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.060
+      B: 0.060
+      C: 0.000
+      D: 0.000
+      E: 0.000
+      F: 0.000
+    two_factor_interactions:
+      "A,B": -0.140  # Turning both on causes net -0.02 drop below baseline
+    item_sd: 0.10
+    noise_sd: 0.04
+    outcome_type: "bounded"
+    missing_rate: 0.0
+
+  scenario_6_binary_logistic:
+    description: "Binary classification outcome via logistic sigmoid link"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.20
+    main_effects:
+      A: 0.50
+      B: 0.30
+      C: 0.00
+      D: -0.40
+      E: 0.25
+      F: 0.00
+    two_factor_interactions:
+      "A,B": 0.20
+    item_sd: 0.40
+    noise_sd: 0.00
+    outcome_type: "binary"
+    missing_rate: 0.0
+
+  scenario_7_strong_item_heterogeneity:
+    description: "Extreme item difficulty variance testing RCBD blocking efficiency"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.50
+    main_effects:
+      A: 0.040
+      B: 0.030
+      C: 0.000
+      D: -0.030
+      E: 0.020
+      F: 0.000
+    two_factor_interactions: {}
+    item_sd: 0.30  # High variance across items
+    noise_sd: 0.03
+    outcome_type: "bounded"
+    missing_rate: 0.0
+
+  scenario_8_judge_noise_and_missingness:
+    description: "5% API missingness rate plus correlated judge evaluation noise"
+    k: 6
+    num_items: 80
+    num_replicates: 1
+    baseline_intercept: 0.60
+    main_effects:
+      A: 0.050
+      B: 0.040
+      C: 0.000
+      D: -0.040
+      E: 0.030
+      F: 0.000
+    two_factor_interactions:
+      "A,B": 0.025
+    item_sd: 0.10
+    noise_sd: 0.04
+    judge_noise_sd: 0.03
+    judge_bias: 0.02
+    outcome_type: "bounded"
+    missing_rate: 0.05

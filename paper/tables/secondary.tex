@@ -1,0 +1,23 @@
+\begin{table*}[htbp]
+\centering
+\small
+\caption{Effect recovery and discovery-screen resource use. Random RMSE and sign agreement are averaged over twenty frozen balanced designs. Costs use the registered Gemini 2.5 Flash paid-tier rates.}
+\label{tab:secondary}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+\textbf{Effect recovery} & \textbf{Extraction} & \textbf{QA} & \textbf{Intent} & \textbf{Mean}\\
+\midrule
+\method\ RMSE & 0.00476 & 0.00339 & 0.00379 & 0.00398\\
+Random RMSE & 0.00547 & 0.01188 & 0.01059 & 0.00931\\
+\method\ sign agreement & 100.0\% & 83.3\% & 83.3\% & 88.9\%\\
+Random sign agreement & 66.7\% & 78.3\% & 77.5\% & 74.2\%\\
+\midrule
+\textbf{Discovery resources} & \textbf{Configurations} & \textbf{Calls} & \textbf{Total tokens} & \textbf{Cost}\\
+\method\ fraction & 16 & 3,840 & 1,138,511 & \$0.5144\\
+Mean balanced random screen & 16 & 3,840 & 1,136,752 & \$0.5100\\
+Exhaustive cube & 64 & 15,360 & 4,550,470 & \$2.0487\\
+\bottomrule
+\end{tabular}
+}
+\end{table*}

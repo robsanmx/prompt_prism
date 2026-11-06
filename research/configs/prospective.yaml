@@ -1,0 +1,40 @@
+# Prospective Study Configurations (Study C, Task 14)
+version: "1.0"
+date: "2026-09-26"
+
+prospective_pairs:
+  pair_1:
+    task_id: "code_docstring_synthesis"
+    domain: "Python algorithmic function generation from specification"
+    model_id: "qwen2.5-7b-instruct"
+    primary_metric: "syntax_and_assertion_pass"
+    delta_sesoi: 0.040
+    design: "2(6-2)IV"
+    runs: 16
+    discovery_items: 40
+    confirmation_items: 40
+    factors:
+      A: "type_annotations_contract"
+      B: "docstring_doctest_examples"
+      C: "edge_case_checklist"
+      D: "algorithmic_complexity_hint"
+      E: "strict_syntax_guardrail"
+      F: "self_testing_pass"
+
+  pair_2:
+    task_id: "financial_sentiment_analysis"
+    domain: "Financial market news sentiment classification (Positive/Negative/Neutral)"
+    model_id: "qwen2.5-7b-instruct"
+    primary_metric: "macro_f1"
+    delta_sesoi: 0.030
+    design: "2(6-2)IV"
+    runs: 16
+    discovery_items: 40
+    confirmation_items: 40
+    factors:
+      A: "market_analyst_persona"
+      B: "entity_sentiment_decomposition"
+      C: "few_shot_market_examples"
+      D: "strict_label_contract"
+      E: "market_nuance_constraint"
+      F: "neutrality_recheck_pass"
