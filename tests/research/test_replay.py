@@ -115,10 +115,14 @@ def test_replay_budget_violation_raises(synthetic_additive_cube):
     df = cube.dataframe
 
     with pytest.raises(ValueError, match="Budget violation"):
-        MethodReplay.replay_random_search(discovery_df=df, factor_ids=factor_ids, budget_runs=0)
+        MethodReplay.replay_random_search(
+            discovery_df=df, factor_ids=factor_ids, budget_runs=0
+        )
 
     with pytest.raises(ValueError, match="Budget violation"):
-        MethodReplay.replay_random_linear_model(discovery_df=df, factor_ids=factor_ids, budget_runs=0)
+        MethodReplay.replay_random_linear_model(
+            discovery_df=df, factor_ids=factor_ids, budget_runs=0
+        )
 
 
 def test_replay_no_fixed_intervals_or_pvalues(synthetic_additive_cube):
@@ -128,38 +132,65 @@ def test_replay_no_fixed_intervals_or_pvalues(synthetic_additive_cube):
     df = cube.dataframe
 
     # Replay on original (low noise) data
-    res_rand = MethodReplay.replay_random_search(discovery_df=df, factor_ids=factor_ids, budget_runs=16, seed=42)
+    res_rand = MethodReplay.replay_random_search(
+        discovery_df=df, factor_ids=factor_ids, budget_runs=16, seed=42
+    )
     res_ofat = MethodReplay.replay_ofat(discovery_df=df, factor_ids=factor_ids)
-    res_oracle = MethodReplay.replay_exhaustive_oracle(discovery_df=df, factor_ids=factor_ids)
-    res_lin = MethodReplay.replay_random_linear_model(discovery_df=df, factor_ids=factor_ids, budget_runs=16, seed=42)
+    res_oracle = MethodReplay.replay_exhaustive_oracle(
+        discovery_df=df, factor_ids=factor_ids
+    )
+    MethodReplay.replay_random_linear_model(
+        discovery_df=df, factor_ids=factor_ids, budget_runs=16, seed=42
+    )
 
     # Replay on high noise data
     df_noisy = df.copy()
     rng = np.random.default_rng(999)
     df_noisy["metric"] = df_noisy["metric"] + rng.normal(0, 0.30, size=len(df_noisy))
 
-    res_rand_noisy = MethodReplay.replay_random_search(discovery_df=df_noisy, factor_ids=factor_ids, budget_runs=16, seed=42)
-    res_ofat_noisy = MethodReplay.replay_ofat(discovery_df=df_noisy, factor_ids=factor_ids)
-    res_oracle_noisy = MethodReplay.replay_exhaustive_oracle(discovery_df=df_noisy, factor_ids=factor_ids)
-    res_lin_noisy = MethodReplay.replay_random_linear_model(discovery_df=df_noisy, factor_ids=factor_ids, budget_runs=16, seed=42)
+    res_rand_noisy = MethodReplay.replay_random_search(
+        discovery_df=df_noisy, factor_ids=factor_ids, budget_runs=16, seed=42
+    )
+    res_ofat_noisy = MethodReplay.replay_ofat(
+        discovery_df=df_noisy, factor_ids=factor_ids
+    )
+    res_oracle_noisy = MethodReplay.replay_exhaustive_oracle(
+        discovery_df=df_noisy, factor_ids=factor_ids
+    )
+    MethodReplay.replay_random_linear_model(
+        discovery_df=df_noisy, factor_ids=factor_ids, budget_runs=16, seed=42
+    )
 
     # Check that CI widths expand under higher noise (not fixed width)
     for f in factor_ids:
         # Random search
         w_rand = res_rand.conf_intervals_95[f][1] - res_rand.conf_intervals_95[f][0]
-        w_rand_noisy = res_rand_noisy.conf_intervals_95[f][1] - res_rand_noisy.conf_intervals_95[f][0]
+        w_rand_noisy = (
+            res_rand_noisy.conf_intervals_95[f][1]
+            - res_rand_noisy.conf_intervals_95[f][0]
+        )
         assert w_rand > 0.0
-        assert w_rand_noisy > w_rand, f"Random search CI for {f} did not expand with noise"
+        assert (
+            w_rand_noisy > w_rand
+        ), f"Random search CI for {f} did not expand with noise"
 
         # OFAT
         w_ofat = res_ofat.conf_intervals_95[f][1] - res_ofat.conf_intervals_95[f][0]
-        w_ofat_noisy = res_ofat_noisy.conf_intervals_95[f][1] - res_ofat_noisy.conf_intervals_95[f][0]
+        w_ofat_noisy = (
+            res_ofat_noisy.conf_intervals_95[f][1]
+            - res_ofat_noisy.conf_intervals_95[f][0]
+        )
         assert w_ofat > 0.0
         assert w_ofat_noisy > w_ofat, f"OFAT CI for {f} did not expand with noise"
 
         # Oracle
-        w_oracle = res_oracle.conf_intervals_95[f][1] - res_oracle.conf_intervals_95[f][0]
-        w_oracle_noisy = res_oracle_noisy.conf_intervals_95[f][1] - res_oracle_noisy.conf_intervals_95[f][0]
+        w_oracle = (
+            res_oracle.conf_intervals_95[f][1] - res_oracle.conf_intervals_95[f][0]
+        )
+        w_oracle_noisy = (
+            res_oracle_noisy.conf_intervals_95[f][1]
+            - res_oracle_noisy.conf_intervals_95[f][0]
+        )
         assert w_oracle > 0.0
         assert w_oracle_noisy > w_oracle, f"Oracle CI for {f} did not expand with noise"
 
@@ -203,9 +234,14 @@ def test_replay_hand_computed_inference():
     expected_diff_b = 3.0
     expected_se_b = np.sqrt(0.5)
     expected_df_b = 3
-    expected_p_b = float(2.0 * (1.0 - stats.t.cdf(expected_diff_b / expected_se_b, df=expected_df_b)))
+    expected_p_b = float(
+        2.0 * (1.0 - stats.t.cdf(expected_diff_b / expected_se_b, df=expected_df_b))
+    )
     crit_95 = float(stats.t.ppf(0.975, df=expected_df_b))
-    expected_ci95_b = (expected_diff_b - crit_95 * expected_se_b, expected_diff_b + crit_95 * expected_se_b)
+    expected_ci95_b = (
+        expected_diff_b - crit_95 * expected_se_b,
+        expected_diff_b + crit_95 * expected_se_b,
+    )
 
     res_ofat = MethodReplay.replay_ofat(
         discovery_df=hand_df,
@@ -214,7 +250,13 @@ def test_replay_hand_computed_inference():
         block_col="sample_id",
     )
 
-    np.testing.assert_allclose(res_ofat.estimated_main_effects["B"], expected_diff_b, rtol=1e-5)
+    np.testing.assert_allclose(
+        res_ofat.estimated_main_effects["B"], expected_diff_b, rtol=1e-5
+    )
     np.testing.assert_allclose(res_ofat.p_values["B"], expected_p_b, rtol=1e-5)
-    np.testing.assert_allclose(res_ofat.conf_intervals_95["B"][0], expected_ci95_b[0], rtol=1e-5)
-    np.testing.assert_allclose(res_ofat.conf_intervals_95["B"][1], expected_ci95_b[1], rtol=1e-5)
+    np.testing.assert_allclose(
+        res_ofat.conf_intervals_95["B"][0], expected_ci95_b[0], rtol=1e-5
+    )
+    np.testing.assert_allclose(
+        res_ofat.conf_intervals_95["B"][1], expected_ci95_b[1], rtol=1e-5
+    )

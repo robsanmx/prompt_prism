@@ -5,6 +5,7 @@ cache key sensitivity, and discovery/confirmation split isolation.
 """
 
 from pathlib import Path
+
 import pytest
 
 from research.experiments.manifest import ExperimentManifest, ProvenanceRecord
@@ -60,7 +61,9 @@ def test_cache_key_sensitivity():
 def test_interruption_resumption_and_no_duplicate_calls(tmp_path):
     """Verify that an interrupted experiment resumes using cache without duplicate paid calls."""
     manifest_file = tmp_path / "test_manifest.jsonl"
-    manifest = ExperimentManifest(experiment_id="exp_resume_test", manifest_path=manifest_file)
+    manifest = ExperimentManifest(
+        experiment_id="exp_resume_test", manifest_path=manifest_file
+    )
 
     call_counts = {"count": 0}
 
@@ -100,7 +103,9 @@ def test_interruption_resumption_and_no_duplicate_calls(tmp_path):
     assert call_counts["count"] == 5
 
     # Simulate process restart by reloading manifest from disk
-    manifest_reloaded = ExperimentManifest(experiment_id="exp_resume_test", manifest_path=manifest_file)
+    manifest_reloaded = ExperimentManifest(
+        experiment_id="exp_resume_test", manifest_path=manifest_file
+    )
     assert len(manifest_reloaded.records) == 5
 
     runner_resumed = ResumableExperimentRunner(
@@ -202,7 +207,9 @@ def test_discovery_and_confirmation_isolation(tmp_path):
         manifest.get_confirmation_dataframe(unlock_token="WRONG_TOKEN")
 
     # 3. Unlocking with correct token returns confirmation rows
-    conf_df = manifest.get_confirmation_dataframe(unlock_token="CONFIRMATORY_ANALYSIS_UNLOCKED")
+    conf_df = manifest.get_confirmation_dataframe(
+        unlock_token="CONFIRMATORY_ANALYSIS_UNLOCKED"
+    )
     assert len(conf_df) == 2
     assert (conf_df["split"] == "confirmation").all()
     assert set(conf_df["sample_id"]) == {"c_item_0", "c_item_1"}
@@ -241,13 +248,19 @@ def test_real_v2_manifest_quarantine(tmp_path):
     )
     sim_manifest.add_record(sim_rec)
 
-    with pytest.raises(ValueError, match="Origin mismatch.*Quarantined simulated fixtures cannot enter empirical analysis"):
+    with pytest.raises(
+        ValueError,
+        match="Origin mismatch.*Quarantined simulated fixtures cannot enter empirical analysis",
+    ):
         load_real_v2_manifest(sim_path)
 
     # 2. Existing confirmatory_study_v1 manifest must be detected and rejected as simulated
     v1_path = Path("research/results/confirmatory_manifest.jsonl")
     if v1_path.exists():
-        with pytest.raises(ValueError, match="Origin mismatch.*Quarantined simulated fixtures cannot enter empirical analysis"):
+        with pytest.raises(
+            ValueError,
+            match="Origin mismatch.*Quarantined simulated fixtures cannot enter empirical analysis",
+        ):
             load_real_v2_manifest(v1_path)
 
     # 3. Real manifest with data_origin="real" loads successfully
@@ -282,4 +295,3 @@ def test_real_v2_manifest_quarantine(tmp_path):
     loaded = load_real_v2_manifest(real_path)
     assert len(loaded.records) == 1
     assert loaded.records[0].data_origin == "real"
-

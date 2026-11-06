@@ -8,14 +8,16 @@ Verifies that:
 
 import json
 from pathlib import Path
+
 import pytest
 
 from research.experiments.manifest import ExperimentManifest, sha256_hash
 
-
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = REPO_ROOT / "research" / "results" / "confirmatory_manifest.jsonl"
-RECOMMENDATIONS_PATH = REPO_ROOT / "research" / "results" / "method_recommendations.json"
+RECOMMENDATIONS_PATH = (
+    REPO_ROOT / "research" / "results" / "method_recommendations.json"
+)
 
 
 def test_manifest_has_both_splits_and_locks_confirmation():
@@ -23,7 +25,9 @@ def test_manifest_has_both_splits_and_locks_confirmation():
     if not MANIFEST_PATH.exists():
         pytest.skip("Confirmatory manifest not yet generated.")
 
-    manifest = ExperimentManifest(experiment_id="test_leakage_check", manifest_path=MANIFEST_PATH)
+    manifest = ExperimentManifest(
+        experiment_id="test_leakage_check", manifest_path=MANIFEST_PATH
+    )
     assert len(manifest.records) > 0
 
     # Verify discovery records are non-empty

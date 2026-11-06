@@ -2,9 +2,6 @@
 Tests for RealExperimentRunner with resumability and provenance.
 """
 
-from pathlib import Path
-import pytest
-
 from research.experiments.manifest import ExperimentManifest
 from research.experiments.providers import MockProviderAdapter
 from research.experiments.real_runner import RealExperimentRunner

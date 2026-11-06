@@ -314,9 +314,7 @@ class OptimalPromptFinder:
             valid_inters = [
                 i for i in anova_result.interactions if not np.isnan(i.effect_delta)
             ]
-            max_inter = max(
-                (abs(i.effect_delta) for i in valid_inters), default=0.0
-            )
+            max_inter = max((abs(i.effect_delta) for i in valid_inters), default=0.0)
             has_strong_epistasis = (max_inter > 0.25 * max_main) or any(
                 i.is_significant for i in valid_inters
             )

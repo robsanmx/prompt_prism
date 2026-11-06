@@ -18,8 +18,8 @@ from prompt_prism.analysis.anova import ANOVAEngine
 from prompt_prism.design.aliasing import AliasStructure
 from prompt_prism.design.generators import FractionalFactorialGenerator
 
-SEED = 13          # the seed used in the article
-N_ITEMS = 10        # benchmark items -> RCBD blocks
+SEED = 13  # the seed used in the article
+N_ITEMS = 10  # benchmark items -> RCBD blocks
 INTERCEPT = 0.55
 ITEM_DIFFICULTY_SD = 0.12
 NOISE_SD = 0.06

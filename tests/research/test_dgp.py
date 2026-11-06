@@ -6,7 +6,6 @@ outcome bounds, replicate structure, and deterministic reproducibility.
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from research.simulation.dgp import DGPConfig, SyntheticDGP
 

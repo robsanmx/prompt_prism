@@ -7,9 +7,9 @@ Verifies that:
 """
 
 from pathlib import Path
-import yaml
-import pytest
 
+import pytest
+import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 FACTORS_CONFIG_PATH = REPO_ROOT / "research" / "configs" / "factors.yaml"
@@ -104,7 +104,6 @@ def test_prompt_rendering_factor_isolation(factors_cfg, tasks_cfg):
             for other_id, other_data in factors.items():
                 if other_id == factor_id:
                     continue
-                other_name = other_data["name"]
                 # Other factor's level 0 text should still be present if non-empty
                 other_l0 = other_data["tasks"][task_name]["level_0"]
                 if other_l0:

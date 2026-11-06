@@ -5,7 +5,6 @@ Verifies provenance capture, origin tagging, failure handling, and cost calculat
 """
 
 from unittest.mock import MagicMock, patch
-import pytest
 
 from research.experiments.providers import (
     AnthropicProviderAdapter,
@@ -13,7 +12,6 @@ from research.experiments.providers import (
     LocalVLLMAdapter,
     MockProviderAdapter,
     ModelRequest,
-    ModelResponse,
     OpenAIProviderAdapter,
 )
 
@@ -36,13 +34,17 @@ def test_openai_adapter_provenance_and_mock(mock_post):
         "id": "chatcmpl-test-123",
         "model": "gpt-4o-mini-2024-07-18",
         "system_fingerprint": "fp_test_456",
-        "choices": [{"message": {"content": '{"buyer": "Acme"}'}, "finish_reason": "stop"}],
+        "choices": [
+            {"message": {"content": '{"buyer": "Acme"}'}, "finish_reason": "stop"}
+        ],
         "usage": {"prompt_tokens": 120, "completion_tokens": 35},
     }
     mock_post.return_value = mock_response
 
     adapter = OpenAIProviderAdapter(api_key="test-key-mock")
-    req = ModelRequest(prompt="Extract buyer", model_id="gpt-4o-mini-2024-07-18", seed=42)
+    req = ModelRequest(
+        prompt="Extract buyer", model_id="gpt-4o-mini-2024-07-18", seed=42
+    )
     res = adapter.generate(req)
 
     assert res.data_origin == "real"
@@ -87,7 +89,9 @@ def test_local_vllm_adapter_connection_error(mock_post):
     mock_post.side_effect = ConnectionError("Could not connect to localhost:8000")
 
     adapter = LocalVLLMAdapter(model_id="meta-llama/Llama-3.1-8B-Instruct")
-    req = ModelRequest(prompt="Hello local", model_id="meta-llama/Llama-3.1-8B-Instruct")
+    req = ModelRequest(
+        prompt="Hello local", model_id="meta-llama/Llama-3.1-8B-Instruct"
+    )
     res = adapter.generate(req)
 
     assert res.data_origin == "real"
@@ -120,7 +124,9 @@ def test_gemini_adapter_provenance_and_mock(mock_post):
     }
     mock_post.return_value = mock_response
 
-    adapter = GeminiProviderAdapter(model_id="gemini-1.5-flash", api_key="test-gemini-key")
+    adapter = GeminiProviderAdapter(
+        model_id="gemini-1.5-flash", api_key="test-gemini-key"
+    )
     req = ModelRequest(prompt="Extract buyer", model_id="gemini-1.5-flash", seed=42)
     res = adapter.generate(req)
 

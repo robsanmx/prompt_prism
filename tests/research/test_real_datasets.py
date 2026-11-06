@@ -4,13 +4,16 @@ Verifies item counts, schema compliance, absence of ID or text overlap,
 and reproducible split allocation.
 """
 
-from pathlib import Path
 import json
+from pathlib import Path
+
 import pytest
 
-from research.data.real_v2.validate import audit_dataset, REQUIRED_DATASETS
+from research.data.real_v2.validate import REQUIRED_DATASETS, audit_dataset
 
-DATA_DIR = Path(__file__).resolve().parent.parent.parent / "research" / "data" / "real_v2"
+DATA_DIR = (
+    Path(__file__).resolve().parent.parent.parent / "research" / "data" / "real_v2"
+)
 
 
 @pytest.mark.parametrize("filename,spec", list(REQUIRED_DATASETS.items()))
@@ -41,8 +44,13 @@ def test_intent_classes_distribution():
     """Verify customer intent categories are valid."""
     path = DATA_DIR / "intent_classification.jsonl"
     valid_classes = {
-        "lost_card", "balance_inquiry", "update_address",
-        "dispute_charge", "loan_application", "reset_credentials", "out_of_scope"
+        "lost_card",
+        "balance_inquiry",
+        "update_address",
+        "dispute_charge",
+        "loan_application",
+        "reset_credentials",
+        "out_of_scope",
     }
     with open(path) as f:
         for line in f:

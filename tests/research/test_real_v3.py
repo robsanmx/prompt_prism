@@ -1,13 +1,13 @@
 """Regression tests for the prospective Gemini real-v3 study."""
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import pytest
 
 from research.real_v3.analysis import analyze_task, fit_main_effects
+from research.real_v3.datasets import DATA_ROOT, INTENT_LABELS
 from research.real_v3.design import (
     FACTOR_IDS,
     all_factorial_configs,
@@ -25,12 +25,13 @@ from research.real_v3.metrics import (
     evaluate_intent,
 )
 from research.real_v3.prompts import render_prompt
-from research.real_v3.datasets import DATA_ROOT, INTENT_LABELS
 
 
 def test_stable_seed_does_not_depend_on_python_hash_randomization():
     assert stable_seed("grounded_qa", base=42) == stable_seed("grounded_qa", base=42)
-    assert stable_seed("grounded_qa", base=42) != stable_seed("schema_extraction", base=42)
+    assert stable_seed("grounded_qa", base=42) != stable_seed(
+        "schema_extraction", base=42
+    )
     assert stable_seed("grounded_qa", base=42) == 1718039911
 
 
@@ -44,7 +45,9 @@ def test_balanced_random_designs_are_reproducible_balanced_and_full_rank():
     for run_ids in first:
         assert len(run_ids) == 16
         assert len(set(run_ids)) == 16
-        matrix = np.array([[configs[run_id][f] for f in FACTOR_IDS] for run_id in run_ids])
+        matrix = np.array(
+            [[configs[run_id][f] for f in FACTOR_IDS] for run_id in run_ids]
+        )
         assert (matrix.sum(axis=0) == 0).all()
         design = np.column_stack([np.ones(len(matrix)), matrix])
         assert np.linalg.matrix_rank(design) == 7
@@ -57,8 +60,14 @@ def test_registered_fraction_is_balanced_full_rank_and_resolution_iv():
     matrix = np.array([[configs[run_id][f] for f in FACTOR_IDS] for run_id in run_ids])
     assert (matrix.sum(axis=0) == 0).all()
     assert np.linalg.matrix_rank(np.column_stack([np.ones(16), matrix])) == 7
-    assert all(configs[r]["E"] == configs[r]["A"] * configs[r]["B"] * configs[r]["C"] for r in run_ids)
-    assert all(configs[r]["F"] == configs[r]["B"] * configs[r]["C"] * configs[r]["D"] for r in run_ids)
+    assert all(
+        configs[r]["E"] == configs[r]["A"] * configs[r]["B"] * configs[r]["C"]
+        for r in run_ids
+    )
+    assert all(
+        configs[r]["F"] == configs[r]["B"] * configs[r]["C"] * configs[r]["D"]
+        for r in run_ids
+    )
 
 
 def test_prompts_use_task_specific_examples_contracts_and_label_inventory():
@@ -66,9 +75,18 @@ def test_prompts_use_task_specific_examples_contracts_and_label_inventory():
 
     schema_item = {
         "text": "Alice met Example Org in London on Monday.",
-        "target": {"person": ["Alice"], "organization": ["Example Org"], "location": ["London"], "money": [], "temporal": ["Monday"]},
+        "target": {
+            "person": ["Alice"],
+            "organization": ["Example Org"],
+            "location": ["London"],
+            "money": [],
+            "temporal": ["Monday"],
+        },
     }
-    qa_item = {"context": "The mission launched in 2020.", "question": "When did it launch?"}
+    qa_item = {
+        "context": "The mission launched in 2020.",
+        "question": "When did it launch?",
+    }
     intent_item = {"utterance": "My card has not arrived."}
     examples = {
         "schema_extraction": [(schema_item, schema_item["target"])],
@@ -113,14 +131,25 @@ def test_task_evaluators_parse_direct_and_json_outputs_without_substring_guessin
     assert entity["entity_f1"] == pytest.approx(2 / 3)
     assert entity["schema_validity"] == 1.0
 
-    assert evaluate_grounded_qa('{"answer":"Ariane 5"}', ["Ariane 5"], True)["token_f1"] == 1.0
+    assert (
+        evaluate_grounded_qa('{"answer":"Ariane 5"}', ["Ariane 5"], True)["token_f1"]
+        == 1.0
+    )
     assert evaluate_grounded_qa("Ariane 5", ["Ariane 5"], True)["token_f1"] == 1.0
     assert evaluate_grounded_qa('{"answer":null}', [], False)["token_f1"] == 1.0
 
     labels = ["card_arrival", "card_not_working"]
-    assert evaluate_intent('{"intent":"card_arrival"}', "card_arrival", labels)["accuracy"] == 1.0
+    assert (
+        evaluate_intent('{"intent":"card_arrival"}', "card_arrival", labels)["accuracy"]
+        == 1.0
+    )
     assert evaluate_intent("card_arrival", "card_arrival", labels)["accuracy"] == 1.0
-    assert evaluate_intent("Maybe card_arrival or card_not_working", "card_arrival", labels)["accuracy"] == 0.0
+    assert (
+        evaluate_intent(
+            "Maybe card_arrival or card_not_working", "card_arrival", labels
+        )["accuracy"]
+        == 0.0
+    )
 
 
 def test_fit_main_effects_uses_only_supplied_fraction():
@@ -140,21 +169,25 @@ def test_analysis_uses_discovery_selected_oracle_not_confirmation_best():
     configs = all_factorial_configs()
     for run_id in range(1, 65):
         for item in range(4):
-            rows.append({
-                "split": "discovery",
-                "sample_id": f"d{item}",
-                "run_id": run_id,
-                "score": 1.0 if run_id == 1 else 0.0,
-                **configs[run_id],
-            })
+            rows.append(
+                {
+                    "split": "discovery",
+                    "sample_id": f"d{item}",
+                    "run_id": run_id,
+                    "score": 1.0 if run_id == 1 else 0.0,
+                    **configs[run_id],
+                }
+            )
             conf_score = 1.0 if run_id == 2 else (0.4 if run_id == 1 else 0.0)
-            rows.append({
-                "split": "confirmation",
-                "sample_id": f"c{item}",
-                "run_id": run_id,
-                "score": conf_score,
-                **configs[run_id],
-            })
+            rows.append(
+                {
+                    "split": "confirmation",
+                    "sample_id": f"c{item}",
+                    "run_id": run_id,
+                    "score": conf_score,
+                    **configs[run_id],
+                }
+            )
 
     result = analyze_task(
         pd.DataFrame(rows),
@@ -176,7 +209,9 @@ def test_recommendation_lock_detects_manifest_or_recommendation_tampering(tmp_pa
     manifest.write_text('{"split":"discovery"}\n', encoding="utf-8")
     recommendations.write_text('{"schema_extraction":{"run_id":1}}\n', encoding="utf-8")
 
-    create_recommendation_lock(manifest, recommendations, lock_path, protocol_hash="abc")
+    create_recommendation_lock(
+        manifest, recommendations, lock_path, protocol_hash="abc"
+    )
     assert_lock_matches(manifest, recommendations, lock_path, protocol_hash="abc")
 
     recommendations.write_text('{"schema_extraction":{"run_id":2}}\n', encoding="utf-8")
@@ -187,9 +222,16 @@ def test_recommendation_lock_detects_manifest_or_recommendation_tampering(tmp_pa
 def test_frozen_public_data_splits_have_expected_counts_and_no_group_leakage():
     for task in ["schema_extraction", "grounded_qa", "intent_classification"]:
         groups = {}
-        for split, expected in {"pilot": 20, "discovery": 80, "confirmation": 80}.items():
+        for split, expected in {
+            "pilot": 20,
+            "discovery": 80,
+            "confirmation": 80,
+        }.items():
             path = DATA_ROOT / "splits" / f"{task}_{split}.jsonl"
-            rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
+            rows = [
+                json.loads(line)
+                for line in path.read_text(encoding="utf-8").splitlines()
+            ]
             assert len(rows) == expected
             assert len({row["sample_id"] for row in rows}) == expected
             groups[split] = {row["group_id"] for row in rows}
@@ -199,7 +241,10 @@ def test_frozen_public_data_splits_have_expected_counts_and_no_group_leakage():
 
     for split, per_label in {"pilot": 2, "discovery": 8, "confirmation": 8}.items():
         path = DATA_ROOT / "splits" / f"intent_classification_{split}.jsonl"
-        rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
-        assert {label: sum(row["target"] == label for row in rows) for label in INTENT_LABELS} == {
-            label: per_label for label in INTENT_LABELS
-        }
+        rows = [
+            json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
+        ]
+        assert {
+            label: sum(row["target"] == label for row in rows)
+            for label in INTENT_LABELS
+        } == {label: per_label for label in INTENT_LABELS}

@@ -5,7 +5,6 @@ Verifies hand-computed regret, uplift ratio, RMSE, sign accuracy, and coverage.
 
 import numpy as np
 import pandas as pd
-import pytest
 
 from research.analysis.estimands import EstimandCalculator, MethodResult
 
@@ -31,7 +30,7 @@ def test_hand_computed_regret_and_uplift():
     conf_df = pd.DataFrame(records)
 
     oracle_best = {"A": 1, "B": 1}  # mean = 0.80
-    baseline = {"A": 0, "B": 0}     # mean = 0.50
+    baseline = {"A": 0, "B": 0}  # mean = 0.50
     selected_suboptimal = {"A": 1, "B": 0}  # mean = 0.65
 
     # Regret = 0.80 - 0.65 = 0.15
@@ -74,8 +73,8 @@ def test_hand_computed_evaluation_metrics():
         p_values={"A": 0.001, "B": 0.010, "C": 0.200},
         conf_intervals_95={
             "A": (0.040, 0.080),  # contains 0.050 -> True
-            "B": (-0.050, -0.010), # contains -0.040 -> True
-            "C": (0.005, 0.035),   # does NOT contain 0.000 -> False
+            "B": (-0.050, -0.010),  # contains -0.040 -> True
+            "C": (0.005, 0.035),  # does NOT contain 0.000 -> False
         },
         conf_intervals_90={
             "A": (0.045, 0.075),

@@ -22,7 +22,9 @@ def test_fit_main_effects_contrast_coding():
         {"A": -1, "B": 1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.5},
     ]
     df = pd.DataFrame(rows)
-    effects = fit_fractional_factorial_main_effects(df, factor_ids=["A", "B"], metric_col="metric")
+    effects = fit_fractional_factorial_main_effects(
+        df, factor_ids=["A", "B"], metric_col="metric"
+    )
     assert pytest.approx(effects["A"], 1e-6) == 0.4  # (0.85 - 0.45) = 0.4
     assert pytest.approx(effects["B"], 1e-6) == 0.1  # (0.70 - 0.60) = 0.1
 
@@ -35,11 +37,63 @@ def test_cell_cluster_bootstrap_h1_decision():
     """Verify that cell_cluster_bootstrap_h1 executes and produces valid bootstrap statistics."""
     rows = []
     for i in range(20):
-        rows.append({"run_id": 1, "sample_id": f"d_{i}", "split": "discovery", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.9 + np.random.normal(0, 0.01)})
-        rows.append({"run_id": 2, "sample_id": f"d_{i}", "split": "discovery", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.4 + np.random.normal(0, 0.01)})
+        rows.append(
+            {
+                "run_id": 1,
+                "sample_id": f"d_{i}",
+                "split": "discovery",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.9 + np.random.normal(0, 0.01),
+            }
+        )
+        rows.append(
+            {
+                "run_id": 2,
+                "sample_id": f"d_{i}",
+                "split": "discovery",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.4 + np.random.normal(0, 0.01),
+            }
+        )
     for i in range(20):
-        rows.append({"run_id": 1, "sample_id": f"c_{i}", "split": "confirmation", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.9 + np.random.normal(0, 0.01)})
-        rows.append({"run_id": 2, "sample_id": f"c_{i}", "split": "confirmation", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.4 + np.random.normal(0, 0.01)})
+        rows.append(
+            {
+                "run_id": 1,
+                "sample_id": f"c_{i}",
+                "split": "confirmation",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.9 + np.random.normal(0, 0.01),
+            }
+        )
+        rows.append(
+            {
+                "run_id": 2,
+                "sample_id": f"c_{i}",
+                "split": "confirmation",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.4 + np.random.normal(0, 0.01),
+            }
+        )
 
     df = pd.DataFrame(rows)
     res = cell_cluster_bootstrap_h1(df, n_bootstraps=50, seed=123)
@@ -61,11 +115,63 @@ def test_h1_decision_rules_null_beneficial_harmful_tied():
     # Run 1 (+1,+1) = 0.95; Run 2 (-1,-1) = 0.50; Run 3 (+1,-1) = 0.70; Run 4 (-1,+1) = 0.70
     rows_ben = []
     for i in range(30):
-        rows_ben.append({"run_id": 1, "sample_id": f"d_{i}", "split": "discovery", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.95})
-        rows_ben.append({"run_id": 2, "sample_id": f"d_{i}", "split": "discovery", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.50})
+        rows_ben.append(
+            {
+                "run_id": 1,
+                "sample_id": f"d_{i}",
+                "split": "discovery",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.95,
+            }
+        )
+        rows_ben.append(
+            {
+                "run_id": 2,
+                "sample_id": f"d_{i}",
+                "split": "discovery",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.50,
+            }
+        )
     for i in range(30):
-        rows_ben.append({"run_id": 1, "sample_id": f"c_{i}", "split": "confirmation", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.95})
-        rows_ben.append({"run_id": 2, "sample_id": f"c_{i}", "split": "confirmation", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.50})
+        rows_ben.append(
+            {
+                "run_id": 1,
+                "sample_id": f"c_{i}",
+                "split": "confirmation",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.95,
+            }
+        )
+        rows_ben.append(
+            {
+                "run_id": 2,
+                "sample_id": f"c_{i}",
+                "split": "confirmation",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.50,
+            }
+        )
     df_ben = pd.DataFrame(rows_ben)
     # When random is forced to pick run 2 and PromptPrism picks run 1
     # Here with run 1 (+1) and run 2 (-1), PromptPrism gets effects > 0 -> selects (+1).
@@ -74,7 +180,6 @@ def test_h1_decision_rules_null_beneficial_harmful_tied():
 
     # 2. Harmful fixture (where PromptPrism has positive delta regret -> higher regret):
     # Delta > 0 must result in UNSUPPORTED
-    from research.analysis.real_v2_confirmatory import multi_cell_cluster_bootstrap_h1
     # In any test where delta > 0, decision must be UNSUPPORTED
     assert res_ben["h1_decision"] in ("SUPPORTED", "UNSUPPORTED")
 
@@ -90,11 +195,44 @@ def test_h4_uplift_efficiency_zero_sesoi_denominator():
     rows = []
     for i in range(20):
         # baseline (-1)
-        rows.append({"sample_id": f"c_{i}", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.80})
+        rows.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.80,
+            }
+        )
         # selected (+1)
-        rows.append({"sample_id": f"c_{i}", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.81})
+        rows.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.81,
+            }
+        )
         # oracle (+1)
-        rows.append({"sample_id": f"c_{i}", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.81})
+        rows.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.81,
+            }
+        )
 
     df = pd.DataFrame(rows)
     selected_cfg = {f: 1 for f in ["A", "B", "C", "D", "E", "F"]}
@@ -114,8 +252,30 @@ def test_h4_uplift_efficiency_zero_sesoi_denominator():
     # Now test with oracle uplift > SESOI (e.g. 0.10 > 0.02)
     rows_valid = []
     for i in range(20):
-        rows_valid.append({"sample_id": f"c_{i}", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.70})
-        rows_valid.append({"sample_id": f"c_{i}", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.795})
+        rows_valid.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.70,
+            }
+        )
+        rows_valid.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.795,
+            }
+        )
     df_valid = pd.DataFrame(rows_valid)
 
     res_valid = evaluate_h4_uplift_efficiency(
@@ -140,7 +300,14 @@ def test_h2_effect_recovery_and_sign_accuracy():
         {"A": -1, "B": 1, "C": -1, "D": 1, "E": -1, "F": 1, "metric": 0.65},
     ]
     df = pd.DataFrame(rows)
-    oracle_effects = {"A": 0.20, "B": -0.20, "C": 0.20, "D": -0.20, "E": 0.20, "F": -0.20}
+    oracle_effects = {
+        "A": 0.20,
+        "B": -0.20,
+        "C": 0.20,
+        "D": -0.20,
+        "E": 0.20,
+        "F": -0.20,
+    }
 
     res = evaluate_h2_effect_recovery(df, oracle_effects, sesoi=0.02)
     assert res["sign_accuracy"] == 1.0
@@ -149,12 +316,36 @@ def test_h2_effect_recovery_and_sign_accuracy():
 
 def test_h3_baseline_generalization():
     """Verify H3 paired t-test between selected prompt and baseline."""
-    from research.analysis.real_v2_confirmatory import evaluate_h3_baseline_generalization
+    from research.analysis.real_v2_confirmatory import (
+        evaluate_h3_baseline_generalization,
+    )
 
     rows = []
     for i in range(30):
-        rows.append({"sample_id": f"c_{i}", "A": 1, "B": 1, "C": 1, "D": 1, "E": 1, "F": 1, "metric": 0.85})
-        rows.append({"sample_id": f"c_{i}", "A": -1, "B": -1, "C": -1, "D": -1, "E": -1, "F": -1, "metric": 0.70})
+        rows.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": 1,
+                "B": 1,
+                "C": 1,
+                "D": 1,
+                "E": 1,
+                "F": 1,
+                "metric": 0.85,
+            }
+        )
+        rows.append(
+            {
+                "sample_id": f"c_{i}",
+                "A": -1,
+                "B": -1,
+                "C": -1,
+                "D": -1,
+                "E": -1,
+                "F": -1,
+                "metric": 0.70,
+            }
+        )
 
     df = pd.DataFrame(rows)
     selected_cfg = {f: 1 for f in ["A", "B", "C", "D", "E", "F"]}
@@ -186,11 +377,63 @@ def test_confirmation_isolation_from_discovery_selection():
     """Verify that confirmation data changes do NOT alter discovery selection."""
     rows = []
     for i in range(10):
-        rows.append({"run_id": 1, "sample_id": f"d_{i}", "split": "discovery", "A": 1, "B": -1, "C": 1, "D": -1, "E": 1, "F": -1, "metric": 0.8})
-        rows.append({"run_id": 2, "sample_id": f"d_{i}", "split": "discovery", "A": -1, "B": 1, "C": -1, "D": 1, "E": -1, "F": 1, "metric": 0.4})
+        rows.append(
+            {
+                "run_id": 1,
+                "sample_id": f"d_{i}",
+                "split": "discovery",
+                "A": 1,
+                "B": -1,
+                "C": 1,
+                "D": -1,
+                "E": 1,
+                "F": -1,
+                "metric": 0.8,
+            }
+        )
+        rows.append(
+            {
+                "run_id": 2,
+                "sample_id": f"d_{i}",
+                "split": "discovery",
+                "A": -1,
+                "B": 1,
+                "C": -1,
+                "D": 1,
+                "E": -1,
+                "F": 1,
+                "metric": 0.4,
+            }
+        )
     for i in range(10):
-        rows.append({"run_id": 1, "sample_id": f"c_{i}", "split": "confirmation", "A": 1, "B": -1, "C": 1, "D": -1, "E": 1, "F": -1, "metric": 0.5})
-        rows.append({"run_id": 2, "sample_id": f"c_{i}", "split": "confirmation", "A": -1, "B": 1, "C": -1, "D": 1, "E": -1, "F": 1, "metric": 0.5})
+        rows.append(
+            {
+                "run_id": 1,
+                "sample_id": f"c_{i}",
+                "split": "confirmation",
+                "A": 1,
+                "B": -1,
+                "C": 1,
+                "D": -1,
+                "E": 1,
+                "F": -1,
+                "metric": 0.5,
+            }
+        )
+        rows.append(
+            {
+                "run_id": 2,
+                "sample_id": f"c_{i}",
+                "split": "confirmation",
+                "A": -1,
+                "B": 1,
+                "C": -1,
+                "D": 1,
+                "E": -1,
+                "F": 1,
+                "metric": 0.5,
+            }
+        )
 
     df1 = pd.DataFrame(rows)
     eff1 = fit_fractional_factorial_main_effects(df1[df1["split"] == "discovery"])

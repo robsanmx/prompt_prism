@@ -8,10 +8,11 @@ Verifies:
 
 import json
 from pathlib import Path
+
 import pytest
 
 from research.data.real_v2.validate import load_dataset_records
-from research.experiments.manifest import ExperimentManifest, ProvenanceRecord, load_real_v2_manifest
+from research.experiments.manifest import ExperimentManifest, load_real_v2_manifest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = REPO_ROOT / "research" / "data" / "real_v2"
@@ -19,7 +20,11 @@ DATA_DIR = REPO_ROOT / "research" / "data" / "real_v2"
 
 def test_pilot_items_strictly_disjoint():
     """Verify zero overlap between pilot and non-pilot items in all task files."""
-    task_files = ["schema_extraction.jsonl", "grounded_qa.jsonl", "intent_classification.jsonl"]
+    task_files = [
+        "schema_extraction.jsonl",
+        "grounded_qa.jsonl",
+        "intent_classification.jsonl",
+    ]
 
     for fname in task_files:
         path = DATA_DIR / fname
@@ -34,8 +39,12 @@ def test_pilot_items_strictly_disjoint():
         assert len(conf_ids) == 80
 
         # Disjoint ID sets
-        assert len(pilot_ids & disc_ids) == 0, f"Pilot items leak into discovery in {fname}"
-        assert len(pilot_ids & conf_ids) == 0, f"Pilot items leak into confirmation in {fname}"
+        assert (
+            len(pilot_ids & disc_ids) == 0
+        ), f"Pilot items leak into discovery in {fname}"
+        assert (
+            len(pilot_ids & conf_ids) == 0
+        ), f"Pilot items leak into confirmation in {fname}"
 
         # Text uniqueness
         if "context" in records[0]:
@@ -44,7 +53,9 @@ def test_pilot_items_strictly_disjoint():
             assert len(pilot_texts & conf_texts) == 0
         elif "utterance" in records[0]:
             pilot_texts = {r["utterance"] for r in records if r["split"] == "pilot"}
-            conf_texts = {r["utterance"] for r in records if r["split"] == "confirmation"}
+            conf_texts = {
+                r["utterance"] for r in records if r["split"] == "confirmation"
+            }
             assert len(pilot_texts & conf_texts) == 0
 
 
@@ -84,5 +95,5 @@ def test_confirmatory_manifest_loader_rejects_pilot_split(tmp_path):
 
     # load_real_v2_manifest should raise ValueError when loaded for confirmatory analysis
     with pytest.raises(ValueError, match="pilot|non-confirmatory"):
-        manifest = ExperimentManifest(experiment_id="test_pilot", manifest_path=manifest_file)
+        ExperimentManifest(experiment_id="test_pilot", manifest_path=manifest_file)
         load_real_v2_manifest(manifest_file, allow_pilot=False)

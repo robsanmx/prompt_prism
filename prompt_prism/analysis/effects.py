@@ -142,7 +142,9 @@ class EffectAnalyzer:
                 df_res = float(getattr(ols_model, "df_resid", 0.0))
                 se = (
                     float(
-                        np.sqrt(max(0.0, mse_res) * (1.0 / len(vals_1) + 1.0 / len(vals_0)))
+                        np.sqrt(
+                            max(0.0, mse_res) * (1.0 / len(vals_1) + 1.0 / len(vals_0))
+                        )
                     )
                     if mse_res > 0
                     else 0.0

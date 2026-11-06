@@ -50,6 +50,8 @@ dev = [
     # The Definition of Done runs `pyflakes prompt_prism tests examples` directly, so it is
     # declared explicitly rather than relied on as a transitive flake8 dependency.
     "pyflakes>=2.5.0",
+    "pyyaml>=6.0",
+    "requests>=2.25.0",
 ]
 cloud = [
     "google-cloud-aiplatform>=1.0.0",
