@@ -1,0 +1,61 @@
+{
+  "artifact_name": "confirmation_manifest.jsonl",
+  "artifact_sha256": "eb33567958f7c6b7a2e8d291d73449868d3e4367ffecaae1ba3c182a0c1e37f5",
+  "file_hashes": {
+    "protocol/preregistration.md": "c6e1b5a814cb66375d5c566714b33b077bbd640065836bacb847f94c120e1bc6",
+    "protocol/statistical_analysis_plan.md": "4b8dde13229efc8ad05a5f1b2adbaee9c3db04ff2af1df6de1914f7322b97011",
+    "protocol/study_plan.md": "e8ed6ca8e8d9b6fd0661e5f31351b6c46efb9ed48c1a5af7e32076c64e289da0",
+    "research/configs/real_v4/calibration.yaml": "a812374318a65eba503e8dd3743ec4d00df0e784185513c4fce0ac977137e17a",
+    "research/data/real_v4/dataset_manifest.json": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd",
+    "research/protocol/real_v4/model_registry.json": "db110c7782824ca5056dbfbeb6fc2d18d0ec1a88c816c418b393202a230f7e3c",
+    "research/protocol/real_v4/perturbation_registry.json": "8d2983e6f642bf27b2d208c7391c029d3409bb291b66fee1aa3768eb01382405",
+    "research/real_v4/__init__.py": "52be1d1a5612fe326650de8215ef92ae39c83355a82b81b9e01db2c8bbe1d870",
+    "research/real_v4/analysis.py": "f60daf8d88809cd76f4ed35824281f0c9e7d0f4eb1e719cf30d62b5fc337a2dc",
+    "research/real_v4/baselines.py": "4c9b1facc4a36348e85e249eac5eef19d6dbf033701e9d5fbcf3292cfa03a33e",
+    "research/real_v4/budget.py": "869c02c9d23f22aae55e5253c2324c49c7aae926327b005066b1eeba0f787a41",
+    "research/real_v4/certificate.py": "a650ce2909f0d1669c25bb573dbab2abc4232a84d9580bc487c675cfc70ba263",
+    "research/real_v4/decisions.py": "5b03b90a0c19b80d813dedef88b247346714b3b7141dffb5a84494b2134927e6",
+    "research/real_v4/execution.py": "ffd03fa7e7d4fc6d2bb6500de8ea17bc9cea8c07a1331f098c421b78647cb443",
+    "research/real_v4/locking.py": "3ce5d253dcaaae308e62564e4ce2ea2e31c4ecdec43bf286d91ddf92fae5862d",
+    "research/real_v4/manifest.py": "22c04aaf177a7781c6514b350ec5f0b47654331acada12970881ed267ebc2327",
+    "research/real_v4/model_provenance.py": "637c00fa7ec3a69a3bbac62fc6ae8dcb50fec9f7d18f7003dc3082aefbc11e4d",
+    "research/real_v4/perturbations.py": "5b2b1a79fa55d4452d4f917d8fb184fda6ebf430b1e9217d2e2e3b436e11d8ea",
+    "research/real_v4/pilot.py": "5f600cb50679de3efd3ee0ef9dd0e3454cbe1008fd257d3dfe1fceee1a17596f",
+    "research/real_v4/providers.py": "6bbfe2cd0a6db8d4bb505f14fb00f481d0b5e1dd6792b512b1449ff2689064ea",
+    "research/real_v4/registration.py": "27da8163782dc95fee30ba53027bba130b2b8d763a9010ae3aa93083c07ef36f",
+    "research/real_v4/resampling.py": "91f904b58285d05456a159638871c6c158aaf687050464d6a52de0990eaea08f",
+    "research/real_v4/robust_score.py": "557dc68e037803be1ba6744761e99be7ef587aac9d9c0ec6bfb49d254307a7cc",
+    "research/real_v4/runner.py": "07461a3b2fa5902468cacb1b42486432a2900c3afb1dd194b7718436958a8796",
+    "research/real_v4/schemas.py": "64566244c6360758f499ac7500731e5a2f8ba0f9c0fa32869381ed9f26c8dc03",
+    "research/real_v4/selection.py": "93bb6d82b1bbfbefd3ea37193148802ac191b05358a48daf99d200a04ae3b8b4",
+    "research/real_v4/simulation.py": "fbe8e79d625532eae5e2ef6731e71bc5940c2c73d11677a6cdd9a194153620e8"
+  },
+  "lock_sha256": "c1ac315e9aa5ed907469e6932603f4447cbaddfe9f3b14f377ebb476d739ea07",
+  "metadata": {
+    "replay_audit": {
+      "manifest_name": "confirmation_manifest.jsonl",
+      "ok_calls": 32400,
+      "records_canonical_sha256": "cd82ad6246aca08fc40e06206aa6c3659e08b9631437244cad182eaaf885fd7d",
+      "terminal_failure_calls": 0,
+      "total_expected": 32400,
+      "total_observed": 32400,
+      "unique_response_ids": 32400
+    }
+  },
+  "phase": "clean_confirmation",
+  "prior_lock_sha256": "bfa1f4e069d913427c2bbf19be6166cfc65b248cb534f8a14f089cadd238b94b",
+  "prior_phase": "final_selection_lock",
+  "registered_env_ids": [
+    "ref",
+    "repeat_r2",
+    "repeat_r3",
+    "fmt_whitespace",
+    "fmt_delimiter",
+    "word_paraphrase_1",
+    "word_paraphrase_2",
+    "item_holdout_group",
+    "temporal_wave_2"
+  ],
+  "schema_version": "1.0.0",
+  "study_fingerprint_sha256": "1ce457531c6cf72118b4c582483830cc8f04a554d6ea8b10fb0dbe6ad7a7bbd9"
+}

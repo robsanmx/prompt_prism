@@ -1,0 +1,336 @@
+{
+  "algorithm_version": "promptprism_robust_v4.0.0",
+  "allowed_conclusion": "Neither claim is established.",
+  "certificate_id": "cert-prompt-prism-real-v4-selection-stability-2026",
+  "claim_p_pass": false,
+  "claim_p_practical_pass": false,
+  "claim_s_pass": false,
+  "drift_events": [],
+  "envelope": {
+    "code_hash": "1ce457531c6cf72118b4c582483830cc8f04a554d6ea8b10fb0dbe6ad7a7bbd9",
+    "decoding_config": {
+      "max_output_tokens": 512,
+      "seed": 42,
+      "temperature": 0.0,
+      "thinking_enabled": false
+    },
+    "factor_ids": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F"
+    ],
+    "local_runtime_locks": {
+      "machine": "arm64",
+      "mlx": "0.32.4",
+      "mlx_lm": "0.32.2",
+      "python_version": "3.11.15",
+      "release": "27.0.0",
+      "system": "Darwin"
+    },
+    "model_versions_pinned": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "models": [
+      "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "mlx-community/Qwen3-8B-4bit"
+    ],
+    "nondeterminism_detected": true,
+    "parser_hashes": {
+      "banking77_intent": "09dd5e0e03198394c5d105bc176aecc1ead477b4f82edcf680041303b2307ed4",
+      "gsm8k_math": "a3620e472118b4fce666a96bd749a8426094275d8ed784604d413c0ab9526978",
+      "mbpp_python": "963ed313abf28d7336f7338fdedb524b001cd692a25e6f0761e9d63f3a68f1ad",
+      "re3d_entity_extraction": "2d61e0661376fe47b7b2c8fbf9554598688ae9436463da47c12babeb04f33e00",
+      "sciq_verification": "789a91ac2f17d42e7a26102321135a3244663bf76c477f9cee3a8425763089e0",
+      "squad2_grounded_qa": "d0138428c723f874a6fea8c2b32f5562c47c9e1e70e4e24c04ace3c3e5aac552"
+    },
+    "partition_hashes": {
+      "banking77_intent": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd",
+      "gsm8k_math": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd",
+      "mbpp_python": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd",
+      "re3d_entity_extraction": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd",
+      "sciq_verification": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd",
+      "squad2_grounded_qa": "c28eb6152e71d92ade7471c013ba8c9f0cf1eef23eec57348aa74bafe50d0efd"
+    },
+    "primary_metrics": {
+      "banking77_intent": "exact_label_accuracy",
+      "gsm8k_math": "numeric_exact_match",
+      "mbpp_python": "assertion_pass_rate",
+      "re3d_entity_extraction": "entity_f1",
+      "sciq_verification": "exact_choice_accuracy",
+      "squad2_grounded_qa": "token_f1"
+    },
+    "registered_environments": [
+      {
+        "description": "Canonical clean confirmation condition",
+        "env_id": "ref",
+        "family": "reference",
+        "parent_env_id": null,
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "16207be996c795af",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Identical-request repeat pass 2",
+        "env_id": "repeat_r2",
+        "family": "repeat",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "3fc0a9e7037babdc",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Identical-request repeat pass 3",
+        "env_id": "repeat_r3",
+        "family": "repeat",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "76523002d66a9eb6",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Expanded vertical whitespace between structural blocks",
+        "env_id": "fmt_whitespace",
+        "family": "formatting",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "136369bbad88b8f0",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Banner-style section delimiters (=== HEADER ===)",
+        "env_id": "fmt_delimiter",
+        "family": "formatting",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "c727ef4e34ef1e96",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Controlled semantic-preserving wrapper paraphrase A",
+        "env_id": "word_paraphrase_1",
+        "family": "wording",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "ae11e06e20b69f7e",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Controlled semantic-preserving wrapper paraphrase B",
+        "env_id": "word_paraphrase_2",
+        "family": "wording",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "c35e5840a8f335e6",
+        "uses_disjoint_item_group": false
+      },
+      {
+        "description": "Group-disjoint secondary confirmation item stratum",
+        "env_id": "item_holdout_group",
+        "family": "item_group",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "507a535750f9824c",
+        "uses_disjoint_item_group": true
+      },
+      {
+        "description": "Second execution wave under pinned provider version",
+        "env_id": "temporal_wave_2",
+        "family": "temporal",
+        "parent_env_id": "ref",
+        "requires_identical_model_version": true,
+        "schema_version": "1.0.0",
+        "semantic_equivalence_audited": true,
+        "transformation_hash": "64ee248830cbf612",
+        "uses_disjoint_item_group": false
+      }
+    ],
+    "repeat_count": 3,
+    "schema_version": "1.0.0",
+    "study_id": "prompt-prism-real-v4-selection-stability-2026",
+    "tasks": [
+      "re3d_entity_extraction",
+      "squad2_grounded_qa",
+      "banking77_intent",
+      "gsm8k_math",
+      "mbpp_python",
+      "sciq_verification"
+    ]
+  },
+  "envelope_sha256": "12848f97bf789fabb626c4fccbabc5620cb7b513cbdcfedba0710ada237c4603",
+  "hash_mismatches": [],
+  "incomplete_pairs_count": 0,
+  "missing_cells_count": 0,
+  "observed_environments": [
+    "fmt_delimiter",
+    "fmt_whitespace",
+    "item_holdout_group",
+    "ref",
+    "repeat_r2",
+    "repeat_r3",
+    "temporal_wave_2",
+    "word_paraphrase_1",
+    "word_paraphrase_2"
+  ],
+  "observed_model_versions": {
+    "fmt_delimiter": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "fmt_whitespace": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "item_holdout_group": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "ref": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "repeat_r2": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "repeat_r3": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "temporal_wave_2": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "word_paraphrase_1": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    },
+    "word_paraphrase_2": {
+      "gemini-2.5-flash": "gemini-2.5-flash",
+      "mlx-community/Mistral-7B-Instruct-v0.3-4bit": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "mlx-community/Qwen3-8B-4bit": "545dc4251c05440727734bcd94334791f6ab0192"
+    }
+  },
+  "overall_study_pass": false,
+  "schema_version": "1.0.0",
+  "selection_contrasts": {
+    "balanced_random": {
+      "ci95_lower": -0.001528194108,
+      "comparator_id": "balanced_random",
+      "estimate": 0.002231971116,
+      "p_value_one_sided": 0.161419290355,
+      "passes_practical_gate": false,
+      "passes_statistical_gate": false,
+      "practical_margin": 0.01,
+      "schema_version": "1.0.0",
+      "se": 0.002268697609
+    },
+    "bayesian_opt": {
+      "ci95_lower": -0.002176383724,
+      "comparator_id": "bayesian_opt",
+      "estimate": 0.001447207741,
+      "p_value_one_sided": 0.244377811094,
+      "passes_practical_gate": false,
+      "passes_statistical_gate": false,
+      "practical_margin": 0.01,
+      "schema_version": "1.0.0",
+      "se": 0.002158867091
+    }
+  },
+  "stability_summary": {
+    "comparator_worst_env_checks": {
+      "balanced_random": {
+        "ci95_lower": 0.036700844725,
+        "comparator_id": "balanced_random",
+        "estimate": 0.041331075338,
+        "p_value_one_sided": 0.000499750125,
+        "passes_practical_gate": true,
+        "passes_statistical_gate": true,
+        "practical_margin": 0.02,
+        "schema_version": "1.0.0",
+        "se": 0.002902320295
+      },
+      "bayesian_opt": {
+        "ci95_lower": 0.035360022792,
+        "comparator_id": "bayesian_opt",
+        "estimate": 0.039813365256,
+        "p_value_one_sided": 0.000499750125,
+        "passes_practical_gate": true,
+        "passes_statistical_gate": true,
+        "practical_margin": 0.02,
+        "schema_version": "1.0.0",
+        "se": 0.002746141418
+      }
+    },
+    "d_stability_estimate": 0.019404610073,
+    "d_stability_upper_95_sim": 0.04332475751,
+    "epsilon_stability": 0.02,
+    "passes_absolute_noninferiority": false,
+    "passes_comparator_worst_env": true,
+    "per_env_drops": {
+      "fmt_delimiter": -0.000704026226,
+      "fmt_whitespace": -0.004671835717,
+      "item_holdout_group": 0.019404610073,
+      "repeat_r2": -0.001157407407,
+      "repeat_r3": -0.000249485597,
+      "temporal_wave_2": -0.00074845679,
+      "word_paraphrase_1": -0.00081625518,
+      "word_paraphrase_2": -0.000635786706
+    },
+    "per_env_means": {
+      "fmt_delimiter": 0.778721335704,
+      "fmt_whitespace": 0.782689145195,
+      "item_holdout_group": 0.758612699405,
+      "ref": 0.778017309478,
+      "repeat_r2": 0.779174716885,
+      "repeat_r3": 0.778266795074,
+      "temporal_wave_2": 0.778765766268,
+      "word_paraphrase_1": 0.778833564658,
+      "word_paraphrase_2": 0.778653096184
+    },
+    "reference_mean": 0.778017309478,
+    "schema_version": "1.0.0",
+    "worst_perturbation_env_id": "item_holdout_group"
+  },
+  "status": "FAIL",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026",
+  "supporting_diagnostics": {
+    "effect_recovery_gain": 0.015474281116,
+    "effect_recovery_rmse_prism": 0.028265306072,
+    "effect_recovery_rmse_random": 0.043739587188,
+    "identical_repeat_exact_match_rate": 0.936574074074,
+    "schema_version": "1.0.0",
+    "score_variance_across_repeats": 0.000706571026,
+    "selection_resample_agreement": 0.688611111111
+  },
+  "verdict_code": "FAIL_BOTH"
+}

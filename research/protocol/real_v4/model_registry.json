@@ -1,0 +1,69 @@
+{
+  "canonical_decoding_intent": {
+    "max_output_tokens": 512,
+    "seed": 42,
+    "temperature": 0.0,
+    "thinking_enabled": false
+  },
+  "models": {
+    "gemini-2.5-flash": {
+      "decoding": {
+        "maxOutputTokens": 512,
+        "seed": 42,
+        "temperature": 0.0,
+        "thinkingBudget": 0,
+        "topP": 1.0
+      },
+      "default_pinned_version": "gemini-2.5-flash",
+      "deployment_mode": "hosted_api",
+      "pinned_version_policy": "lock_exact_returned_modelVersion_at_pilot",
+      "pricing_usd_per_1m_input": 0.3,
+      "pricing_usd_per_1m_output": 2.5,
+      "provider": "google_gemini",
+      "requested_model_id": "gemini-2.5-flash"
+    },
+    "mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "decoding": {
+        "enable_thinking": false,
+        "max_tokens": 512,
+        "temperature": 0.0
+      },
+      "default_pinned_version": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+      "deployment_mode": "local_weights",
+      "pinned_version_policy": "exact_snapshot_and_7_file_sha256",
+      "pricing_usd_per_1m_input": 0.0,
+      "pricing_usd_per_1m_output": 0.0,
+      "provider": "local_mlx",
+      "quantization": {
+        "bits": 4,
+        "group_size": 64
+      },
+      "requested_model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "tokenizer_sha256": "e553af6fff7d7ad76e830608b218c5c0b0822998d5a1a96099a74cd3c1cb1a49",
+      "weights_inventory_sha256": "a2ec35b69f852a67ca6a5ccce8ee002432fd86bfcaa56bc38c05e1d61087d333"
+    },
+    "mlx-community/Qwen3-8B-4bit": {
+      "decoding": {
+        "enable_thinking": false,
+        "max_tokens": 512,
+        "temperature": 0.0
+      },
+      "default_pinned_version": "545dc4251c05440727734bcd94334791f6ab0192",
+      "deployment_mode": "local_weights",
+      "pinned_version_policy": "exact_snapshot_and_9_file_sha256",
+      "pricing_usd_per_1m_input": 0.0,
+      "pricing_usd_per_1m_output": 0.0,
+      "provider": "local_mlx",
+      "quantization": {
+        "bits": 4,
+        "group_size": 64
+      },
+      "requested_model_id": "mlx-community/Qwen3-8B-4bit",
+      "tokenizer_sha256": "aeb13307a71acd8fe81861d94ad54ab689df773318809eed3cbe794b4492dae4",
+      "weights_inventory_sha256": "14ae975a41aaecd0025542b4faaa06fbafda190a1a79ebcbece4dacb0575061d"
+    }
+  },
+  "registry_sha256": "4440fe4618c9b18a7afc81bfc98b09bbf66caba881fde6ed6821d79cb2306215",
+  "schema_version": "1.0.0",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026"
+}

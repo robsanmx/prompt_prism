@@ -1,15 +1,40 @@
 """
-prompt_prism: Statistical Prompt Optimization & Factorial Analysis for LLMs.
+prompt_prism 2.0: Prompt Diagnostics, Token Pruning, Calibrated Attribution,
+and Envelope-Bounded Stability Certification for LLMs.
 
-A universal, statistically rigorous framework for optimizing LLM prompts using
-Fractional Factorial Designs (2^(k-p)), Plackett-Burman screening, and ANOVA.
+Applies Fractional Factorial Designs (2^(k-p)), Plackett-Burman screening,
+contrast-specific item-clustered inference, TOST token-bloat pruning, and
+fail-closed operating-envelope stability certificates.
 """
 
 from .analysis.anova import ANOVAEngine, ANOVAResult, ANOVARow
+from .analysis.diagnostics import (
+    CalibratedAttributionAudit,
+    CalibratedFactorDiagnostic,
+    NoiseFloorSummary,
+    run_calibrated_attribution_audit,
+)
 from .analysis.effects import EffectAnalyzer, FactorEffect, InteractionEffect
 from .analysis.optimizer import OptimalPromptFinder, OptimalPromptRecommendation
+from .analysis.selection import (
+    PROMOTED_TO_DEFAULT_PUBLIC_API,
+    REAL_V4_REGISTERED_VERDICT,
+    ExperimentalTwoStageSelector,
+    build_selection_report_from_recommendation,
+    evaluate_simultaneous_perturbation_certificate,
+)
 from .core.factors import Factor, FactorSet, FactorType, Level
-from .core.models import DesignMatrix, ExperimentResults, RunConfig, Trial
+from .core.models import (
+    DesignMatrix,
+    EnvelopeValidationResult,
+    ExperimentResults,
+    OperatingEnvelopeSpec,
+    PromptEvidenceState,
+    PromptSelectionReport,
+    PromptStabilityCertificate,
+    RunConfig,
+    Trial,
+)
 from .design.aliasing import AliasStructure
 from .design.catalog import CATALOG_DESIGNS, get_catalog_entry, list_available_plans
 from .design.generators import (
@@ -42,10 +67,10 @@ from .visualization.plots import (
     plot_pareto_effects,
 )
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 
 __all__ = [
-    # Core
+    # Core & v2.0 Envelope / Certificate Contracts
     "Factor",
     "Level",
     "FactorType",
@@ -54,6 +79,11 @@ __all__ = [
     "RunConfig",
     "Trial",
     "ExperimentResults",
+    "PromptEvidenceState",
+    "OperatingEnvelopeSpec",
+    "EnvelopeValidationResult",
+    "PromptStabilityCertificate",
+    "PromptSelectionReport",
     # Experiment Orchestrator
     "Experiment",
     # Design of Experiments
@@ -89,7 +119,7 @@ __all__ = [
     "DeepEvalMetric",
     "deepeval_metric",
     "JudgeCache",
-    # Statistical Analysis & ANOVA
+    # Statistical Analysis, Calibrated Attribution & v2.0 Selection
     "ANOVAEngine",
     "ANOVAResult",
     "ANOVARow",
@@ -98,6 +128,15 @@ __all__ = [
     "InteractionEffect",
     "OptimalPromptFinder",
     "OptimalPromptRecommendation",
+    "CalibratedAttributionAudit",
+    "CalibratedFactorDiagnostic",
+    "NoiseFloorSummary",
+    "run_calibrated_attribution_audit",
+    "ExperimentalTwoStageSelector",
+    "PROMOTED_TO_DEFAULT_PUBLIC_API",
+    "REAL_V4_REGISTERED_VERDICT",
+    "build_selection_report_from_recommendation",
+    "evaluate_simultaneous_perturbation_certificate",
     # Visualization & Reporting
     "plot_main_effects",
     "plot_pareto_effects",

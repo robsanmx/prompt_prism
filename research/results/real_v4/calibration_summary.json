@@ -1,0 +1,149 @@
+{
+  "all_scientific_feasibility_gates_passed": true,
+  "config_sha256": "1ea67f666a864d96145428dad8de1137d9216537060e87cf309eeae5301b9f56",
+  "envelope_sha256": "3d63ce98784e9f7cf8fc661b63442c5a836a139d55f5823809085aeea48ad583",
+  "frozen_decision_thresholds": {
+    "alpha": 0.05,
+    "cell_majority_threshold": 12,
+    "delta_select": 0.01,
+    "epsilon_stability": 0.02
+  },
+  "frozen_sizing_envelope": {
+    "clean_confirmation_items_per_task": 240,
+    "items_per_source_group": 2,
+    "n_cells": 18,
+    "n_models": 3,
+    "n_tasks": 6,
+    "pilot_items_per_task": 20,
+    "repeat_count_when_nondeterministic": 3,
+    "screen_configs": 16,
+    "screen_items_per_task": 120,
+    "stability_holdout_items_per_task": 240,
+    "validation_candidates": 4,
+    "validation_env_ids": [
+      "ref",
+      "fmt_whitespace",
+      "word_paraphrase_1"
+    ],
+    "validation_items_per_task": 60
+  },
+  "gate_results": {
+    "beneficial_claim_p_power_ok": true,
+    "beneficial_claim_s_power_ok": true,
+    "harmful_regime_rejected_100pct": true,
+    "null_claim_p_type1_ok": true,
+    "null_claim_s_boundary_type1_ok": true,
+    "null_simultaneous_coverage_ok": true,
+    "provider_drift_fails_closed_100pct": true
+  },
+  "operating_characteristic_gates": {
+    "max_type1_claim_p": 0.05,
+    "max_type1_claim_s_boundary": 0.065,
+    "min_power_claim_p_at_design_alt": 0.9,
+    "min_power_claim_s_at_design_alt": 0.9,
+    "min_simultaneous_stability_coverage": 0.935
+  },
+  "regimes": {
+    "beneficial_structured": {
+      "claim_p_pass_rate": 0.95,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 1.0,
+      "description": "Design alternative: structured 6-factor main effects with unobserved complementary global optimum, deceptive unguarded local basin, and stability-protective D/E contracts (true worst drop = 0.002).",
+      "invalid_out_of_envelope_rate": 0.0,
+      "mean_d_stability": 0.0030514200749635232,
+      "mean_d_stability_u95_sim": 0.009188913230474252,
+      "mean_g_select_vs_bayesian_opt": 0.0021056565533628833,
+      "mean_g_select_vs_random": 0.07553377813510916,
+      "n_trials": 120,
+      "overall_pass_rate": 0.95,
+      "simultaneous_upper_bound_coverage": 1.0
+    },
+    "harmful_antagonistic": {
+      "claim_p_pass_rate": 0.0,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 0.0,
+      "description": "Adversarial higher-order aliasing plus severe perturbation degradation (true worst drop = 0.030 > epsilon_stability).",
+      "invalid_out_of_envelope_rate": 0.0,
+      "mean_d_stability": 0.029593632413802508,
+      "mean_d_stability_u95_sim": 0.0313033240690032,
+      "mean_g_select_vs_bayesian_opt": -0.030948692230343786,
+      "mean_g_select_vs_random": -0.027096239212796698,
+      "n_trials": 60,
+      "overall_pass_rate": 0.0,
+      "simultaneous_upper_bound_coverage": 0.9666666666666667
+    },
+    "heterogeneous_cells": {
+      "claim_p_pass_rate": 0.08333333333333333,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 1.0,
+      "description": "Cross-task and cross-model heterogeneity with cell-specific active factor subsets and attenuated cells.",
+      "invalid_out_of_envelope_rate": 0.0,
+      "mean_d_stability": 0.0037565476426732786,
+      "mean_d_stability_u95_sim": 0.010476020335027635,
+      "mean_g_select_vs_bayesian_opt": -0.0007948900155991534,
+      "mean_g_select_vs_random": 0.019938119613317574,
+      "n_trials": 60,
+      "overall_pass_rate": 0.08333333333333333,
+      "simultaneous_upper_bound_coverage": 1.0
+    },
+    "interaction_heavy": {
+      "claim_p_pass_rate": 0.06666666666666667,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 1.0,
+      "description": "Strong pairwise epistasis where naive sign composition fails and Stage-2 validation selects among observed/2FI candidates.",
+      "invalid_out_of_envelope_rate": 0.0,
+      "mean_d_stability": 0.0035067500047396725,
+      "mean_d_stability_u95_sim": 0.009932092222149073,
+      "mean_g_select_vs_bayesian_opt": -0.0018810650298192529,
+      "mean_g_select_vs_random": 0.0019015374391273784,
+      "n_trials": 60,
+      "overall_pass_rate": 0.06666666666666667,
+      "simultaneous_upper_bound_coverage": 1.0
+    },
+    "null_flat": {
+      "claim_p_pass_rate": 0.025,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 0.041666666666666664,
+      "description": "Zero factor effects across all 64 runs; worst perturbation drop fixed at exact calibrated boundary epsilon_stability = 0.02.",
+      "invalid_out_of_envelope_rate": 0.0,
+      "mean_d_stability": 0.01986295942831891,
+      "mean_d_stability_u95_sim": 0.02084012416301904,
+      "mean_g_select_vs_bayesian_opt": -0.00016135691650833912,
+      "mean_g_select_vs_random": -0.00017561106887862646,
+      "n_trials": 120,
+      "overall_pass_rate": 0.0,
+      "simultaneous_upper_bound_coverage": 0.9583333333333334
+    },
+    "provider_drift": {
+      "claim_p_pass_rate": 0.0,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 0.0,
+      "description": "Beneficial performance with silent hosted model-version update in temporal_wave_2 (must fail closed 100%).",
+      "invalid_out_of_envelope_rate": 1.0,
+      "mean_d_stability": null,
+      "mean_d_stability_u95_sim": null,
+      "mean_g_select_vs_bayesian_opt": null,
+      "mean_g_select_vs_random": null,
+      "n_trials": 40,
+      "overall_pass_rate": 0.0,
+      "simultaneous_upper_bound_coverage": 0.0
+    },
+    "smooth_additive_bo_parity": {
+      "claim_p_pass_rate": 0.2,
+      "claim_p_practical_pass_rate": 0.0,
+      "claim_s_pass_rate": 1.0,
+      "description": "Diagnostic regime: smooth unimodal additive Hamming gradient where sequential GP-UCB matches PromptPrism while both outperform Balanced Random.",
+      "invalid_out_of_envelope_rate": 0.0,
+      "mean_d_stability": 0.003831997843658743,
+      "mean_d_stability_u95_sim": 0.010464583393001863,
+      "mean_g_select_vs_bayesian_opt": -7.045208865112951e-05,
+      "mean_g_select_vs_random": 0.01687063159254214,
+      "n_trials": 60,
+      "overall_pass_rate": 0.2,
+      "simultaneous_upper_bound_coverage": 1.0
+    }
+  },
+  "schema_version": "1.0.0",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026",
+  "summary_sha256": "f0e8466070ac373e76aa0b45f3d57d018847f70845b847467298d7258b566eaf"
+}

@@ -1,0 +1,529 @@
+{
+  "cells": {
+    "banking77_intent::gemini-2.5-flash": {
+      "balanced_random": {
+        "design_00": 12,
+        "design_01": 9,
+        "design_02": 8,
+        "design_03": 2,
+        "design_04": 45,
+        "design_05": 13,
+        "design_06": 9,
+        "design_07": 33,
+        "design_08": 5,
+        "design_09": 3
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 7,
+        "bo_seed_01": 5,
+        "bo_seed_02": 9,
+        "bo_seed_03": 9,
+        "bo_seed_04": 8,
+        "bo_seed_05": 8,
+        "bo_seed_06": 3,
+        "bo_seed_07": 8,
+        "bo_seed_08": 8,
+        "bo_seed_09": 36
+      },
+      "promptprism": {
+        "primary": 44
+      }
+    },
+    "banking77_intent::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "balanced_random": {
+        "design_00": 12,
+        "design_01": 9,
+        "design_02": 9,
+        "design_03": 32,
+        "design_04": 32,
+        "design_05": 32,
+        "design_06": 44,
+        "design_07": 11,
+        "design_08": 11,
+        "design_09": 43
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 32,
+        "bo_seed_01": 40,
+        "bo_seed_02": 12,
+        "bo_seed_03": 32,
+        "bo_seed_04": 32,
+        "bo_seed_05": 40,
+        "bo_seed_06": 32,
+        "bo_seed_07": 40,
+        "bo_seed_08": 32,
+        "bo_seed_09": 32
+      },
+      "promptprism": {
+        "primary": 44
+      }
+    },
+    "banking77_intent::mlx-community/Qwen3-8B-4bit": {
+      "balanced_random": {
+        "design_00": 47,
+        "design_01": 46,
+        "design_02": 22,
+        "design_03": 47,
+        "design_04": 42,
+        "design_05": 46,
+        "design_06": 46,
+        "design_07": 52,
+        "design_08": 5,
+        "design_09": 46
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 3,
+        "bo_seed_01": 52,
+        "bo_seed_02": 46,
+        "bo_seed_03": 47,
+        "bo_seed_04": 46,
+        "bo_seed_05": 52,
+        "bo_seed_06": 46,
+        "bo_seed_07": 46,
+        "bo_seed_08": 46,
+        "bo_seed_09": 46
+      },
+      "promptprism": {
+        "primary": 52
+      }
+    },
+    "gsm8k_math::gemini-2.5-flash": {
+      "balanced_random": {
+        "design_00": 6,
+        "design_01": 6,
+        "design_02": 6,
+        "design_03": 6,
+        "design_04": 7,
+        "design_05": 7,
+        "design_06": 6,
+        "design_07": 4,
+        "design_08": 5,
+        "design_09": 15
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 38,
+        "bo_seed_01": 6,
+        "bo_seed_02": 7,
+        "bo_seed_03": 7,
+        "bo_seed_04": 7,
+        "bo_seed_05": 46,
+        "bo_seed_06": 21,
+        "bo_seed_07": 7,
+        "bo_seed_08": 7,
+        "bo_seed_09": 6
+      },
+      "promptprism": {
+        "primary": 7
+      }
+    },
+    "gsm8k_math::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "balanced_random": {
+        "design_00": 3,
+        "design_01": 2,
+        "design_02": 35,
+        "design_03": 2,
+        "design_04": 32,
+        "design_05": 34,
+        "design_06": 53,
+        "design_07": 2,
+        "design_08": 34,
+        "design_09": 3
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 34,
+        "bo_seed_01": 34,
+        "bo_seed_02": 34,
+        "bo_seed_03": 34,
+        "bo_seed_04": 34,
+        "bo_seed_05": 34,
+        "bo_seed_06": 34,
+        "bo_seed_07": 53,
+        "bo_seed_08": 2,
+        "bo_seed_09": 53
+      },
+      "promptprism": {
+        "primary": 34
+      }
+    },
+    "gsm8k_math::mlx-community/Qwen3-8B-4bit": {
+      "balanced_random": {
+        "design_00": 6,
+        "design_01": 6,
+        "design_02": 6,
+        "design_03": 6,
+        "design_04": 45,
+        "design_05": 45,
+        "design_06": 6,
+        "design_07": 14,
+        "design_08": 5,
+        "design_09": 14
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 6,
+        "bo_seed_01": 6,
+        "bo_seed_02": 45,
+        "bo_seed_03": 6,
+        "bo_seed_04": 6,
+        "bo_seed_05": 45,
+        "bo_seed_06": 6,
+        "bo_seed_07": 45,
+        "bo_seed_08": 6,
+        "bo_seed_09": 45
+      },
+      "promptprism": {
+        "primary": 5
+      }
+    },
+    "mbpp_python::gemini-2.5-flash": {
+      "balanced_random": {
+        "design_00": 41,
+        "design_01": 15,
+        "design_02": 8,
+        "design_03": 15,
+        "design_04": 14,
+        "design_05": 43,
+        "design_06": 14,
+        "design_07": 10,
+        "design_08": 10,
+        "design_09": 15
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 15,
+        "bo_seed_01": 10,
+        "bo_seed_02": 13,
+        "bo_seed_03": 59,
+        "bo_seed_04": 8,
+        "bo_seed_05": 62,
+        "bo_seed_06": 15,
+        "bo_seed_07": 10,
+        "bo_seed_08": 8,
+        "bo_seed_09": 8
+      },
+      "promptprism": {
+        "primary": 46
+      }
+    },
+    "mbpp_python::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "balanced_random": {
+        "design_00": 52,
+        "design_01": 53,
+        "design_02": 53,
+        "design_03": 54,
+        "design_04": 45,
+        "design_05": 26,
+        "design_06": 55,
+        "design_07": 21,
+        "design_08": 53,
+        "design_09": 53
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 55,
+        "bo_seed_01": 53,
+        "bo_seed_02": 52,
+        "bo_seed_03": 54,
+        "bo_seed_04": 25,
+        "bo_seed_05": 42,
+        "bo_seed_06": 25,
+        "bo_seed_07": 54,
+        "bo_seed_08": 55,
+        "bo_seed_09": 53
+      },
+      "promptprism": {
+        "primary": 24
+      }
+    },
+    "mbpp_python::mlx-community/Qwen3-8B-4bit": {
+      "balanced_random": {
+        "design_00": 6,
+        "design_01": 61,
+        "design_02": 6,
+        "design_03": 32,
+        "design_04": 32,
+        "design_05": 32,
+        "design_06": 6,
+        "design_07": 4,
+        "design_08": 23,
+        "design_09": 4
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 4,
+        "bo_seed_01": 4,
+        "bo_seed_02": 4,
+        "bo_seed_03": 4,
+        "bo_seed_04": 4,
+        "bo_seed_05": 6,
+        "bo_seed_06": 6,
+        "bo_seed_07": 12,
+        "bo_seed_08": 32,
+        "bo_seed_09": 4
+      },
+      "promptprism": {
+        "primary": 4
+      }
+    },
+    "re3d_entity_extraction::gemini-2.5-flash": {
+      "balanced_random": {
+        "design_00": 26,
+        "design_01": 9,
+        "design_02": 9,
+        "design_03": 6,
+        "design_04": 29,
+        "design_05": 26,
+        "design_06": 9,
+        "design_07": 63,
+        "design_08": 26,
+        "design_09": 26
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 29,
+        "bo_seed_01": 9,
+        "bo_seed_02": 6,
+        "bo_seed_03": 31,
+        "bo_seed_04": 63,
+        "bo_seed_05": 22,
+        "bo_seed_06": 29,
+        "bo_seed_07": 9,
+        "bo_seed_08": 14,
+        "bo_seed_09": 47
+      },
+      "promptprism": {
+        "primary": 47
+      }
+    },
+    "re3d_entity_extraction::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "balanced_random": {
+        "design_00": 41,
+        "design_01": 41,
+        "design_02": 9,
+        "design_03": 41,
+        "design_04": 43,
+        "design_05": 43,
+        "design_06": 56,
+        "design_07": 40,
+        "design_08": 41,
+        "design_09": 43
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 41,
+        "bo_seed_01": 43,
+        "bo_seed_02": 43,
+        "bo_seed_03": 43,
+        "bo_seed_04": 43,
+        "bo_seed_05": 41,
+        "bo_seed_06": 43,
+        "bo_seed_07": 43,
+        "bo_seed_08": 43,
+        "bo_seed_09": 43
+      },
+      "promptprism": {
+        "primary": 41
+      }
+    },
+    "re3d_entity_extraction::mlx-community/Qwen3-8B-4bit": {
+      "balanced_random": {
+        "design_00": 36,
+        "design_01": 58,
+        "design_02": 39,
+        "design_03": 62,
+        "design_04": 36,
+        "design_05": 39,
+        "design_06": 56,
+        "design_07": 63,
+        "design_08": 57,
+        "design_09": 36
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 36,
+        "bo_seed_01": 62,
+        "bo_seed_02": 36,
+        "bo_seed_03": 39,
+        "bo_seed_04": 45,
+        "bo_seed_05": 62,
+        "bo_seed_06": 39,
+        "bo_seed_07": 62,
+        "bo_seed_08": 36,
+        "bo_seed_09": 62
+      },
+      "promptprism": {
+        "primary": 39
+      }
+    },
+    "sciq_verification::gemini-2.5-flash": {
+      "balanced_random": {
+        "design_00": 12,
+        "design_01": 20,
+        "design_02": 12,
+        "design_03": 6,
+        "design_04": 7,
+        "design_05": 20,
+        "design_06": 6,
+        "design_07": 20,
+        "design_08": 5,
+        "design_09": 36
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 7,
+        "bo_seed_01": 10,
+        "bo_seed_02": 5,
+        "bo_seed_03": 7,
+        "bo_seed_04": 8,
+        "bo_seed_05": 7,
+        "bo_seed_06": 6,
+        "bo_seed_07": 7,
+        "bo_seed_08": 12,
+        "bo_seed_09": 5
+      },
+      "promptprism": {
+        "primary": 5
+      }
+    },
+    "sciq_verification::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "balanced_random": {
+        "design_00": 36,
+        "design_01": 6,
+        "design_02": 39,
+        "design_03": 6,
+        "design_04": 36,
+        "design_05": 39,
+        "design_06": 6,
+        "design_07": 52,
+        "design_08": 22,
+        "design_09": 36
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 36,
+        "bo_seed_01": 4,
+        "bo_seed_02": 36,
+        "bo_seed_03": 38,
+        "bo_seed_04": 20,
+        "bo_seed_05": 20,
+        "bo_seed_06": 36,
+        "bo_seed_07": 36,
+        "bo_seed_08": 36,
+        "bo_seed_09": 20
+      },
+      "promptprism": {
+        "primary": 39
+      }
+    },
+    "sciq_verification::mlx-community/Qwen3-8B-4bit": {
+      "balanced_random": {
+        "design_00": 6,
+        "design_01": 6,
+        "design_02": 6,
+        "design_03": 6,
+        "design_04": 7,
+        "design_05": 7,
+        "design_06": 6,
+        "design_07": 4,
+        "design_08": 5,
+        "design_09": 4
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 12,
+        "bo_seed_01": 4,
+        "bo_seed_02": 4,
+        "bo_seed_03": 7,
+        "bo_seed_04": 4,
+        "bo_seed_05": 12,
+        "bo_seed_06": 5,
+        "bo_seed_07": 9,
+        "bo_seed_08": 7,
+        "bo_seed_09": 7
+      },
+      "promptprism": {
+        "primary": 5
+      }
+    },
+    "squad2_grounded_qa::gemini-2.5-flash": {
+      "balanced_random": {
+        "design_00": 12,
+        "design_01": 15,
+        "design_02": 44,
+        "design_03": 13,
+        "design_04": 45,
+        "design_05": 45,
+        "design_06": 44,
+        "design_07": 14,
+        "design_08": 44,
+        "design_09": 14
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 15,
+        "bo_seed_01": 14,
+        "bo_seed_02": 44,
+        "bo_seed_03": 44,
+        "bo_seed_04": 13,
+        "bo_seed_05": 15,
+        "bo_seed_06": 44,
+        "bo_seed_07": 14,
+        "bo_seed_08": 44,
+        "bo_seed_09": 44
+      },
+      "promptprism": {
+        "primary": 44
+      }
+    },
+    "squad2_grounded_qa::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "balanced_random": {
+        "design_00": 47,
+        "design_01": 15,
+        "design_02": 44,
+        "design_03": 13,
+        "design_04": 45,
+        "design_05": 45,
+        "design_06": 15,
+        "design_07": 40,
+        "design_08": 44,
+        "design_09": 15
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 45,
+        "bo_seed_01": 45,
+        "bo_seed_02": 45,
+        "bo_seed_03": 45,
+        "bo_seed_04": 45,
+        "bo_seed_05": 45,
+        "bo_seed_06": 45,
+        "bo_seed_07": 45,
+        "bo_seed_08": 45,
+        "bo_seed_09": 43
+      },
+      "promptprism": {
+        "primary": 47
+      }
+    },
+    "squad2_grounded_qa::mlx-community/Qwen3-8B-4bit": {
+      "balanced_random": {
+        "design_00": 41,
+        "design_01": 41,
+        "design_02": 8,
+        "design_03": 41,
+        "design_04": 62,
+        "design_05": 26,
+        "design_06": 9,
+        "design_07": 40,
+        "design_08": 41,
+        "design_09": 26
+      },
+      "bayesian_opt": {
+        "bo_seed_00": 22,
+        "bo_seed_01": 58,
+        "bo_seed_02": 40,
+        "bo_seed_03": 41,
+        "bo_seed_04": 41,
+        "bo_seed_05": 26,
+        "bo_seed_06": 26,
+        "bo_seed_07": 9,
+        "bo_seed_08": 41,
+        "bo_seed_09": 26
+      },
+      "promptprism": {
+        "primary": 62
+      }
+    }
+  },
+  "final_selection_sha256": "7113ba1e5cbfacdba024945dff6a470a5f8f79f05e5f2ad0d050a32e574d06ec",
+  "schema_version": "1.0.0",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026"
+}

@@ -1,0 +1,182 @@
+{
+  "environments": [
+    {
+      "description": "Canonical clean confirmation condition",
+      "env_id": "ref",
+      "family": "reference",
+      "parent_env_id": null,
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "16207be996c795af",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Identical-request repeat pass 2",
+      "env_id": "repeat_r2",
+      "family": "repeat",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "3fc0a9e7037babdc",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Identical-request repeat pass 3",
+      "env_id": "repeat_r3",
+      "family": "repeat",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "76523002d66a9eb6",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Expanded vertical whitespace between structural blocks",
+      "env_id": "fmt_whitespace",
+      "family": "formatting",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "136369bbad88b8f0",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Banner-style section delimiters (=== HEADER ===)",
+      "env_id": "fmt_delimiter",
+      "family": "formatting",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "c727ef4e34ef1e96",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Controlled semantic-preserving wrapper paraphrase A",
+      "env_id": "word_paraphrase_1",
+      "family": "wording",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "ae11e06e20b69f7e",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Controlled semantic-preserving wrapper paraphrase B",
+      "env_id": "word_paraphrase_2",
+      "family": "wording",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "c35e5840a8f335e6",
+      "uses_disjoint_item_group": false
+    },
+    {
+      "description": "Group-disjoint secondary confirmation item stratum",
+      "env_id": "item_holdout_group",
+      "family": "item_group",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "507a535750f9824c",
+      "uses_disjoint_item_group": true
+    },
+    {
+      "description": "Second execution wave under pinned provider version",
+      "env_id": "temporal_wave_2",
+      "family": "temporal",
+      "parent_env_id": "ref",
+      "requires_identical_model_version": true,
+      "schema_version": "1.0.0",
+      "semantic_equivalence_audited": true,
+      "transformation_hash": "64ee248830cbf612",
+      "uses_disjoint_item_group": false
+    }
+  ],
+  "golden_render_sha256": {
+    "banking77_intent": {
+      "fmt_delimiter": "6b343f1a1316d686b9f82d944423d4e1ab49da84a951da9f06dcce5b42ed594a",
+      "fmt_whitespace": "2d6a1d785c0baef77a26e319d50fec988e2e87a473629a60442c174f37e582f7",
+      "item_holdout_group": "e4abdf1426f9fb0518b8b74107c65046dc256963e524df0fad0b2b8855cffe60",
+      "ref": "e4abdf1426f9fb0518b8b74107c65046dc256963e524df0fad0b2b8855cffe60",
+      "repeat_r2": "e4abdf1426f9fb0518b8b74107c65046dc256963e524df0fad0b2b8855cffe60",
+      "repeat_r3": "e4abdf1426f9fb0518b8b74107c65046dc256963e524df0fad0b2b8855cffe60",
+      "temporal_wave_2": "e4abdf1426f9fb0518b8b74107c65046dc256963e524df0fad0b2b8855cffe60",
+      "word_paraphrase_1": "f64fb50b29b1e81d4e3e08c6f45dff14cdfd352957fbbd2ff4b5be2b59633e2c",
+      "word_paraphrase_2": "8be1a5a2e36be5769fed49db3a463f5c1b8ae8b75f1db9737bcac5f42c6f8442"
+    },
+    "gsm8k_math": {
+      "fmt_delimiter": "4e2827512fc6dd27e1613c5ff6b220afbc837eef15447d3b58fde373cc90fdf5",
+      "fmt_whitespace": "3c63ad192af66900a048598d333656db560078337a5261c5a3164b8cf425a495",
+      "item_holdout_group": "143a8cf863fb986e696938960a67bb43ec7dc5ee135f8441ca67ec81158588fd",
+      "ref": "143a8cf863fb986e696938960a67bb43ec7dc5ee135f8441ca67ec81158588fd",
+      "repeat_r2": "143a8cf863fb986e696938960a67bb43ec7dc5ee135f8441ca67ec81158588fd",
+      "repeat_r3": "143a8cf863fb986e696938960a67bb43ec7dc5ee135f8441ca67ec81158588fd",
+      "temporal_wave_2": "143a8cf863fb986e696938960a67bb43ec7dc5ee135f8441ca67ec81158588fd",
+      "word_paraphrase_1": "a472cda48607ae837b02a0e8a95dd7a85b0be2811ded1b34fbf17551564859d9",
+      "word_paraphrase_2": "0875cbf9356930dc6f0a71c86297861ab4f546cb6ac670b3d7d3ff07007ff09a"
+    },
+    "mbpp_python": {
+      "fmt_delimiter": "60d0378d426760b87583681d850df9faccac9e1439fc103ec4facbb35bdc795f",
+      "fmt_whitespace": "ee28ea7dbb7f5932d9ca3400f8d109955249cc6ad60be58d5cfc1f9115cb9ea3",
+      "item_holdout_group": "414e0cf665d64cecdcf98c385e6c3804d409afd0edd5af547ba77a4c5efd25f3",
+      "ref": "414e0cf665d64cecdcf98c385e6c3804d409afd0edd5af547ba77a4c5efd25f3",
+      "repeat_r2": "414e0cf665d64cecdcf98c385e6c3804d409afd0edd5af547ba77a4c5efd25f3",
+      "repeat_r3": "414e0cf665d64cecdcf98c385e6c3804d409afd0edd5af547ba77a4c5efd25f3",
+      "temporal_wave_2": "414e0cf665d64cecdcf98c385e6c3804d409afd0edd5af547ba77a4c5efd25f3",
+      "word_paraphrase_1": "0481da086ca3b32a67a04937ff363d1a4516ab88d33514ca18e818a932a97136",
+      "word_paraphrase_2": "859da919f2b90cc1cef2a6a3e254dec50a672ed89708dd4443fe8d304dab5da3"
+    },
+    "re3d_entity_extraction": {
+      "fmt_delimiter": "cc3c8fd21a71d98b92d040393b2aa955e674205afc6f34f1b9af8eac55976d7b",
+      "fmt_whitespace": "d5c49c7e22dab34afc750e538890915e5d534b9f69c250bc62ea83a62a68a183",
+      "item_holdout_group": "e3939475a8256a76a80e723c0548ae7e393be6b070336cc772cc1e0dfc8a712c",
+      "ref": "e3939475a8256a76a80e723c0548ae7e393be6b070336cc772cc1e0dfc8a712c",
+      "repeat_r2": "e3939475a8256a76a80e723c0548ae7e393be6b070336cc772cc1e0dfc8a712c",
+      "repeat_r3": "e3939475a8256a76a80e723c0548ae7e393be6b070336cc772cc1e0dfc8a712c",
+      "temporal_wave_2": "e3939475a8256a76a80e723c0548ae7e393be6b070336cc772cc1e0dfc8a712c",
+      "word_paraphrase_1": "fd722db0dbc694ac48aeef64afb9fe9ba24e02aa8a5d37a8d9796afb5928efbd",
+      "word_paraphrase_2": "39e6b6d9ff965c74752e7ad8e55889f5eb6056d18500c9532a9f0edb4440aa50"
+    },
+    "sciq_verification": {
+      "fmt_delimiter": "b71877a85759fc104fc884488e571ee76dae0895754240f90fb82148047ac66e",
+      "fmt_whitespace": "ac0e80438728e13629c7ba54086076a638a6d289fa4b94e2c6222b4ea845078b",
+      "item_holdout_group": "dec927cc1f5b6a0a3545394aebddd6eb31f493f09d3d8af8521efb63fd0e7b91",
+      "ref": "dec927cc1f5b6a0a3545394aebddd6eb31f493f09d3d8af8521efb63fd0e7b91",
+      "repeat_r2": "dec927cc1f5b6a0a3545394aebddd6eb31f493f09d3d8af8521efb63fd0e7b91",
+      "repeat_r3": "dec927cc1f5b6a0a3545394aebddd6eb31f493f09d3d8af8521efb63fd0e7b91",
+      "temporal_wave_2": "dec927cc1f5b6a0a3545394aebddd6eb31f493f09d3d8af8521efb63fd0e7b91",
+      "word_paraphrase_1": "13173d305e0937eb4b611deb73b259288208812940473e52b2d0d231eae82b5a",
+      "word_paraphrase_2": "d9f4a9da81477b20ef1b3232a4405b30fd30d3813eca97d4910f588fd529dfff"
+    },
+    "squad2_grounded_qa": {
+      "fmt_delimiter": "ab0c374a06f3f9576bd3a44b5fa1e39cd362e6b36f062cbdf1ae594a435420e7",
+      "fmt_whitespace": "f895ffd5cf2f7f036c2cd223a55d8a6da4734c4684e2bd919fc4d4731e8c615c",
+      "item_holdout_group": "d1f6739f1db19dd7ba8b4547cb0358bd5f7d8355f52053a052fc92252320edf7",
+      "ref": "d1f6739f1db19dd7ba8b4547cb0358bd5f7d8355f52053a052fc92252320edf7",
+      "repeat_r2": "d1f6739f1db19dd7ba8b4547cb0358bd5f7d8355f52053a052fc92252320edf7",
+      "repeat_r3": "d1f6739f1db19dd7ba8b4547cb0358bd5f7d8355f52053a052fc92252320edf7",
+      "temporal_wave_2": "d1f6739f1db19dd7ba8b4547cb0358bd5f7d8355f52053a052fc92252320edf7",
+      "word_paraphrase_1": "7dd5028cfa43a8b7d398c412723eeb9a975e35a7ac9a36521f20ddb33ff6e849",
+      "word_paraphrase_2": "782807e8b63b16542f7f8375536e057211908b8d50e86683bf191c5078e97e68"
+    }
+  },
+  "parser_hashes": {
+    "banking77_intent": "09dd5e0e03198394c5d105bc176aecc1ead477b4f82edcf680041303b2307ed4",
+    "gsm8k_math": "a3620e472118b4fce666a96bd749a8426094275d8ed784604d413c0ab9526978",
+    "mbpp_python": "963ed313abf28d7336f7338fdedb524b001cd692a25e6f0761e9d63f3a68f1ad",
+    "re3d_entity_extraction": "2d61e0661376fe47b7b2c8fbf9554598688ae9436463da47c12babeb04f33e00",
+    "sciq_verification": "789a91ac2f17d42e7a26102321135a3244663bf76c477f9cee3a8425763089e0",
+    "squad2_grounded_qa": "d0138428c723f874a6fea8c2b32f5562c47c9e1e70e4e24c04ace3c3e5aac552"
+  },
+  "registry_sha256": "693b3259cf580860a593b8a930e37bc6a6daa76b9298c68783ffdcb9419166a6",
+  "schema_version": "1.0.0",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026"
+}

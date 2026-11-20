@@ -220,3 +220,233 @@ def test_cli_analyze_maximize_is_unaffected(tmp_path):
 
     f1_row = _effects_table_row(report_p.read_text(), "f1")
     assert "ENABLE" in f1_row
+
+
+def test_cli_version_reports_2_0():
+    res = subprocess.run(
+        [sys.executable, "-m", "prompt_prism.cli.main", "--version"],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0
+    assert "2.0.0" in res.stdout
+
+
+def test_cli_diagnose_calibrated_attribution_and_token_pruning(tmp_path):
+    import json
+
+    import numpy as np
+    import pandas as pd
+
+    rng = np.random.default_rng(7)
+    rows = []
+    # 120 paired items (standard N >= 100): A=+0.25 booster, B=-0.15 harmful, C=0.000 bloat (SAFE_TO_PRUNE)
+    for run_id, (a, b, c) in enumerate(
+        [
+            (0, 0, 0),
+            (0, 0, 1),
+            (0, 1, 0),
+            (0, 1, 1),
+            (1, 0, 0),
+            (1, 0, 1),
+            (1, 1, 0),
+            (1, 1, 1),
+        ]
+    ):
+        for s in range(120):
+            base = 0.50 + 0.05 * ((s % 5) - 2)
+            y = np.clip(
+                base + 0.25 * a - 0.15 * b + float(rng.normal(0.0, 0.005)), 0.0, 1.0
+            )
+            rows.append(
+                {
+                    "run_id": run_id,
+                    "sample_id": f"item_{s:03d}",
+                    "A": a,
+                    "B": b,
+                    "C": c,
+                    "f1": y,
+                }
+            )
+
+    csv_p = tmp_path / "screen.csv"
+    md_p = tmp_path / "diag.md"
+    json_p = tmp_path / "diag.json"
+    pd.DataFrame(rows).to_csv(csv_p, index=False)
+
+    res = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "prompt_prism.cli.main",
+            "diagnose",
+            "--data",
+            str(csv_p),
+            "--target",
+            "f1",
+            "--token-costs",
+            "A=80,B=100,C=320",
+            "--prune-margin",
+            "0.01",
+            "--sign-flip",
+            "500",
+            "--output-report",
+            str(md_p),
+            "--json-out",
+            str(json_p),
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0, res.stderr
+    assert "SAFE_TO_PRUNE" in res.stdout
+    assert "KEEP" in res.stdout
+    assert "REMOVE_HARMFUL" in res.stdout
+    assert md_p.exists() and json_p.exists()
+
+    payload = json.loads(json_p.read_text(encoding="utf-8"))
+    verdicts = {f["factor_id"]: f["pruning_verdict"] for f in payload["factors"]}
+    assert verdicts["A"] == "KEEP"
+    assert verdicts["B"] == "REMOVE_HARMFUL"
+    assert verdicts["C"] == "SAFE_TO_PRUNE"
+    assert payload["estimated_prunable_tokens"] == 320
+    assert payload["noise_floor"]["small_sample_warning"] is False
+
+
+def test_cli_certify_and_verify_cert_fail_closed(tmp_path):
+    import json
+
+    import pandas as pd
+
+    rows = []
+    for s in range(40):
+        rows.append(
+            {
+                "sample_id": f"s_{s:03d}",
+                "group_id": f"g_{s // 2:02d}",
+                "env_id": "ref",
+                "score": 0.90,
+                "returned_model_version": "gemini-2.5-flash",
+            }
+        )
+        rows.append(
+            {
+                "sample_id": f"s_{s:03d}",
+                "group_id": f"g_{s // 2:02d}",
+                "env_id": "fmt_whitespace",
+                "score": 0.898,
+                "returned_model_version": "gemini-2.5-flash",
+            }
+        )
+        rows.append(
+            {
+                "sample_id": f"s_{s:03d}",
+                "group_id": f"g_{s // 2:02d}",
+                "env_id": "word_paraphrase_1",
+                "score": 0.895,
+                "returned_model_version": "gemini-2.5-flash",
+            }
+        )
+
+    csv_p = tmp_path / "stab.csv"
+    cert_p = tmp_path / "cert.json"
+    pd.DataFrame(rows).to_csv(csv_p, index=False)
+
+    res_cert = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "prompt_prism.cli.main",
+            "certify",
+            "--data",
+            str(csv_p),
+            "--target",
+            "score",
+            "--task-id",
+            "banking77_intent",
+            "--model-id",
+            "gemini-2.5-flash",
+            "--model-version",
+            "gemini-2.5-flash",
+            "--dataset-hash",
+            "sha256_ds_01",
+            "--parser-hash",
+            "sha256_p_01",
+            "--bootstrap",
+            "200",
+            "--output",
+            str(cert_p),
+            "--fail-on-error",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert res_cert.returncode == 0, res_cert.stderr
+    assert "Status:              PASS" in res_cert.stdout
+    assert cert_p.exists()
+
+    # 1. Exact envelope match passes CI gate (exit code 0)
+    res_ok = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "prompt_prism.cli.main",
+            "verify-cert",
+            "--cert",
+            str(cert_p),
+            "--task-id",
+            "banking77_intent",
+            "--model-id",
+            "gemini-2.5-flash",
+            "--model-version",
+            "gemini-2.5-flash",
+            "--dataset-hash",
+            "sha256_ds_01",
+            "--parser-hash",
+            "sha256_p_01",
+            "--envs",
+            "fmt_whitespace",
+            "word_paraphrase_1",
+            "--json",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert res_ok.returncode == 0, res_ok.stderr
+    v_ok = json.loads(res_ok.stdout)
+    assert v_ok["valid"] is True
+    assert v_ok["evidence_state"] == "stability-certified"
+    assert v_ok["can_display_passing_stability_badge"] is True
+
+    # 2. Provider model version swap fails closed (exit code 1, no passing badge)
+    res_drift = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "prompt_prism.cli.main",
+            "verify-cert",
+            "--cert",
+            str(cert_p),
+            "--task-id",
+            "banking77_intent",
+            "--model-id",
+            "gemini-2.5-flash",
+            "--model-version",
+            "gemini-2.5-flash-2026-09",
+            "--dataset-hash",
+            "sha256_ds_01",
+            "--parser-hash",
+            "sha256_p_01",
+            "--envs",
+            "fmt_whitespace",
+            "word_paraphrase_1",
+            "--json",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert res_drift.returncode == 1
+    v_drift = json.loads(res_drift.stdout)
+    assert v_drift["valid"] is False
+    assert v_drift["can_display_passing_stability_badge"] is False
+    assert "OUT-OF-ENVELOPE" in v_drift["badge_label"]

@@ -1,0 +1,505 @@
+{
+  "all_pilot_gates_passed": true,
+  "cell_reports": {
+    "banking77_intent::gemini-2.5-flash": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 391.6508431080729,
+      "mean_primary_score": 0.9,
+      "model_id": "gemini-2.5-flash",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "banking77_intent",
+      "total_calls": 60,
+      "total_cost_usd": 0.00635,
+      "truncation_rate": 0.0
+    },
+    "banking77_intent::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 410.001552081667,
+      "mean_primary_score": 0.95,
+      "model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "banking77_intent",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "banking77_intent::mlx-community/Qwen3-8B-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 389.66214093379676,
+      "mean_primary_score": 0.85,
+      "model_id": "mlx-community/Qwen3-8B-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "banking77_intent",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "gsm8k_math::gemini-2.5-flash": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 853.4416666720062,
+      "mean_primary_score": 0.95,
+      "model_id": "gemini-2.5-flash",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "mean_across_3_identical_repeats",
+        "exact_output_agreement": 0.6,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": true,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 3
+      },
+      "task_id": "gsm8k_math",
+      "total_calls": 60,
+      "total_cost_usd": 0.02076,
+      "truncation_rate": 0.0
+    },
+    "gsm8k_math::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 498.6072972145244,
+      "mean_primary_score": 0.1,
+      "model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "gsm8k_math",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "gsm8k_math::mlx-community/Qwen3-8B-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 1415.3679125437823,
+      "mean_primary_score": 0.95,
+      "model_id": "mlx-community/Qwen3-8B-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "gsm8k_math",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "mbpp_python::gemini-2.5-flash": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 769.1484269608433,
+      "mean_primary_score": 0.6444444444444667,
+      "model_id": "gemini-2.5-flash",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "mean_across_3_identical_repeats",
+        "exact_output_agreement": 0.7,
+        "exact_score_agreement": 0.9,
+        "nondeterminism_detected": true,
+        "score_std_across_repeats": 0.0384900179459943,
+        "selected_repeat_count": 3
+      },
+      "task_id": "mbpp_python",
+      "total_calls": 60,
+      "total_cost_usd": 0.015196,
+      "truncation_rate": 0.016666666666666666
+    },
+    "mbpp_python::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 405.18483192815137,
+      "mean_primary_score": 0.5333333333333,
+      "model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "mbpp_python",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "mbpp_python::mlx-community/Qwen3-8B-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 531.8019867447825,
+      "mean_primary_score": 0.6333333333334,
+      "model_id": "mlx-community/Qwen3-8B-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "mbpp_python",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "re3d_entity_extraction::gemini-2.5-flash": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 496.0362652704741,
+      "mean_primary_score": 0.86144688644695,
+      "model_id": "gemini-2.5-flash",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 1.3597399555105183e-17,
+        "selected_repeat_count": 1
+      },
+      "task_id": "re3d_entity_extraction",
+      "total_calls": 60,
+      "total_cost_usd": 0.008502,
+      "truncation_rate": 0.0
+    },
+    "re3d_entity_extraction::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 441.85291804994137,
+      "mean_primary_score": 0.5777380952382,
+      "model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 3.3993498887762957e-18,
+        "selected_repeat_count": 1
+      },
+      "task_id": "re3d_entity_extraction",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "re3d_entity_extraction::mlx-community/Qwen3-8B-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 664.029022923205,
+      "mean_primary_score": 0.66385281385295,
+      "model_id": "mlx-community/Qwen3-8B-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 6.7986997775525915e-18,
+        "selected_repeat_count": 1
+      },
+      "task_id": "re3d_entity_extraction",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "sciq_verification::gemini-2.5-flash": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 416.5424917358905,
+      "mean_primary_score": 1.0,
+      "model_id": "gemini-2.5-flash",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "sciq_verification",
+      "total_calls": 60,
+      "total_cost_usd": 0.004525,
+      "truncation_rate": 0.0
+    },
+    "sciq_verification::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 340.9363444545307,
+      "mean_primary_score": 1.0,
+      "model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "sciq_verification",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "sciq_verification::mlx-community/Qwen3-8B-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 330.62241804242757,
+      "mean_primary_score": 1.0,
+      "model_id": "mlx-community/Qwen3-8B-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 0.0,
+        "selected_repeat_count": 1
+      },
+      "task_id": "sciq_verification",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "squad2_grounded_qa::gemini-2.5-flash": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 445.26156105178717,
+      "mean_primary_score": 0.98365384615385,
+      "model_id": "gemini-2.5-flash",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 6.7986997775525915e-18,
+        "selected_repeat_count": 1
+      },
+      "task_id": "squad2_grounded_qa",
+      "total_calls": 60,
+      "total_cost_usd": 0.006642,
+      "truncation_rate": 0.0
+    },
+    "squad2_grounded_qa::mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 519.2720861212972,
+      "mean_primary_score": 0.73706917113895,
+      "model_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 6.7986997775525915e-18,
+        "selected_repeat_count": 1
+      },
+      "task_id": "squad2_grounded_qa",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    },
+    "squad2_grounded_qa::mlx-community/Qwen3-8B-4bit": {
+      "cell_gate_pass": true,
+      "completion_rate": 1.0,
+      "mean_latency_ms": 475.9723908849993,
+      "mean_primary_score": 0.88365384615385,
+      "model_id": "mlx-community/Qwen3-8B-4bit",
+      "nonempty_response_rate": 1.0,
+      "repeatability": {
+        "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+        "exact_output_agreement": 1.0,
+        "exact_score_agreement": 1.0,
+        "nondeterminism_detected": false,
+        "score_std_across_repeats": 6.7986997775525915e-18,
+        "selected_repeat_count": 1
+      },
+      "task_id": "squad2_grounded_qa",
+      "total_calls": 60,
+      "total_cost_usd": 0.0,
+      "truncation_rate": 0.0
+    }
+  },
+  "claim_margins_unchanged": {
+    "delta_select": 0.01,
+    "epsilon_stability": 0.02,
+    "methods_modified": false
+  },
+  "human_go_no_go_status": "READY_FOR_HUMAN_APPROVAL",
+  "manifest_replay_audit": {
+    "manifest_name": "pilot_manifest.jsonl",
+    "ok_calls": 1080,
+    "records_canonical_sha256": "b02e404c12f090809f3560a0e0c4c4a1f22bda149fb7839ac0da75e055d9f0d6",
+    "terminal_failure_calls": 0,
+    "total_expected": 1080,
+    "total_observed": 1080,
+    "unique_response_ids": 1080
+  },
+  "model_execution_policy_and_projections": {
+    "gemini-2.5-flash": {
+      "aggregation_rule": "mean_across_3_identical_repeats",
+      "exact_output_agreement": 0.8833333333333333,
+      "exact_score_agreement": 0.9833333333333333,
+      "frozen_repeat_count": 3,
+      "mean_latency_ms": 562.0135424665124,
+      "mean_tokens_input": 227.59166666666667,
+      "mean_tokens_output": 41.55,
+      "missing_provenance_ids": 0,
+      "nondeterminism_detected": true,
+      "observed_returned_versions": [
+        "gemini-2.5-flash"
+      ],
+      "pilot_spend_usd": 0.061975,
+      "projected_phase4_typical_usd": 12.91,
+      "projected_phase4_worst_case_usd": 38.49,
+      "projected_sequential_wall_hours_typical": 11.71,
+      "score_std_across_repeats": 0.006415002990999052,
+      "within_pinned_envelope": true
+    },
+    "mlx-community/Mistral-7B-Instruct-v0.3-4bit": {
+      "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+      "exact_output_agreement": 1.0,
+      "exact_score_agreement": 1.0,
+      "frozen_repeat_count": 1,
+      "mean_latency_ms": 435.975838308352,
+      "mean_tokens_input": 274.95,
+      "mean_tokens_output": 33.733333333333334,
+      "missing_provenance_ids": 0,
+      "nondeterminism_detected": false,
+      "observed_returned_versions": [
+        "a4b8f870474b0eb527f466a03fbc187830d271f5"
+      ],
+      "pilot_spend_usd": 0.0,
+      "projected_phase4_typical_usd": 0.0,
+      "projected_phase4_worst_case_usd": 0.0,
+      "projected_sequential_wall_hours_typical": 9.08,
+      "score_std_across_repeats": 1.6996749443881479e-18,
+      "within_pinned_envelope": true
+    },
+    "mlx-community/Qwen3-8B-4bit": {
+      "aggregation_rule": "single_deterministic_pass_with_stability_audit_r2_r3",
+      "exact_output_agreement": 1.0,
+      "exact_score_agreement": 1.0,
+      "frozen_repeat_count": 1,
+      "mean_latency_ms": 634.5759786788323,
+      "mean_tokens_input": 228.175,
+      "mean_tokens_output": 32.516666666666666,
+      "missing_provenance_ids": 0,
+      "nondeterminism_detected": false,
+      "observed_returned_versions": [
+        "545dc4251c05440727734bcd94334791f6ab0192"
+      ],
+      "pilot_spend_usd": 0.0,
+      "projected_phase4_typical_usd": 0.0,
+      "projected_phase4_worst_case_usd": 0.0,
+      "projected_sequential_wall_hours_typical": 13.22,
+      "score_std_across_repeats": 2.266233259184197e-18,
+      "within_pinned_envelope": true
+    }
+  },
+  "pilot_quarantine_audit": {
+    "downstream_partitions_checked": [
+      "screen",
+      "validation",
+      "clean_confirmation",
+      "stability_confirmation"
+    ],
+    "per_task": {
+      "banking77_intent": {
+        "downstream_items": 660,
+        "group_overlap_count": 0,
+        "pilot_items": 20,
+        "pilot_unique_groups": 20,
+        "sample_overlap_count": 0
+      },
+      "gsm8k_math": {
+        "downstream_items": 660,
+        "group_overlap_count": 0,
+        "pilot_items": 20,
+        "pilot_unique_groups": 20,
+        "sample_overlap_count": 0
+      },
+      "mbpp_python": {
+        "downstream_items": 660,
+        "group_overlap_count": 0,
+        "pilot_items": 20,
+        "pilot_unique_groups": 20,
+        "sample_overlap_count": 0
+      },
+      "re3d_entity_extraction": {
+        "downstream_items": 660,
+        "group_overlap_count": 0,
+        "pilot_items": 20,
+        "pilot_unique_groups": 20,
+        "sample_overlap_count": 0
+      },
+      "sciq_verification": {
+        "downstream_items": 660,
+        "group_overlap_count": 0,
+        "pilot_items": 20,
+        "pilot_unique_groups": 20,
+        "sample_overlap_count": 0
+      },
+      "squad2_grounded_qa": {
+        "downstream_items": 660,
+        "group_overlap_count": 0,
+        "pilot_items": 20,
+        "pilot_unique_groups": 20,
+        "sample_overlap_count": 0
+      }
+    },
+    "quarantine_verified": true
+  },
+  "pilot_repeats": 3,
+  "pilot_run_id": 12,
+  "registered_pilot_gates": {
+    "max_truncation_rate": 0.1,
+    "min_completion_rate": 0.95,
+    "min_nonempty_response_rate": 0.95
+  },
+  "report_sha256": "05b88132968bdecd7afc4f4b3724c07c551f5747abdad84a2b773ce1662a1acd",
+  "schema_version": "1.0.0",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026"
+}

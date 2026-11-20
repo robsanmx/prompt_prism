@@ -1,0 +1,113 @@
+{
+  "audit_passed": true,
+  "audit_sha256": "bb5810d14a0c7c38191ec99aec4dc1206f62dcfa426c39622aa02528731ab023",
+  "error_count": 0,
+  "errors": [],
+  "schema_version": "1.0.0",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026",
+  "tasks": {
+    "banking77_intent": {
+      "cross_partition_group_overlaps": 0,
+      "partition_counts": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      },
+      "unique_groups_per_partition": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      }
+    },
+    "gsm8k_math": {
+      "cross_partition_group_overlaps": 0,
+      "partition_counts": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      },
+      "unique_groups_per_partition": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      }
+    },
+    "mbpp_python": {
+      "cross_partition_group_overlaps": 0,
+      "partition_counts": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      },
+      "unique_groups_per_partition": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      }
+    },
+    "re3d_entity_extraction": {
+      "cross_partition_group_overlaps": 0,
+      "partition_counts": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      },
+      "unique_groups_per_partition": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      }
+    },
+    "sciq_verification": {
+      "cross_partition_group_overlaps": 0,
+      "partition_counts": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      },
+      "unique_groups_per_partition": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      }
+    },
+    "squad2_grounded_qa": {
+      "cross_partition_group_overlaps": 0,
+      "partition_counts": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      },
+      "unique_groups_per_partition": {
+        "clean_confirmation": 240,
+        "pilot": 20,
+        "screen": 120,
+        "stability_confirmation": 240,
+        "validation": 60
+      }
+    }
+  },
+  "total_items_across_tasks": 4080
+}

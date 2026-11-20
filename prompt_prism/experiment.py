@@ -10,7 +10,13 @@ from typing import Any, Callable, Dict, Optional, Sequence, Union
 import pandas as pd
 
 from .core.factors import Factor, FactorSet
-from .core.models import DesignMatrix, ExperimentResults
+from .core.models import (
+    DesignMatrix,
+    ExperimentResults,
+    OperatingEnvelopeSpec,
+    PromptSelectionReport,
+    PromptStabilityCertificate,
+)
 from .design.generators import FractionalFactorialGenerator
 from .design.recommender import recommend_design
 from .evaluation.evaluator import Evaluator
@@ -201,6 +207,61 @@ class Experiment:
         )
         return self.last_report
 
+    def diagnose(
+        self,
+        results: Optional[ExperimentResults] = None,
+        target_metric: Optional[str] = None,
+        *,
+        sample_col: str = "sample_id",
+        alpha: float = 0.05,
+        maximize: Optional[bool] = None,
+        equivalence_margin: float = 0.01,
+        token_costs: Optional[Dict[str, int]] = None,
+        n_sign_flip: int = 2000,
+        seed: int = 42,
+    ):
+        """Run PromptPrism 2.0 calibrated item-clustered attribution, noise-floor, and TOST token-pruning audit.
+
+        When `token_costs` is omitted, estimates incremental token count per binary factor
+        (`max(0, ceil((len(lvl1) - len(lvl0)) / 4))`) from the configured Factor definitions.
+        """
+        from .analysis.diagnostics import run_calibrated_attribution_audit
+
+        exp_res = results or self.last_results
+        if exp_res is None:
+            raise ValueError(
+                "No experiment results provided or available. Run the experiment first."
+            )
+
+        metric_name = target_metric or self.target_metric
+        if maximize is None:
+            maximize = True
+            for m in self.evaluator.metrics:
+                if m.name == metric_name:
+                    maximize = getattr(m, "higher_is_better", True)
+                    break
+
+        eff_token_costs = dict(token_costs) if token_costs is not None else {}
+        if token_costs is None:
+            for factor in self.factors:
+                if len(factor.levels) >= 2:
+                    c0 = len(str(factor.get_level(0).content))
+                    c1 = len(str(factor.get_level(1).content))
+                    eff_token_costs[factor.id] = max(0, (c1 - c0 + 3) // 4)
+
+        return run_calibrated_attribution_audit(
+            data=exp_res.to_dataframe(),
+            factor_cols=exp_res.design.factor_ids,
+            target_col=metric_name,
+            sample_col=sample_col,
+            alpha=alpha,
+            maximize=maximize,
+            equivalence_margin=equivalence_margin,
+            token_costs=eff_token_costs or None,
+            n_sign_flip=n_sign_flip,
+            seed=seed,
+        )
+
     def suggest_confirmation_design(
         self,
         report: Optional[AnalysisReport] = None,
@@ -308,3 +369,109 @@ class Experiment:
                     sec.content = str(lvl.content)
 
         return configured_template
+
+    def selection_report(
+        self,
+        report: Optional[AnalysisReport] = None,
+        *,
+        strategy: str = "additive",
+        confirmation_scores: Optional[Sequence[float]] = None,
+        confirmation_envelope: Optional[OperatingEnvelopeSpec] = None,
+        stability_certificate: Optional[PromptStabilityCertificate] = None,
+        request_envelope: Optional[OperatingEnvelopeSpec] = None,
+    ) -> PromptSelectionReport:
+        """Return a `PromptSelectionReport` explicitly distinguishing `predicted`,
+        `confirmation-validated`, and `stability-certified` evidence states.
+
+        Existing `additive`, `screen_best`, and `interaction_2fi` callers default strictly to
+        `evidence_state="predicted"` (`can_display_passing_stability_badge=False`) unless
+        untouched confirmation outcomes and matching envelope/certificate metadata are provided.
+        """
+        from .analysis.selection import build_selection_report_from_recommendation
+
+        rep = report
+        if rep is None:
+            if self.last_report is not None and (
+                self.last_report.optimal_recommendation is not None
+                and self.last_report.optimal_recommendation.strategy == strategy
+            ):
+                rep = self.last_report
+            else:
+                rep = self.analyze(
+                    strategy=strategy,
+                    include_interactions=(strategy == "interaction_2fi"),
+                )
+
+        if rep.optimal_recommendation is None:
+            raise ValueError(
+                "No optimal recommendation available to build selection report."
+            )
+
+        return build_selection_report_from_recommendation(
+            rep.optimal_recommendation,
+            confirmation_scores=confirmation_scores,
+            confirmation_envelope=confirmation_envelope,
+            stability_certificate=stability_certificate,
+            request_envelope=request_envelope,
+        )
+
+    def experimental_select_two_stage(
+        self,
+        *,
+        validation_scores_by_env: Dict[str, Dict[int, Sequence[float]]],
+        experimental_opt_in: bool = False,
+        screen_results: Optional[ExperimentResults] = None,
+        target_metric: Optional[str] = None,
+        group_ids: Optional[Sequence[str]] = None,
+        confirmation_scores: Optional[Sequence[float]] = None,
+        confirmation_envelope: Optional[OperatingEnvelopeSpec] = None,
+        stability_certificate: Optional[PromptStabilityCertificate] = None,
+        request_envelope: Optional[OperatingEnvelopeSpec] = None,
+        max_candidates: int = 4,
+    ) -> PromptSelectionReport:
+        """Experimental opt-in two-stage screen -> multi-environment validation selector.
+
+        Requires `experimental_opt_in=True` because the prospective Real-v4 promotion gate
+        (`PASS_BOTH`) was not met (`FAIL_BOTH`); does not claim a default stability assurance.
+        """
+        from .analysis.selection import ExperimentalTwoStageSelector
+
+        selector = ExperimentalTwoStageSelector(
+            experimental_opt_in=experimental_opt_in,
+            max_candidates=max_candidates,
+        )
+        exp_res = screen_results or self.last_results
+        if exp_res is None:
+            raise ValueError(
+                "No screening ExperimentResults available. Run `experiment.run(...)` first."
+            )
+
+        metric_name = target_metric or self.target_metric
+        maximize = True
+        for m in self.evaluator.metrics:
+            if m.name == metric_name:
+                maximize = getattr(m, "higher_is_better", True)
+                break
+
+        df = exp_res.to_dataframe()
+        run_levels = {int(r.run_id): dict(r.factor_levels) for r in exp_res.design.runs}
+        screen_scores = {
+            int(rid): grp.sort_values("sample_id")[metric_name].astype(float).tolist()
+            for rid, grp in df.groupby("run_id")
+        }
+        cands = selector.generate_candidates_from_screen(
+            factor_ids=self.factors.ids,
+            run_factor_levels=run_levels,
+            screen_scores_by_run=screen_scores,
+            maximize=maximize,
+        )
+        return selector.select_on_validation(
+            candidates=cands,
+            validation_scores_by_env=validation_scores_by_env,
+            group_ids=group_ids,
+            maximize=maximize,
+            confirmation_scores=confirmation_scores,
+            confirmation_envelope=confirmation_envelope,
+            stability_certificate=stability_certificate,
+            request_envelope=request_envelope,
+        )

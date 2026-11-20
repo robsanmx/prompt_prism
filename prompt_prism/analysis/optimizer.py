@@ -243,15 +243,20 @@ class OptimalPromptFinder:
         if ols_model and hasattr(ols_model, "params"):
             params = dict(ols_model.params)
             intercept = float(params.get("Intercept", 0.0))
+            factor_param_names: Dict[str, str] = anova_result.metadata.get(
+                "factor_param_names", {}
+            )
 
             # Sum positive drivers for optimal prediction
             opt_delta_sum = 0.0
             for effect in pos_drivers:
-                # Find matching param key
-                for k, v in params.items():
-                    if effect.factor_id in k and "C(" in k and ":" not in k:
-                        opt_delta_sum += float(v)
-                        break
+                param_name = factor_param_names.get(effect.factor_id)
+                if param_name in params:
+                    opt_delta_sum += float(params[param_name])
+                else:
+                    # Compatibility fallback for externally constructed ANOVAResult
+                    # instances that predate exact coefficient-name metadata.
+                    opt_delta_sum += float(effect.effect_delta)
 
             baseline_score = (
                 float(np.clip(intercept, bound_low, bound_high))

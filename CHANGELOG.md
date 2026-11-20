@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.0.0] - 2026-11-20
+
+### Added
+- **Calibrated Attribution, Noise-Floor & TOST Token-Bloat Pruning (`prompt_prism/analysis/diagnostics.py`, `Experiment.diagnose`, `prism diagnose`)**:
+  - Contrast-specific item-clustered $t$-tests with Benjamini–Hochberg FDR (`df = N - 1`, conservative zero-variance guard) and optional 2,000-draw Rademacher sign-flip randomization for small item counts ($N < 100$).
+  - Main-effect item-sampling noise-floor decomposition (`RMS_obs`, `RMS_noise`, `RMS_signal_corrected`, noise variance share `%`).
+  - Paired Two-One-Sided-Tests (TOST) pruning verdicts (`KEEP`, `REMOVE_HARMFUL`, `SAFE_TO_PRUNE`, `INCONCLUSIVE_NEED_MORE_ITEMS`) with automatic/custom token-savings estimation.
+- **Explicit Evidence Tiers & Fail-Closed Envelope Stability Certificates (`prompt_prism/core/models.py`, `prompt_prism/analysis/selection.py`, `Experiment.selection_report`, `prism certify`, `prism verify-cert`)**:
+  - Public reports explicitly separate `predicted`, `confirmation-validated`, and `stability-certified` states.
+  - `OperatingEnvelopeSpec` and `PromptStabilityCertificate` hash pinned task, model, model-version, dataset, parser, decoding, algorithm, and perturbation boundaries and fail closed (exit code `1` in `prism verify-cert`) whenever any boundary differs.
+  - `ExperimentalTwoStageSelector` and `Experiment.experimental_select_two_stage` require explicit `experimental_opt_in=True` reflecting the preregistered Real-v4 promotion gate verdict (`FAIL_BOTH`).
+- **Prospective Real-v4 Study & Updated Papers (`research/real_v4/`, `paper_hf/main.pdf`, `paper_hf/reader_friendly.pdf`)**:
+  - Completed 501,300-call cryptographically phase-locked prospective study across 6 tasks and 3 model families (`gemini-2.5-flash`, `Mistral-7B-Instruct-v0.3-4bit`, `Qwen3-8B-4bit`), updating both the technical manuscript and reader-friendly companion guide from machine-generated macros.
+- **CLI v2.0 (`prompt-prism` / `prism`) & Agent Skill v2.0 (`.agents/skills/prompt_prism/SKILL.md`)**:
+  - Added `--version`, `diagnose`, `certify`, `verify-cert`, and `--strategy` / `--include-interactions` flags on `analyze` with explicit `predicted` evidence-tier notice.
+  - Realigned package positioning, README, and Agent Skill around Prompt Diagnostics, Token Pruning, Calibrated Attribution, and Envelope-Bounded Stability Certification.
+
+### Changed
+- Bumped package version in `pyproject.toml` and `prompt_prism/__init__.py` to `2.0.0`.
+- Re-positioned pooled fixed-block RCBD ANOVA as exploratory only (citing the 18.4% global BH empirical-null FDR finding); contrast-specific item-clustered $t$-tests are now the primary v2.0 diagnostic inference method.
+
+---
+
 ## [1.2.0] - 2026-11-06
 
 ### Added

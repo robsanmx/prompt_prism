@@ -1,5 +1,11 @@
 """
-Command-Line Interface (CLI) for prompt-prism / prism.
+Command-Line Interface (CLI) for prompt-prism / prism (v2.0).
+
+Supports:
+- Orthogonal design discovery & generation (`list-designs`, `alias`, `design`, `list-metrics`)
+- Legacy & epistasis-aware screening analysis (`analyze`)
+- v2.0 calibrated item-clustered attribution, noise-floor, and TOST token pruning (`diagnose`)
+- v2.0 fail-closed stability envelope certification & CI/CD verification (`certify`, `verify-cert`)
 """
 
 from __future__ import annotations
@@ -9,11 +15,19 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 
+from .. import __version__
 from ..analysis.anova import ANOVAEngine
+from ..analysis.diagnostics import run_calibrated_attribution_audit
 from ..analysis.optimizer import OptimalPromptFinder
+from ..analysis.selection import (
+    EXPERIMENTAL_TWO_STAGE_ALGORITHM_VERSION,
+    evaluate_simultaneous_perturbation_certificate,
+)
+from ..core.models import OperatingEnvelopeSpec, PromptStabilityCertificate
 from ..design.aliasing import AliasStructure
 from ..design.catalog import get_catalog_entry, list_available_plans
 from ..design.generators import FractionalFactorialGenerator
@@ -22,10 +36,76 @@ from ..reporting.reporter import AnalysisReport
 from ..visualization.plots import generate_ascii_pareto
 
 
-def main():
+def _load_tabular(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        print(f"Error: file '{path}' not found.", file=sys.stderr)
+        sys.exit(1)
+    if path.suffix.lower() in {".jsonl", ".ndjson"}:
+        rows = [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        return pd.DataFrame(rows)
+    return pd.read_csv(path)
+
+
+def _auto_detect_binary_factors(
+    df: pd.DataFrame, target_col: str, extra_exclude: Optional[List[str]] = None
+) -> List[str]:
+    exclude = {
+        target_col,
+        "run_id",
+        "sample_id",
+        "group_id",
+        "env_id",
+        "trial_id",
+        "error",
+        "latency_ms",
+        "combination",
+    }
+    if extra_exclude:
+        exclude.update(x for x in extra_exclude if x)
+    return [
+        c
+        for c in df.columns
+        if c not in exclude
+        and set(df[c].dropna().unique()).issubset({0, 1, 0.0, 1.0, -1, -1.0})
+    ]
+
+
+def _parse_token_costs(spec: Optional[str]) -> Optional[Dict[str, int]]:
+    if not spec:
+        return None
+    out: Dict[str, int] = {}
+    for pair in spec.split(","):
+        pair = pair.strip()
+        if not pair:
+            continue
+        if "=" not in pair:
+            print(
+                f"Error: invalid --token-costs entry '{pair}'. Expected KEY=INT (e.g. A=120,B=450).",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        k, v = pair.split("=", 1)
+        out[k.strip()] = int(v.strip())
+    return out or None
+
+
+def main() -> None:
     parser = argparse.ArgumentParser(
         prog="prompt-prism",
-        description="PromptPrism: Statistical Prompt Optimization & Factorial Analysis for LLMs using Fractional Factorial DoE and ANOVA.",
+        description=(
+            "PromptPrism 2.0: Prompt Diagnostics, Token Pruning, Calibrated Attribution, "
+            "and Envelope-Bounded Stability Certification using Fractional Factorial DoE."
+        ),
+    )
+    parser.add_argument(
+        "--version",
+        "-V",
+        action="version",
+        version=f"%(prog)s {__version__}",
     )
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -78,13 +158,17 @@ def main():
     )
     gen_parser.add_argument("--output", "-o", type=str, help="Output CSV/JSON filepath")
 
-    # Command: analyze
+    # Command: analyze (backward compatible, upgraded with evidence-tier & strategy options)
     analyze_parser = subparsers.add_parser(
         "analyze",
-        help="Run ANOVA and Optimal Prompt analysis on experiment results CSV",
+        help="Run ANOVA and Optimal Prompt analysis on experiment results CSV/JSONL (evidence tier: predicted)",
     )
     analyze_parser.add_argument(
-        "--data", "-d", type=str, required=True, help="Path to experiment results CSV"
+        "--data",
+        "-d",
+        type=str,
+        required=True,
+        help="Path to experiment results CSV or JSONL",
     )
     analyze_parser.add_argument(
         "--target", "-t", type=str, required=True, help="Target metric column name"
@@ -110,15 +194,284 @@ def main():
         help="Significance alpha threshold (default: 0.05)",
     )
     analyze_parser.add_argument(
+        "--strategy",
+        "-s",
+        type=str,
+        choices=("additive", "screen_best", "interaction_2fi", "auto"),
+        default="additive",
+        help="Selection strategy (default: additive)",
+    )
+    analyze_parser.add_argument(
+        "--include-interactions",
+        action="store_true",
+        help="Fit 2-factor interaction terms (recommended on Resolution V+ designs)",
+    )
+    analyze_parser.add_argument(
         "--minimize",
         action="store_true",
-        help="Minimize target metric instead of maximizing (e.g. for toxicity/bias/error)",
+        help="Minimize target metric instead of maximizing (e.g. for latency or error rate)",
     )
     analyze_parser.add_argument(
         "--output-report",
         "-o",
         type=str,
         help="Save report to Markdown (.md) or HTML (.html)",
+    )
+
+    # Command: diagnose (NEW in v2.0 — calibrated item-clustered attribution, noise floor & TOST token pruning)
+    diag_parser = subparsers.add_parser(
+        "diagnose",
+        help="[v2.0] Calibrated item-clustered contrast t-tests, noise floor, and TOST token-bloat pruning audit",
+    )
+    diag_parser.add_argument(
+        "--data",
+        "-d",
+        type=str,
+        required=True,
+        help="Path to experiment results CSV or JSONL",
+    )
+    diag_parser.add_argument(
+        "--target", "-t", type=str, required=True, help="Target metric column name"
+    )
+    diag_parser.add_argument(
+        "--factors",
+        "-f",
+        nargs="+",
+        help="Binary factor column names (auto-detected if omitted)",
+    )
+    diag_parser.add_argument(
+        "--sample-col",
+        type=str,
+        default="sample_id",
+        help="Paired item identifier column (default: sample_id)",
+    )
+    diag_parser.add_argument(
+        "--alpha",
+        "-a",
+        type=float,
+        default=0.05,
+        help="BH FDR and TOST significance threshold (default: 0.05)",
+    )
+    diag_parser.add_argument(
+        "--prune-margin",
+        type=float,
+        default=0.01,
+        help="Practical equivalence margin |delta| < margin for SAFE_TO_PRUNE TOST gate (default: 0.01)",
+    )
+    diag_parser.add_argument(
+        "--token-costs",
+        type=str,
+        help="Optional comma-separated token cost per factor (e.g. 'A=120,B=450,C=80')",
+    )
+    diag_parser.add_argument(
+        "--sign-flip",
+        type=int,
+        default=2000,
+        help="Rademacher sign-flip randomization draws (0 to disable; default: 2000)",
+    )
+    diag_parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for sign-flip randomization (default: 42)",
+    )
+    diag_parser.add_argument(
+        "--minimize",
+        action="store_true",
+        help="Minimize target metric instead of maximizing",
+    )
+    diag_parser.add_argument(
+        "--output-report",
+        "-o",
+        type=str,
+        help="Save Markdown audit report to filepath (.md)",
+    )
+    diag_parser.add_argument(
+        "--json-out",
+        type=str,
+        help="Save machine-readable JSON audit to filepath (.json)",
+    )
+
+    # Command: certify (NEW in v2.0 — generate fail-closed stability envelope certificate)
+    cert_parser = subparsers.add_parser(
+        "certify",
+        help="[v2.0] Issue a fail-closed OperatingEnvelopeSpec stability certificate from paired perturbation results",
+    )
+    cert_parser.add_argument(
+        "--data",
+        "-d",
+        type=str,
+        required=True,
+        help="Path to paired confirmation/perturbation CSV or JSONL",
+    )
+    cert_parser.add_argument(
+        "--target",
+        "-t",
+        type=str,
+        required=True,
+        help="Score column name (values in [0, 1])",
+    )
+    cert_parser.add_argument(
+        "--task-id", type=str, required=True, help="Pinned task identifier"
+    )
+    cert_parser.add_argument(
+        "--model-id", type=str, required=True, help="Pinned model identifier"
+    )
+    cert_parser.add_argument(
+        "--model-version",
+        type=str,
+        required=True,
+        help="Pinned provider version or local weight commit hash",
+    )
+    cert_parser.add_argument(
+        "--dataset-hash",
+        type=str,
+        required=True,
+        help="SHA-256 hash of the confirmation item partition",
+    )
+    cert_parser.add_argument(
+        "--parser-hash",
+        type=str,
+        required=True,
+        help="SHA-256 hash of the deterministic metric/parser",
+    )
+    cert_parser.add_argument(
+        "--env-col",
+        type=str,
+        default="env_id",
+        help="Environment column name (default: env_id)",
+    )
+    cert_parser.add_argument(
+        "--ref-env",
+        type=str,
+        default="ref",
+        help="Clean reference environment label (default: ref)",
+    )
+    cert_parser.add_argument(
+        "--envs",
+        nargs="+",
+        help="Expected perturbation environment IDs (defaults to all non-ref env_ids present in data)",
+    )
+    cert_parser.add_argument(
+        "--sample-col",
+        type=str,
+        default="sample_id",
+        help="Item identifier column (default: sample_id)",
+    )
+    cert_parser.add_argument(
+        "--group-col",
+        type=str,
+        default="group_id",
+        help="Optional cluster/group column for paired group bootstrap (default: group_id if present)",
+    )
+    cert_parser.add_argument(
+        "--version-col",
+        type=str,
+        default="returned_model_version",
+        help="Optional column of observed provider model versions to audit for drift",
+    )
+    cert_parser.add_argument(
+        "--algorithm-version",
+        type=str,
+        default=EXPERIMENTAL_TWO_STAGE_ALGORITHM_VERSION,
+        help="Pinned selector/algorithm version string",
+    )
+    cert_parser.add_argument(
+        "--decoding-json",
+        type=str,
+        help='Optional JSON object of decoding settings (default: {"temperature":0.0,"max_output_tokens":512,"seed":42})',
+    )
+    cert_parser.add_argument(
+        "--epsilon",
+        type=float,
+        default=0.02,
+        help="Maximum allowable simultaneous drop margin epsilon_stability (default: 0.02)",
+    )
+    cert_parser.add_argument(
+        "--alpha",
+        type=float,
+        default=0.05,
+        help="One-sided confidence level alpha (default: 0.05)",
+    )
+    cert_parser.add_argument(
+        "--bootstrap",
+        type=int,
+        default=1000,
+        help="Paired bootstrap replicates (default: 1000)",
+    )
+    cert_parser.add_argument(
+        "--seed", type=int, default=20261118, help="Bootstrap RNG seed"
+    )
+    cert_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        help="Save machine-readable stability certificate JSON to filepath",
+    )
+    cert_parser.add_argument(
+        "--fail-on-error",
+        action="store_true",
+        help="Exit with code 2 if certificate status is not PASS (useful in CI/CD gates)",
+    )
+
+    # Command: verify-cert (NEW in v2.0 — CI/CD fail-closed envelope verification gate)
+    verify_parser = subparsers.add_parser(
+        "verify-cert",
+        help="[v2.0] Fail-closed CI/CD gate verifying a PromptStabilityCertificate against a live deployment envelope",
+    )
+    verify_parser.add_argument(
+        "--cert",
+        "-c",
+        type=str,
+        required=True,
+        help="Path to stability certificate JSON file",
+    )
+    verify_parser.add_argument(
+        "--task-id", type=str, required=True, help="Live task identifier"
+    )
+    verify_parser.add_argument(
+        "--model-id", type=str, required=True, help="Live model identifier"
+    )
+    verify_parser.add_argument(
+        "--model-version",
+        type=str,
+        required=True,
+        help="Live provider version or local weight commit hash",
+    )
+    verify_parser.add_argument(
+        "--dataset-hash",
+        type=str,
+        required=True,
+        help="Live confirmation dataset partition hash",
+    )
+    verify_parser.add_argument(
+        "--parser-hash",
+        type=str,
+        required=True,
+        help="Live deterministic metric/parser hash",
+    )
+    verify_parser.add_argument(
+        "--envs",
+        nargs="+",
+        required=True,
+        help="Required perturbation environment IDs covered by deployment gate",
+    )
+    verify_parser.add_argument(
+        "--algorithm-version",
+        type=str,
+        default=EXPERIMENTAL_TWO_STAGE_ALGORITHM_VERSION,
+        help="Live algorithm version string",
+    )
+    verify_parser.add_argument(
+        "--decoding-json",
+        type=str,
+        help="Optional JSON object of live decoding config",
+    )
+    verify_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="Print validation verdict as machine-readable JSON",
     )
 
     args = parser.parse_args()
@@ -175,7 +528,7 @@ def main():
         has_deepeval = importlib.util.find_spec("deepeval") is not None
 
         print("\n" + "=" * 75)
-        print(" 📊 PROMPTPRISM EVALUATION METRICS SUITE")
+        print(f" 📊 PROMPTPRISM v{__version__} EVALUATION METRICS SUITE")
         print("=" * 75)
 
         print("\n1. ⚡ Built-in Deterministic Metrics (Zero-Cost / Offline / Fast)")
@@ -270,60 +623,42 @@ def main():
             print(f"\nSaved design to {args.output}\n")
 
     elif args.command == "analyze":
-        data_p = Path(args.data)
-        if not data_p.exists():
-            print(f"Error: file '{args.data}' not found.")
-            sys.exit(1)
-
-        df = pd.read_csv(data_p)
+        df = _load_tabular(Path(args.data))
         if args.target not in df.columns:
             print(
                 f"Error: target column '{args.target}' not found in dataset. Columns: {list(df.columns)}"
             )
             sys.exit(1)
 
-        if args.factors:
-            f_cols = args.factors
-        else:
-            exclude = {
-                args.target,
-                "run_id",
-                "sample_id",
-                "trial_id",
-                "error",
-                "latency_ms",
-                "combination",
-            }
-            if args.block_by:
-                exclude.add(args.block_by)
-            f_cols = [
-                c
-                for c in df.columns
-                if c not in exclude
-                and set(df[c].dropna().unique()).issubset({0, 1, 0.0, 1.0})
-            ]
-
+        f_cols = args.factors or _auto_detect_binary_factors(
+            df, args.target, extra_exclude=[args.block_by]
+        )
         block_col = (
             args.block_by if (args.block_by and args.block_by in df.columns) else None
         )
-        # The direction has to reach run_anova, not just the optimizer: the effects it
-        # computes carry the action_recommendation that the report's main-effects table
-        # renders (and that the plots colour by). Passing it to only one of the two
-        # printed a report whose table said ENABLE about the same factor its own
-        # recommendation listed as harmful.
+        # Direction reaches both run_anova and find_optimal_prompt so main-effects table
+        # actions and optimizer recommendations stay consistent.
         maximize = not args.minimize
         anova_res = ANOVAEngine.run_anova(
             data=df,
             factor_cols=f_cols,
             target_col=args.target,
             block_col=block_col,
+            include_interactions=args.include_interactions,
             alpha=args.alpha,
             maximize=maximize,
         )
-        opt_rec = OptimalPromptFinder.find_optimal_prompt(anova_res, maximize=maximize)
+        opt_rec = OptimalPromptFinder.find_optimal_prompt(
+            anova_res, maximize=maximize, strategy=args.strategy
+        )
 
         print("\n" + generate_ascii_pareto(anova_res) + "\n")
         print(opt_rec.summary_markdown)
+        print(
+            "\n[Evidence Tier: predicted] Single-stage screen output only (not confirmation-validated "
+            "or stability-certified). Run `prompt-prism diagnose` for calibrated item-clustered t-tests "
+            "& TOST token-bloat pruning, and `prompt-prism certify` on untouched perturbation data."
+        )
 
         if args.output_report:
             rep = AnalysisReport(anova_result=anova_res, optimal_recommendation=opt_rec)
@@ -332,6 +667,218 @@ def main():
             else:
                 rep.to_markdown(args.output_report)
             print(f"\nSaved report to {args.output_report}\n")
+
+    elif args.command == "diagnose":
+        df = _load_tabular(Path(args.data))
+        if args.target not in df.columns:
+            print(
+                f"Error: target column '{args.target}' not found in dataset. Columns: {list(df.columns)}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        f_cols = args.factors or _auto_detect_binary_factors(
+            df, args.target, extra_exclude=[args.sample_col]
+        )
+        if not f_cols:
+            print(
+                "Error: no binary factor columns detected. Pass --factors explicitly.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        tok_costs = _parse_token_costs(args.token_costs)
+        audit = run_calibrated_attribution_audit(
+            data=df,
+            factor_cols=f_cols,
+            target_col=args.target,
+            sample_col=args.sample_col,
+            alpha=args.alpha,
+            maximize=not args.minimize,
+            equivalence_margin=args.prune_margin,
+            token_costs=tok_costs,
+            n_sign_flip=args.sign_flip,
+            seed=args.seed,
+        )
+        md = audit.to_markdown()
+        print("\n" + md + "\n")
+
+        if args.output_report:
+            Path(args.output_report).write_text(md + "\n", encoding="utf-8")
+            print(f"Saved calibrated audit report to {args.output_report}")
+        if args.json_out:
+            Path(args.json_out).write_text(
+                audit.model_dump_json(indent=2) + "\n", encoding="utf-8"
+            )
+            print(f"Saved calibrated audit JSON to {args.json_out}")
+
+    elif args.command == "certify":
+        df = _load_tabular(Path(args.data))
+        for req_col in (args.target, args.env_col, args.sample_col):
+            if req_col not in df.columns:
+                print(
+                    f"Error: required column '{req_col}' not found in dataset. Columns: {list(df.columns)}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+        ref_df = df[df[args.env_col].astype(str) == args.ref_env].copy()
+        if ref_df.empty:
+            print(
+                f"Error: reference environment '{args.ref_env}' not found in column '{args.env_col}'.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        ref_df = ref_df.sort_values(args.sample_col)
+        ref_samples = ref_df[args.sample_col].astype(str).tolist()
+        ref_scores = ref_df[args.target].astype(float).tolist()
+        group_ids = (
+            ref_df[args.group_col].astype(str).tolist()
+            if (args.group_col and args.group_col in ref_df.columns)
+            else None
+        )
+
+        all_other_envs = sorted(
+            {
+                str(e)
+                for e in df[args.env_col].dropna().unique()
+                if str(e) != args.ref_env
+            }
+        )
+        pert_envs = list(args.envs) if args.envs else all_other_envs
+
+        pert_scores: Dict[str, List[float]] = {}
+        obs_versions: Dict[str, str] = {}
+        has_ver_col = args.version_col in df.columns
+        if has_ver_col:
+            ref_vers = sorted(
+                {str(v) for v in ref_df[args.version_col].dropna().unique()}
+            )
+            if ref_vers:
+                obs_versions[args.ref_env] = next(
+                    (v for v in ref_vers if v != args.model_version), ref_vers[0]
+                )
+
+        for e_id in pert_envs:
+            edf = df[df[args.env_col].astype(str) == e_id]
+            if edf.empty:
+                continue
+            by_sample = dict(
+                zip(edf[args.sample_col].astype(str), edf[args.target].astype(float))
+            )
+            if all(s in by_sample for s in ref_samples):
+                pert_scores[e_id] = [by_sample[s] for s in ref_samples]
+            else:
+                # Pass mismatched-length list so evaluate_simultaneous_perturbation_certificate fails closed
+                pert_scores[e_id] = edf[args.target].astype(float).tolist()
+            if has_ver_col:
+                e_vers = sorted(
+                    {str(v) for v in edf[args.version_col].dropna().unique()}
+                )
+                if e_vers:
+                    obs_versions[e_id] = next(
+                        (v for v in e_vers if v != args.model_version), e_vers[0]
+                    )
+
+        decoding_cfg: Dict[str, Any] = (
+            json.loads(args.decoding_json)
+            if args.decoding_json
+            else {"temperature": 0.0, "max_output_tokens": 512, "seed": 42}
+        )
+        envelope = OperatingEnvelopeSpec(
+            task_id=args.task_id,
+            model_id=args.model_id,
+            model_version=args.model_version,
+            dataset_partition_hash=args.dataset_hash,
+            parser_hash=args.parser_hash,
+            perturbation_env_ids=pert_envs,
+            algorithm_version=args.algorithm_version,
+            decoding_config=decoding_cfg,
+        )
+        cert = evaluate_simultaneous_perturbation_certificate(
+            envelope=envelope,
+            reference_scores=ref_scores,
+            perturbation_scores_by_env=pert_scores,
+            group_ids=group_ids,
+            epsilon_stability=args.epsilon,
+            alpha=args.alpha,
+            n_bootstrap=args.bootstrap,
+            seed=args.seed,
+            observed_model_versions_by_env=obs_versions or None,
+        )
+
+        print("\n=== PromptPrism 2.0 Stability Envelope Certificate ===")
+        print(f"Status:              {cert.status}")
+        print(
+            f"Task / Model:        {envelope.task_id} / {envelope.model_id}@{envelope.model_version}"
+        )
+        print(
+            f"Perturbation Envs:   {', '.join(envelope.perturbation_env_ids) or '(none)'}"
+        )
+        if cert.reference_mean is not None:
+            print(f"Reference Mean:      {cert.reference_mean:.4f}")
+        if (
+            cert.d_stability_estimate is not None
+            and cert.d_stability_upper_95_sim is not None
+        ):
+            print(
+                f"Max Drop / U95_sim:  {cert.d_stability_estimate:+.4f} / "
+                f"{cert.d_stability_upper_95_sim:.4f} (margin < {cert.epsilon_stability:.4f})"
+            )
+        if cert.drift_events:
+            print(f"Drift / Integrity:   {'; '.join(cert.drift_events)}")
+        print(f"Envelope SHA-256:    {envelope.envelope_sha256()}")
+        print(f"Certificate SHA-256: {cert.certificate_sha256()}\n")
+
+        if args.output:
+            Path(args.output).write_text(
+                cert.model_dump_json(indent=2) + "\n", encoding="utf-8"
+            )
+            print(f"Saved stability certificate to {args.output}")
+
+        if args.fail_on_error and not cert.is_passing_within_envelope:
+            sys.exit(2)
+
+    elif args.command == "verify-cert":
+        cert_p = Path(args.cert)
+        if not cert_p.exists():
+            print(f"Error: certificate file '{args.cert}' not found.", file=sys.stderr)
+            sys.exit(1)
+        cert = PromptStabilityCertificate.model_validate_json(
+            cert_p.read_text(encoding="utf-8")
+        )
+        decoding_cfg = (
+            json.loads(args.decoding_json)
+            if args.decoding_json
+            else {"temperature": 0.0, "max_output_tokens": 512, "seed": 42}
+        )
+        req_env = OperatingEnvelopeSpec(
+            task_id=args.task_id,
+            model_id=args.model_id,
+            model_version=args.model_version,
+            dataset_partition_hash=args.dataset_hash,
+            parser_hash=args.parser_hash,
+            perturbation_env_ids=list(args.envs),
+            algorithm_version=args.algorithm_version,
+            decoding_config=decoding_cfg,
+        )
+        res = cert.validate_request(
+            req_env, has_confirmation_validation=True, strict=False
+        )
+        if args.as_json:
+            print(res.model_dump_json(indent=2))
+        else:
+            print("\n=== PromptPrism 2.0 Envelope Gate Verification ===")
+            print(f"Valid:               {res.valid}")
+            print(f"Evidence State:      {res.evidence_state}")
+            print(f"Stability Badge:     {res.badge_label}")
+            if res.mismatch_reasons:
+                print(f"Refusal Reasons:     {'; '.join(res.mismatch_reasons)}")
+            print()
+
+        if not (res.valid and res.can_display_passing_stability_badge):
+            sys.exit(1)
 
     else:
         parser.print_help()

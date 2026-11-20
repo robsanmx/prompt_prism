@@ -110,12 +110,14 @@ class FractionalFactorialGenerator:
         grid = list(itertools.product([0, 1], repeat=q))
         df_base = pd.DataFrame(grid, columns=list(base_factors))
 
-        # Step 2: Compute generated factors using modulo-2 arithmetic (XOR in {0,1} space)
+        # Step 2: Compute generated factors in {0,1} while preserving the catalog's
+        # positive defining relations under the public z=2x-1 coding. Plain XOR would
+        # produce z_target=-prod(z_sources); complementing XOR produces the standard
+        # z_target=prod(z_sources) relation shown in the catalog.
         df_full = df_base.copy()
         for gen in generators:
             target, sources = parse_generator(gen)
-            # Modulo 2 sum of binary columns
-            df_full[target] = df_full[sources].sum(axis=1) % 2
+            df_full[target] = (1 + df_full[sources].sum(axis=1)) % 2
 
         # Step 3: Align column order
         if all_factors:

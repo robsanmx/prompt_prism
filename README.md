@@ -1,220 +1,224 @@
-# 💎 PromptPrism: Statistical Prompt Optimization & Factorial Analysis for LLMs
+# 💎 PromptPrism 2.0: Prompt Diagnostics, Token Pruning & Stability Certification for LLMs
 
-> *Separate your prompt into its true factors — like light through a prism.*
+> *Separate your prompt into its true factors — strip dead tokens, measure real signal above eval noise, and gate releases with fail-closed stability certificates.*
 
 [![CI](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml/badge.svg)](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml)
+[![Version: 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 150 Passed](https://img.shields.io/badge/tests-150%20passed-brightgreen.svg)](tests/)
+[![Tests: 244 Passed](https://img.shields.io/badge/tests-244%20passed-brightgreen.svg)](tests/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-**`prompt_prism`** is a universal, statistically rigorous Python library that applies **Fractional Factorial Design of Experiments (DoE)** and **Analysis of Variance (ANOVA)** to isolate, quantify, and optimize LLM prompts with 90%+ fewer runs (and the compute that follows) and zero guesswork.
+**`prompt_prism` 2.0** is a statistically calibrated Python library and CLI that applies **Fractional Factorial Design of Experiments (DoE)**, **contrast-specific item-clustered inference**, **TOST token-bloat pruning**, and **SHA-256-hashed operating-envelope stability certificates** to production LLM prompts.
 
 ---
 
-## 💡 Why PromptPrism?
+## 💡 Why PromptPrism 2.0?
 
-In Prompt Engineering, a prompt is composed of multiple candidate factors:
-- 🎭 **Persona / Role** (e.g. Expert vs None)
-- 📝 **Task Clarity & Formatting** (e.g. Markdown vs JSON Schema)
-- 💡 **Few-Shot Examples** (e.g. 0 vs 3 examples)
-- 🧠 **Reasoning Style** (e.g. Standard vs Chain-of-Thought)
-- 🔒 **Negative Constraints & Guardrails**
-- 🌡️ **Sampling Hyperparameters** (e.g. Temperature $0.1$ vs $0.7$)
+Black-box prompt optimizers (random search, Bayesian optimization, DSPy/MIPRO) hand you a winning prompt blob, **not** an explanation of what each instruction does, whether a 2% swing is real or eval noise, or whether a model update silently broke it.
 
-### The Exponential Cost Problem
-Testing $k = 10$ binary prompt factors via Full Factorial requires **$2^{10} = 1,024$ prompt variants**. Across a 50-item benchmark dataset, that means **$51,200$ LLM calls** costing hundreds of dollars and hours of latency.
+PromptPrism 2.0 is built for **three concrete production workflows**:
 
-### The Fractional Factorial Solution
-Using **$2^{10-6}_{\text{III}}$ Fractional Factorial Design**, `prompt_prism` tests all 10 factors in **just 16 runs** ($98.4\%$ of the search space eliminated!), while ANOVA mathematically isolates the true individual effect ($\Delta$), standard error, $t$-statistic, and $p$-value for every single factor.
-
-```
-Full Factorial (10 factors):             1,024 runs  💸 ($$$)
-Fractional Factorial 2^(10-6)_III:          16 runs  ⚡ (-98.4% of search space!)
-Plackett-Burman Screening (11 factors):     12 runs  🚀 (-99.4% of search space!)
-```
+1. **Kill Cargo-Cult Prompt Bloat (`prism diagnose` / `exp.diagnose()`):**
+   Production prompts accumulate thousands of tokens of personas, examples, and guardrails nobody dares delete. Orthogonal $2^{k-p}$ screening cuts factor attribution error by **$35.38\%$ prospectively** (winning $17/18$ task–model cells) and **$1.40\times$–$4.11\times$ retrospectively**, while paired **TOST practical-equivalence tests** label truly negligible clauses **`SAFE_TO_PRUNE`** (distinct from underpowered `INCONCLUSIVE_NEED_MORE_ITEMS`) so teams cut input tokens and latency without guessing.
+2. **Stop Chasing Eval Noise (Calibrated Paired Inference):**
+   Across 1,033 multi-prompt benchmark cubes ($7{,}006{,}016$ outcomes), **$79\%$–$85\%$** of apparent per-task higher-order variance is item-sampling noise, and textbook pooled fixed-block RCBD ANOVA inflates global Benjamini–Hochberg false discoveries to **$18.4\%$**. PromptPrism 2.0 reports the **item-sampling noise floor** explicitly and uses **contrast-specific item-clustered $t$-tests** ($4.0\%$–$5.1\%$ FDR at $N \ge 100$) plus $2{,}000$-draw **Rademacher sign-flip randomization** for small $N$.
+3. **CI/CD Release Gates & Model-Swap Certification (`prism certify` & `prism verify-cert`):**
+   Every report strictly separates **`predicted`** (single-stage screen), **`confirmation-validated`** (untouched held-out items), and **`stability-certified`** (verified simultaneous max-drop bound $U_{95,\text{sim}} < \epsilon$ across registered formatting, paraphrase, repeat, and temporal perturbations). Certificates hash the exact **`OperatingEnvelopeSpec`** (`task_id`, `model_id`, `model_version`, `dataset_partition_hash`, `parser_hash`, `perturbation_env_ids`, `decoding_config`) and **fail closed** in CI whenever a provider silently rotates model weights or any boundary drifts.
 
 ---
 
-## 🚀 Key Features
+## ✨ What's New in v2.0
 
-- 📐 **Full & Fractional Factorial Catalog ($2^{k-p}$)**: 28 standard Box-Hunter / Montgomery orthogonal designs from $2^{3-1}_{\text{III}}$ ($4$ runs) up to $2^{15-11}_{\text{III}}$ ($16$ runs) with automated alias structure and resolution calculation ($\text{Res III}$, $\text{IV}$, $\text{V}$, $\text{VI}$, $\text{VII}$, $\text{VIII}$).
-- 🎲 **Plackett-Burman Screening**: Hadamard-matrix based orthogonal designs for screening $k \le 23$ factors in $N \in \{8, 12, 16, 20, 24\}$ runs.
-- 🧩 **Modular Prompt Composer**: Dynamic section assembly, Jinja2 template interpolation, Python string templates, and multi-turn chat message generation.
-- 🔌 **Universal LLM Adapter**: Works out of the box with **ANY** Python function (`fn(prompt) -> str`), OpenAI, Anthropic, Gemini, Vertex AI, LiteLLM, or local models.
-- 📊 **Comprehensive Metrics & DeepEval Integration**:
-  - Deterministic metrics: Exact Match, F1 Score, JSON Schema Validity, Key-Value Extraction Overlap, Levenshtein Similarity, Regex Matching, and Custom callables.
-  - LLM-as-a-Judge metrics (`pip install prompt-prism[deepeval]`): Answer Relevancy, Faithfulness, Hallucination, Toxicity, Bias, Contextual Precision/Recall, Summarization, and G-Eval with automatic judge response caching (`JudgeCache`).
-- 📈 **Complete ANOVA & RCBD Engine**:
-  - Randomized Complete Block Design (RCBD) blocking on `sample_id` to eliminate item difficulty variance.
-  - Main Effects & 2-Factor Interactions ($\Delta = \bar{Y}_+ - \bar{Y}_-$)
-  - Type I & Type II Sums of Squares, $F$-statistic, $p$-values
-  - Effect Sizes: Partial $\eta^2$, Generalized $\eta^2$, $\omega^2$, Cohen's $d$
-  - Multiple hypothesis corrections (Bonferroni, Benjamini-Hochberg FDR)
-- 🎯 **Optimal Prompt Finder**: Automatically classifies factors into **Positive Boosters**, **Harmful Drops**, and **Neutral Token-Bloat**, generating the statistically optimal prompt configuration.
-- 🎨 **Visualizations & Reports**: Main Effects plots, Pareto charts of effects, 2-Factor Interaction matrices, Daniel Half-Normal plots, Markdown reports, and HTML exports.
-- 💾 **SQLite Response Caching**: Prevents redundant API spend across reruns.
-- 🤖 **Agent Skill & Self-Healing Loops**: Includes an Antigravity Agent Skill (`.agents/skills/prompt_prism/SKILL.md`) enabling autonomous agents to run closed-loop prompt self-healing and continuous prompt improvement.
-- 💻 **CLI Interface**: `prompt-prism list-designs`, `prompt-prism design`, and `prompt-prism analyze`.
+| Capability | PromptPrism 1.x | PromptPrism 2.0 |
+|:---|:---|:---|
+| **Core Positioning** | Single-stage prompt optimizer | **Prompt Diagnostics, Token Pruning & Stability Certification** |
+| **Primary Significance Test** | Pooled fixed-block RCBD ANOVA *(now exploratory only; 18.4% empirical-null FDR)* | **Contrast-specific item-clustered $t$-tests** + BH FDR ($4.0\%$–$5.1\%$ FDR) + **2,000-draw sign-flip check** |
+| **Noise-Floor Audit** | Not reported | **`NoiseFloorSummary`** (`RMS_obs`, `RMS_noise`, `RMS_corr`, noise variance share `%`, small-$N$ guard) |
+| **Token-Bloat Pruning** | `p >= 0.05` labeled "neutral" | **Paired TOST equivalence gate**: `KEEP`, `REMOVE_HARMFUL`, **`SAFE_TO_PRUNE`** (+ tokens saved), or `INCONCLUSIVE_NEED_MORE_ITEMS` |
+| **Evidence Tiers** | Unlabeled recommendations | Explicit **`predicted`**, **`confirmation-validated`**, and **`stability-certified`** tiers (`PromptSelectionReport`) |
+| **CI/CD Stability Gates** | None | **`prism diagnose`**, **`prism certify`**, and fail-closed **`prism verify-cert`** (`OperatingEnvelopeSpec` + `PromptStabilityCertificate`) |
+| **Two-Stage Selection** | Single-stage only | **`ExperimentalTwoStageSelector`** (explicit `experimental_opt_in=True` only; reflects honest Real-v4 `FAIL_BOTH` gate) |
 
 ---
 
 ## 📦 Installation
 
 ```bash
-# Clone and install
+# Clone and install PromptPrism 2.0
 git clone https://github.com/robsanmx/prompt_prism.git
 cd prompt_prism
 pip install -e .
 
-# With visualization dependencies
-pip install -e ".[viz]"
+# Optional extras
+pip install -e ".[viz]"       # Matplotlib Pareto & interaction charts
+pip install -e ".[deepeval]"  # DeepEval >= 4.2.0 LLM-as-a-Judge metrics
 ```
 
 ---
 
-## ⚡ Quickstart: 5-Minute Example
+## ⚡ Quickstart: Diagnose, Prune & Certify in 5 Minutes
 
 ```python
-from prompt_prism import Experiment, Factor, ExactMatch, F1Score
-
-# 1. Define Prompt Factors
-factors = [
-    Factor.binary("persona", level_0_content="", level_1_content="You are an expert catalog analyst."),
-    Factor.binary("few_shot", level_0_content="", level_1_content="Example: Product: Nike Air Max -> Brand: Nike"),
-    Factor.binary("cot", level_0_content="", level_1_content="Think step by step before answering."),
-    Factor.binary("format_json", level_0_content="PlainText", level_1_content="Strict JSON object"),
-    Factor.binary("constraints", level_0_content="", level_1_content="Only use facts mentioned in the input."),
-]
-
-# 2. Setup Experiment (auto-recommends 2^(5-1)V design with 16 runs)
-exp = Experiment.from_factors(
-    factors=factors,
-    design="2(5-1)V", # 16 runs, Resolution V (unaliased main effects & 2-factor interactions)
-    system_prompt="Extract product attributes from listings.",
-    data_template="Offer Title: {{ title }}\nDescription: {{ description }}",
-    metrics=[ExactMatch(), F1Score()],
-    target_metric="f1_score",
-    title="Product Attribute Extraction DoE",
+from prompt_prism import (
+    Experiment,
+    Factor,
+    ExactMatch,
+    F1Score,
+    OperatingEnvelopeSpec,
+    evaluate_simultaneous_perturbation_certificate,
 )
 
-# 3. Benchmark Dataset
-dataset = [
-    {"id": 1, "title": "Nike Air Max 90 Red", "description": "Men sneakers size 42", "target": "Brand: Nike, Color: Red"},
-    {"id": 2, "title": "Adidas Ultraboost 21", "description": "Running shoes black", "target": "Brand: Adidas, Color: Black"},
-    {"id": 3, "title": "Puma Suede Classic", "description": "Retro sneakers blue", "target": "Brand: Puma, Color: Blue"},
+# 1. Decompose candidate prompt clauses into clean binary factors
+factors = [
+    Factor.binary("persona", level_0_content="", level_1_content="You are an expert catalog analyst."),
+    Factor.binary("few_shot", level_0_content="", level_1_content="Example: Nike Air Max -> Brand: Nike"),
+    Factor.binary("cot", level_0_content="", level_1_content="Think step by step before answering."),
+    Factor.binary("format_json", level_0_content="Plain text.", level_1_content="Return strict JSON object."),
+    Factor.binary("guardrail", level_0_content="", level_1_content="Only use facts stated in the input."),
 ]
 
-# 4. Run with any LLM callable or API
-def my_llm_client(prompt: str) -> str:
-    # Call your preferred LLM provider here (OpenAI, Anthropic, Gemini, local model)
-    return "Brand: Nike, Color: Red"
+# 2. Screen orthogonally (16 runs instead of 32; kappa=1.0 for main + 2FI)
+exp = Experiment.from_factors(
+    factors=factors,
+    design="2(5-1)V",
+    system_prompt="Extract product attributes from listings.",
+    data_template="Title: {{ title }}\nDescription: {{ description }}",
+    metrics=[ExactMatch(), F1Score()],
+    target_metric="f1_score",
+    title="Product Extraction Attribution & Pruning Audit",
+)
 
-results = exp.run(dataset=dataset, client=my_llm_client, max_workers=4)
+results = exp.run(dataset=screen_dataset, client=my_llm_client, max_workers=4, cache_db="prompt_cache.db")
 
-# 5. Analyze ANOVA with RCBD blocking & Get Optimal Prompt
-report = exp.analyze(block_by="sample_id")
-print(report.to_markdown())
+# 3. [v2.0] Calibrated attribution, noise floor & TOST token-bloat pruning
+audit = exp.diagnose(alpha=0.05, equivalence_margin=0.01, n_sign_flip=2000)
+print(audit.to_markdown())
 
-# 6. Retrieve Configured Optimal Prompt Template
-optimal_template = exp.get_optimal_prompt_template()
+# 4. Single-stage report explicitly marks evidence_state="predicted" (never proven stable)
+pred_report = exp.selection_report(strategy="screen_best")
+assert pred_report.evidence_state == "predicted"
+
+# 5. [v2.0] Validate on untouched confirmation + perturbations and issue fail-closed certificate
+envelope = OperatingEnvelopeSpec(
+    task_id="product_extraction",
+    model_id="gemini-2.5-flash",
+    model_version="gemini-2.5-flash",
+    dataset_partition_hash="sha256_confirmation_split",
+    parser_hash="sha256_f1_parser",
+    perturbation_env_ids=["fmt_whitespace", "word_paraphrase_1", "temporal_wave_2"],
+)
+cert = evaluate_simultaneous_perturbation_certificate(
+    envelope=envelope,
+    reference_scores=conf_ref_scores,
+    perturbation_scores_by_env={
+        "fmt_whitespace": ws_scores,
+        "word_paraphrase_1": para_scores,
+        "temporal_wave_2": wave2_scores,
+    },
+    epsilon_stability=0.02,
+    n_bootstrap=2000,
+)
+certified_report = exp.selection_report(
+    strategy="screen_best",
+    confirmation_scores=conf_ref_scores,
+    confirmation_envelope=envelope,
+    stability_certificate=cert,
+    request_envelope=envelope,
+)
+print(certified_report.to_markdown())
+```
+
+### Sample v2.0 `prism diagnose` Output
+
+```markdown
+# PromptPrism 2.0 Calibrated Attribution & Token-Pruning Audit (`f1_score`)
+
+- **Optimization Direction:** `maximize`
+- **Primary Inference:** Contrast-specific item-clustered `t`-test + Benjamini-Hochberg FDR (`alpha=0.05`)
+- **Pruning Gate:** TOST practical equivalence (`|delta| < 0.0100`)
+- **Paired Benchmark Items (`N`):** `120` across `8` experimental runs
+- **Main-Effect Noise Floor:** `RMS_obs=0.1683`, `RMS_noise=0.0005`, `RMS_signal_corr=0.1683` (item noise accounts for **0.0%** of observed variance)
+- **Estimated Safe Token Savings (`SAFE_TO_PRUNE`):** `320` tokens/prompt
+
+| Factor | Lvl 0 | Lvl 1 | Delta (L1-L0) | SE (Clust.) | 95% Interval | p (Clust.) | q (BH) | p (Flip) | TOST p | Verdict | Tokens |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---:|
+| **A** | 0.4250 | 0.6750 | +0.2500 | 0.0005 | [+0.2490, +0.2510] | 1.2e-180 | 3.6e-180 | 0.001996 | 1 | `KEEP` | 80 |
+| **B** | 0.6250 | 0.4750 | -0.1500 | 0.0005 | [-0.1510, -0.1490] | 4.8e-154 | 7.2e-154 | 0.001996 | 1 | `REMOVE_HARMFUL` | 100 |
+| **C** | 0.5500 | 0.5501 | +0.0001 | 0.0005 | [-0.0009, +0.0011] | 0.8412 | 0.8412 | 0.8383 | 4.1e-34 | `SAFE_TO_PRUNE` | 320 |
 ```
 
 ---
 
-## 📊 Sample ANOVA Output & Pareto Chart
+## 💻 CLI v2.0 Usage (`prompt-prism` / `prism`)
 
-```
-=== Pareto Chart of Standardized Effects (f1_score) ===
-Factor ID | Name                     | Effect Δ | t-value | Chart
-----------+--------------------------+----------+---------+-----------------------------------------
-   A      | persona                  |  +0.3520 |   14.21 | ██████████████████████████████ [*** SIG ***]
-   B      | few_shot                 |  +0.2480 |   10.02 | █████████████████████          [*** SIG ***]
-   D      | format_json              |  -0.1210 |    4.88 | ██████████                     [*** SIG ***]
-   C      | cot                      |  +0.0150 |    0.60 | █
-   E      | constraints              |  -0.0080 |    0.32 | ░
-```
+```bash
+# Check installed version
+prism --version
+# prompt-prism 2.0.0
 
-### Generated Executive Recommendation:
-> 🎯 **Optimal Prompt Recipe:**
-> - 🟢 **ENABLE** `persona` (+35.2% accuracy, $p < 0.001$)
-> - 🟢 **ENABLE** `few_shot` (+24.8% accuracy, $p < 0.001$)
-> - 🔴 **DISABLE** `format_json` (-12.1% accuracy, $p = 0.002$) $\rightarrow$ *Negative constraint was overly restricting extraction!*
-> - ⚪ **OMIT** `cot` and `constraints` ($p > 0.5$) $\rightarrow$ *Omit to reduce token usage and latency without losing accuracy.*
+# 1. Discover & export orthogonal fractional factorial plans
+prism list-designs --factors 6 --min-resolution 4
+prism alias --plan "2(6-2)IV"
+prism design --factors 6 --plan "2(6-2)IV" --output design_matrix.csv
+prism list-metrics
+
+# 2. [v2.0] Calibrated attribution, noise floor & TOST token-bloat pruning audit (CSV or JSONL)
+prism diagnose \
+  --data screen_results.csv \
+  --target f1_score \
+  --sample-col sample_id \
+  --prune-margin 0.01 \
+  --token-costs A=80,B=100,C=320 \
+  --output-report diag.md \
+  --json-out diag.json
+
+# 3. [v2.0] Generate a fail-closed stability envelope certificate (exit code 2 on FAIL/INVALID with --fail-on-error)
+prism certify \
+  --data stability_wave.csv \
+  --target score \
+  --task-id banking77_intent \
+  --model-id gemini-2.5-flash \
+  --model-version gemini-2.5-flash \
+  --dataset-hash sha256_conf_split \
+  --parser-hash sha256_exact_label \
+  --epsilon 0.02 \
+  --output stability_cert.json \
+  --fail-on-error
+
+# 4. [v2.0] CI/CD release gate — exits 0 ONLY when PASS and live envelope matches 100% (exits 1 on drift)
+prism verify-cert \
+  --cert stability_cert.json \
+  --task-id banking77_intent \
+  --model-id gemini-2.5-flash \
+  --model-version gemini-2.5-flash \
+  --dataset-hash sha256_conf_split \
+  --parser-hash sha256_exact_label \
+  --envs fmt_whitespace word_paraphrase_1 temporal_wave_2
+
+# 5. Legacy single-stage ANOVA & Pareto chart (explicitly marked evidence tier: predicted)
+prism analyze --data screen_results.csv --target f1_score --strategy screen_best --output-report report.md
+```
 
 ---
 
 ## 🤖 LLM-as-a-Judge & DeepEval Integration
 
-`prompt_prism` integrates with **DeepEval** to evaluate complex, semantic, and subjective qualities using LLM judges. It supports two evaluation paradigms:
-
-```bash
-pip install prompt-prism[deepeval]
-```
-
-> **Note:** `prompt_prism` requires **Python 3.11+**, which also satisfies DeepEval's minimum (its dependency chain, e.g. `langchain-core`, needs Python 3.10+).
-
-### 1. 🎯 Reference-Based Evaluation (WITH Golden Datasets)
-When you have ground-truth expected answers, DeepEval evaluates semantic equivalence, factual agreement, and retrieval recall against the golden targets:
+`prompt_prism` integrates with **DeepEval** (`pip install prompt-prism[deepeval]`) for reference-based (`g_eval`, `contextual_recall`, `contextual_precision`, `json_correctness`) and reference-free (`answer_relevancy`, `faithfulness`, `hallucination`, `toxicity`, `bias`, `contextual_relevancy`, `summarization`) scoring with SQLite `JudgeCache`:
 
 ```python
-from prompt_prism import Experiment, Factor, deepeval_metric, JudgeCache
+from prompt_prism import Experiment, deepeval_metric, JudgeCache
 
-# Setup SQLite Judge Cache to prevent repeated API calls
 judge_cache = JudgeCache(db_path="judge_cache.db")
-
-# A. Golden Dataset with reference targets
-golden_dataset = [
-    {
-        "id": "case_01",
-        "input": "Explain why the customer was charged a $50 late fee.",
-        "target": "The payment was received on Nov 18, 3 days after the Nov 15 deadline.",  # <-- GOLDEN TARGET
-    }
-]
-
-# B. G-Eval: Evaluates factual agreement against the Golden Target
 factual_geval = deepeval_metric(
     "g_eval",
     name="factual_accuracy",
-    criteria="Determine whether the actual output factually agrees with the expected golden target.",
-    evaluation_steps=[
-        "Check if all key facts from the expected output are preserved in the actual output.",
-        "Penalize if the actual output contradicts the expected target or fabricates facts.",
-    ],
+    criteria="Determine whether actual output factually agrees with expected golden target.",
+    evaluation_steps=["Check key facts/numbers match target.", "Penalize fabricated claims."],
     cache=judge_cache,
 )
-
-# C. Contextual Recall: Measures how much of the golden target was retrieved in context
-context_recall = deepeval_metric("contextual_recall", cache=judge_cache)
-```
-
-### 2. 🔍 Reference-Free Evaluation (WITHOUT Golden Datasets)
-When evaluating open-ended queries or streaming logs without ground-truth labels:
-
-```python
-# Answer Relevancy: Checks if the output directly answers the user prompt
-relevancy = deepeval_metric("answer_relevancy", threshold=0.7, cache=judge_cache)
-
-# Faithfulness & Hallucination: Verifies grounding against retrieved documents
 faithfulness = deepeval_metric("faithfulness", cache=judge_cache)
-hallucination = deepeval_metric("hallucination", cache=judge_cache)
 ```
-
-### 3. DeepEval Supported Metric Kinds & Defaults
-
-| Kind | Default Metric Name | Higher is Better | Requires Golden Target? | Description |
-|:---|:---|:---:|:---:|:---|
-| `answer_relevancy` | `deepeval_answer_relevancy` | ✅ Yes | No | Measures directness and relevance to user input |
-| `faithfulness` | `deepeval_faithfulness` | ✅ Yes | No | Measures grounding against retrieved context docs |
-| `contextual_precision` | `deepeval_contextual_precision` | ✅ Yes | ✅ Yes | Evaluates ranking quality of retrieved context |
-| `contextual_recall` | `deepeval_contextual_recall` | ✅ Yes | ✅ Yes | Measures coverage of expected facts in retrieval |
-| `contextual_relevancy` | `deepeval_contextual_relevancy` | ✅ Yes | No | Ratio of relevant sentences in context |
-| `hallucination` | `deepeval_hallucination` | ✅ Yes | No | Groundedness: 1.0 = no ungrounded contradictions |
-| `toxicity` | `deepeval_toxicity` | ✅ Yes | No | Safety: 1.0 = no toxic, harmful, or abusive content |
-| `bias` | `deepeval_bias` | ✅ Yes | No | Impartiality: 1.0 = no gender, racial, or political bias |
-| `summarization` | `deepeval_summarization` | ✅ Yes | No | Inclusion of key facts and absence of hallucinations |
-| `g_eval` | `deepeval_g_eval` | ✅ Yes | Optional | Custom rubrics / evaluation criteria |
-| `json_correctness` | `deepeval_json_correctness` | ✅ Yes | No | Validates JSON against a Pydantic schema |
 
 > **🧭 Score direction and `threshold`:** PromptPrism targets **deepeval >= 4.2.0**, where every
 > metric scores in the same direction — `1.0` is a pass, `0.0` is a failure, and `threshold` is
@@ -222,69 +226,23 @@ hallucination = deepeval_metric("hallucination", cache=judge_cache)
 > the problem, so higher is better for them too. deepeval <= 4.1.10 scored those three as the
 > proportion of violations (lower was better, and `threshold` was a maximum); the extra is
 > pinned `deepeval>=4.2.0,<5` because reading the new scores with the old direction makes the
-> optimizer recommend the **more** toxic prompt. `Experiment.analyze()` picks the direction
-> from `Metric.higher_is_better` automatically; `prompt-prism analyze --minimize` sets it
-> explicitly for a metric you want to minimize (e.g. latency or an error rate).
-
-> **⚖️ Evaluation Modes (`mode="score"` vs `mode="pass"`):**
-> - `mode="score"` (Default): Yields continuous scores in `[0.0, 1.0]`. This maximizes statistical sensitivity and ANOVA power to detect fine-grained prompt factor improvements.
-> - `mode="pass"`: Binarizes evaluation to `1.0` (pass) or `0.0` (fail) based on `threshold`. Note: Binarization collapses granular differences into step functions, which discards statistical variance and reduces ANOVA effect detection power.
-
-### 4. Run Factorial Experiment with Judge Metrics
-
-```python
-exp = Experiment.from_factors(
-    factors=factors,
-    design="2(5-1)V",
-    metrics=[factual_geval, relevancy],
-    target_metric="factual_accuracy",
-)
-results = exp.run(dataset=golden_dataset, client=my_llm)
-report = exp.analyze(block_by="sample_id")
-```
-
-> **💡 Best Practice:** Always set `temperature=0` on your LLM judge model and pass `cache=JudgeCache(...)` so that repeated ANOVA runs do not incur unnecessary judge API costs.
+> optimizer recommend the **more** toxic prompt. `Experiment.analyze()` and `Experiment.diagnose()`
+> pick the direction from `Metric.higher_is_better` automatically; `--minimize` sets it explicitly
+> for lower-is-better metrics (e.g. latency or error rate).
 
 ---
 
-## 🤖 Agent Skill & Self-Healing Loops
+## 🛡️ Experimental Two-Stage Selection & Honest Promotion Gate
 
-`prompt_prism` includes a built-in agent skill at `.agents/skills/prompt_prism/SKILL.md`. AI coding assistants and autonomous agents can use this skill to run closed-loop **Self-Healing & Prompt Improvement Loops**:
-
-1. **Failure Diagnosis**: Cluster production errors or edge-case failures.
-2. **Hypothesis Synthesis**: Propose candidate fix factors ($A, B, C, \dots$).
-3. **Orthogonal Tournament**: Run $2^{k-p}$ design on failure cases.
-4. **ANOVA Gatekeeping**: Lock in fixes with $p < 0.05$ and $\Delta > 0$; purge harmful mutations ($\Delta < 0$) and placebo bloat ($p > 0.05$).
-5. **Continuous Promotion**: Deploy the statistically verified prompt.
+Per our preregistered Real-v4 promotion policy (requiring both Claim P and Claim S to pass), `PROMOTED_TO_DEFAULT_PUBLIC_API` is **`False`**:
+- Existing `additive`, `screen_best`, and `interaction_2fi` callers remain 100% backward compatible and report `evidence_state = "predicted"`.
+- Two-stage screen → multi-environment simultaneous-LCB selection is available explicitly as an **experimental opt-in** via `ExperimentalTwoStageSelector(experimental_opt_in=True)` or `exp.experimental_select_two_stage(..., experimental_opt_in=True)` without marketing a default stability assurance.
 
 ---
 
-## 🛠️ CLI Usage
+## 🤖 Agent Skill v2.0
 
-`prompt_prism` includes a command-line interface `prompt-prism`:
-
-### 1. List Available Standard DoE Plans
-```bash
-prompt-prism list-designs --factors 7
-```
-```
-Plan ID         Factors  Runs   Resolution   Generators
------------------------------------------------------------------
-2(7-1)VII       7        64     Res 7        G=ABCDEF
-2(7-2)IV        7        32     Res 4        F=ABCD, G=ABDE
-2(7-3)IV        7        16     Res 4        E=ABC, F=BCD, G=ACD
-2(7-4)III       7        8      Res 3        D=AB, E=AC, F=BC, G=ABC
-```
-
-### 2. Generate a Design Matrix CSV
-```bash
-prompt-prism design --factors 5 --runs 16 --output design_matrix.csv
-```
-
-### 3. Run ANOVA on Results CSV
-```bash
-prompt-prism analyze --data experiment_results.csv --target f1_score --output-report report.md
-```
+PromptPrism ships with an updated **v2.0 Agent Skill** at [`.agents/skills/prompt_prism/SKILL.md`](.agents/skills/prompt_prism/SKILL.md) so AI coding assistants run calibrated attribution, noise-floor audits, TOST token pruning (`SAFE_TO_PRUNE`), and fail-closed CI certificate verification (`prism diagnose`, `prism certify`, `prism verify-cert`) instead of uncalibrated ANOVA or unvalidated additive recipes.
 
 ---
 
@@ -292,55 +250,46 @@ prompt-prism analyze --data experiment_results.csv --target f1_score --output-re
 
 ```
 prompt_prism/
-├── core/                  # Core abstractions: Factor, Level, FactorSet, DesignMatrix, RunConfig, Trial
-├── design/                # DoE Engine: FractionalFactorial (2^(k-p)), Plackett-Burman, FullFactorial, Aliasing
-├── template/              # Prompt Composition: Modular Sections, Jinja2, Chat Messages
-├── runner/                # Execution: Multi-threaded Runner, SQLite Cache, CallableLLM, MockLLM
-├── evaluation/            # Metrics: ExactMatch, F1, JSON, ExtractionOverlap, Levenshtein, Custom
-├── analysis/              # Statistics: Main Effects, Interactions, OLS, ANOVA (Type I/II/III), Optimizer
-├── visualization/         # Plotting: Main Effects, Pareto Chart, Interactions, ASCII Charts
-├── reporting/             # Reports: Automated Markdown, HTML, and JSON generators
-├── cli/                   # Command Line Tool: prompt-prism
-└── ...
+├── core/                  # Factor, Level, DesignMatrix, Trial, OperatingEnvelopeSpec, PromptStabilityCertificate, PromptSelectionReport
+├── design/                # 2^(k-p) FractionalFactorial, Plackett-Burman, FullFactorial, AliasStructure, Recommender
+├── template/              # Modular PromptComposer, Jinja2, multi-turn chat templates
+├── runner/                # Parallel ExperimentRunner, SQLite ResponseCache, LLMClient / CallableLLM / MockLLM
+├── evaluation/            # Deterministic metrics + DeepEval (>=4.2.0) integration & SQLite JudgeCache
+├── analysis/              # v2.0 Calibrated diagnostics & TOST pruning (diagnostics.py), Envelope & two-stage selection (selection.py), Effects, ANOVA, Optimizer
+├── visualization/         # Main Effects, Pareto, Interaction plots & ASCII charts
+├── reporting/             # Automated Markdown & HTML reports
+└── cli/                   # PromptPrism 2.0 CLI: diagnose, certify, verify-cert, analyze, design, alias, list-designs, list-metrics
 ```
 
 ---
 
 ## 🧪 Running Tests
- 
+
 ```bash
 pytest
-```
-
-```
-============================== 150 passed in 18.7s ==============================
 ```
 
 ---
 
 ## 📄 Research Papers & Reproducible Benchmarks
 
-- **Multi-Model Hugging Face Factorial Benchmark Study (`paper_hf/main.pdf`)**:
-  - *"Factorial Prompt Engineering at Scale: Evaluating Fractional Designs, Epistatic Interactions, and RCBD Blocking Across 1,033 Multi-Prompt LLM Benchmark Cubes"*
-  - Evaluates $7{,}024{,}960$ cell–item outcomes across 15 LLMs on MMLU (`PromptEval/PromptEval_MMLU_full`, $2^5=32$ cubes) and 11–16 LLMs on `BBH` & `LMentry` (`SLAB-NLP`, $2^4=16$ cubes). Demonstrates a **$23.8\times$ reduction in pairwise interaction ($2\text{FI}$) RMSE** with Resolution V ($2^{5-1}_{\text{V}}$), **$86.1\%\text{–}86.4\%$ oracle uplift recovery** at $50\%$ budget via `ScreenBest`, and a **$5.9\times$ increase in FDR-significant factor discoveries** via RCBD item blocking.
-  - Reproduce in `research/hf_multi_prompt/run_experiments.py`.
-- **Prospective & Monte Carlo Calibration Study (`paper/main.tex`)**:
-  - *"Factorial Prompt Engineering: Testing Fractional Designs for Efficient and Interpretable Prompt Optimization"*
-  - Preregistered simulation and prospective confirmatory study in `research/reproduce.py`.
+- **Technical Paper (`paper_hf/main.pdf`) & Reader-Friendly Guide (`paper_hf/reader_friendly.pdf`)**:
+  - *"Separating Attribution, Noise Floors, and Selection in Multi-Prompt LLM Benchmarks: An Empirical Design-of-Experiments and Calibration Audit Across 1,033 Benchmark Cubes"*
+  - **Retrospective Benchmark Audit (`research/hf_multi_prompt/run_experiments.py`):** Evaluates $7{,}006{,}016$ cell–item outcomes across 15 LLMs on all 57 MMLU subjects and 16 unique LLMs on the completeness-selected $6/15$ BBH and $7/10$ LMentry tasks. Shows $79\%$–$85\%$ of single-task MMLU higher-order variance is item-sampling noise; orthogonal fractions and outcome-blind A-/D-optimal subsets of the 89 observed mixed-level MMLU templates reduce contrast RMSE by **$1.40\times$–$4.11\times$** over full-rank random subsets, while equal-budget single-stage `ScreenBest` differences are $+0.013\text{ pp}$ (MMLU) and $-0.327\text{ pp}$ (BBH/LMentry), and empirical-null calibration validates item-clustered contrast $t$-tests ($4.0\%$–$5.1\%$ global BH FDR) while disqualifying pooled fixed-block RCBD ($18.4\%$ FDR).
+  - **Prospective Real-v4 Two-Stage Selection & Bounded Stability Study (`research/real_v4/`):** Evaluates $501{,}300$ cryptographically phase-locked live model calls (\$39.03 hosted spend) across 6 deterministic tasks (`re3d_entity_extraction`, `squad2_grounded_qa`, `banking77_intent`, `gsm8k_math`, `mbpp_python`, `sciq_verification`) and 3 distinct model families (`gemini-2.5-flash`, `Mistral-7B-Instruct-v0.3-4bit`, `Qwen3-8B-4bit`). Registered confirmatory verdict is **`FAIL_BOTH`**: equal-budget clean confirmation contrasts are $+0.22\text{ pp}$ vs. balanced random ($L_{95}=-0.15\text{ pp}, p=0.161$) and $+0.14\text{ pp}$ vs. Bayesian optimization ($L_{95}=-0.22\text{ pp}, p=0.244$), and full 8-environment simultaneous max-drop bound is $U_{95,\text{sim}}=0.0433 \ge 0.02$ (driven by unpaired item-holdout variance and hosted `HTTP 429` zero-scoring, whereas all 7 paired prompt/repeat/temporal environments satisfy $U_{95,\text{sim}}=0.0048 < 0.02$), while supporting 6-factor main-effect RMSE drops by **$35.38\%$** ($0.0283$ vs. $0.0437$, winning $17/18$ cells). Reproduce via `python -m research.real_v4.execution --step analyze`.
+- **Earlier Simulation & Calibration Paper (`paper/main.tex`):** *"Factorial Prompt Engineering: Testing Fractional Designs for Efficient and Interpretable Prompt Optimization"* (`research/reproduce.py`).
 
 ---
 
 ## 🤝 Contributing & Community
 
-We welcome contributions of all kinds! Please see our:
-- 📖 [Contributing Guide](CONTRIBUTING.md) for local development setup and guidelines.
-- 🛡️ [Code of Conduct](CODE_OF_CONDUCT.md) for community standards.
-- 🔒 [Security Policy](SECURITY.md) for responsible disclosure.
-- 📜 [Changelog](CHANGELOG.md) for release history.
+- 📖 [Contributing Guide](CONTRIBUTING.md)
+- 🛡️ [Code of Conduct](CODE_OF_CONDUCT.md)
+- 🔒 [Security Policy](SECURITY.md)
+- 📜 [Changelog](CHANGELOG.md)
 
 ---
 
 ## 📜 License
 
 Distributed under the MIT License. See [`LICENSE`](LICENSE) for more information.
-

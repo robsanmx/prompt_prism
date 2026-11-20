@@ -1,0 +1,54 @@
+{
+  "acquisition_study_fingerprint_sha256": "1ce457531c6cf72118b4c582483830cc8f04a554d6ea8b10fb0dbe6ad7a7bbd9",
+  "artifact_sha256": {
+    "candidate_lock.json": "4e07debd333fd84e3a4b2e3dbc27d0c3600c3a2b6e49dd653bf68684ad689063",
+    "claim_evidence_map.csv": "26f5a40813faa970d4ac24d1da618a97d615657bafa746d0dffe9a8ba64282a1",
+    "confirmation_manifest.jsonl": "eb33567958f7c6b7a2e8d291d73449868d3e4367ffecaae1ba3c182a0c1e37f5",
+    "final_selection_lock.json": "3cc291b65be8f5e6de759be3dd0bfd6f7e5847ccfc34fb044d250508a84557f9",
+    "pilot_manifest.jsonl": "3c68617b3c1c3aed9e721f4b44d85b0a70c4fbd05702cb3cd3ef0d6944084ca6",
+    "pilot_report.json": "664bcb0616fb8e531e18e497febdac6abaf4a2b546e76d2a4aba0520ea894c52",
+    "raw_results_lock.json": "95b4e5edccf3a883176b5c707add12466288418e74cd6cc1bb276ed139440826",
+    "screen_manifest.jsonl": "05c5d034911126a85fbe7232ff5dd77d654996ae2ba94aad1965e542d1882e0b",
+    "stability_certificate.json": "0afc0ac6d7ceabea60a251c917e3de3ac72a4f18fa89787f2d78c32488e1acb1",
+    "stability_manifest.jsonl": "2e8b072d96b8f387f746721d7f486600923238ca9b43ef0689abd36a8b126680",
+    "summary.json": "1880a6fdd998af4794a193e98a259f73ac26e8a6f5e7eafe51078a784d121f8b",
+    "validation_manifest.jsonl": "e0de79acb6d44fbdcb0ca3c4b9d3236dc77f940a4b963a42d87a47bc48b8524f"
+  },
+  "independent_audit": {
+    "certificate_sha256": "b90582726fff9bd51cce6eabe27448f9097f92692d6d4c861909a241d1e8d2fb",
+    "claim_count_verified": 8,
+    "independent_audit_passed": true,
+    "replayed_d_stability": 0.01940461007261196,
+    "replayed_g_select_balanced_random": 0.002231971116469746,
+    "replayed_g_select_bayesian_opt": 0.001447207741243913,
+    "verified_locks": {
+      "candidate_lock": "9d69311851eb2b45b05b1f2baedf2f2be13f941e214f39d0607c4811e60cc800",
+      "clean_confirmation": "c1ac315e9aa5ed907469e6932603f4447cbaddfe9f3b14f377ebb476d739ea07",
+      "final_selection_lock": "bfa1f4e069d913427c2bbf19be6166cfc65b248cb534f8a14f089cadd238b94b",
+      "pilot": "285345da2c2e6e47f0dec8e038bdaa1bd5fd999a9ff7174a94924573d681d984",
+      "protocol": "b37f44c944671e78a893ddc20bb324e8c65ff8a809c749dc803df640cf964008",
+      "raw_results_lock": "1e66b96de407c3969b579c7efd05f8c41a97f72118c9c7ea762cb79e1839976c",
+      "screen": "fb36e7754378c1d2294a99ed8de9764f6171ce2225c0fcb14f1ed0f7690199ad",
+      "stability_wave": "7dd114ae69f9b352ac6745173d8eda437e125b439858c1a2665868e03b160e6f",
+      "validation": "39bad76f2335150f40fd64e14a7f322cfa886fdb27258b050037a38b86282700"
+    }
+  },
+  "post_lock_analysis_errata": [
+    {
+      "file": "research/real_v4/analysis.py",
+      "locked_pre_analysis_sha256": "f60daf8d88809cd76f4ed35824281f0c9e7d0f4eb1e719cf30d62b5fc337a2dc",
+      "post_lock_analysis_sha256": "42f10caa2068e0463834d25071b42709b01d13d6554025521dc0ae306f5059ec",
+      "sap_alignment_note": "Post-acquisition SAP \u00a73.2 alignment: terminal_failure HTTP errors score 0.0 in denominator without misclassifying 'HTTP_ERROR' as a provider model_version swap, and _write_claim_evidence_map safely formats INVALID/OUT_OF_ENVELOPE states."
+    },
+    {
+      "file": "research/real_v4/execution.py",
+      "locked_pre_analysis_sha256": "ffd03fa7e7d4fc6d2bb6500de8ea17bc9cea8c07a1331f098c421b78647cb443",
+      "post_lock_analysis_sha256": "08d749915e1694fcd92daea97736bdcebc1fd62347a8e274dd33aa95edf5c2a7",
+      "sap_alignment_note": "Post-acquisition SAP \u00a73.2 alignment: terminal_failure HTTP errors score 0.0 in denominator without misclassifying 'HTTP_ERROR' as a provider model_version swap, and _write_claim_evidence_map safely formats INVALID/OUT_OF_ENVELOPE states."
+    }
+  ],
+  "release_sha256": "37a8e8ffd15d82836a0186a118fc60c702fbfb0ec7ef0ddebab630485d40d41b",
+  "schema_version": "1.0.0",
+  "study_fingerprint_sha256": "8838e70fb549dbf3e1e055ebf4ca276f7d9e7b1a104ec1d0466045c972e2d961",
+  "study_id": "prompt-prism-real-v4-selection-stability-2026"
+}

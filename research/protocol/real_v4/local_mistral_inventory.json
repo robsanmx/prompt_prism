@@ -1,0 +1,55 @@
+{
+  "cache_snapshot": "~/.cache/huggingface/hub/models--mlx-community--Mistral-7B-Instruct-v0.3-4bit/snapshots/a4b8f870474b0eb527f466a03fbc187830d271f5",
+  "files": [
+    {
+      "name": "config.json",
+      "sha256": "efc145d2f53d6d6ef2639be0556b4ecf6faac6cf8a7199ad2b7bb5ebcf443bdd",
+      "size_bytes": 721
+    },
+    {
+      "name": "model.safetensors",
+      "sha256": "d7182d886f93a9efa73d6d556ee33ffe839a4e09e15965eeef46f295ab5b503d",
+      "size_bytes": 4077480215
+    },
+    {
+      "name": "model.safetensors.index.json",
+      "sha256": "525940738b16d210fdfd692a24752d050c15a50cbe208dd82b06204d640d687b",
+      "size_bytes": 52381
+    },
+    {
+      "name": "special_tokens_map.json",
+      "sha256": "6fa06efa2785e450051989a6f8fb4416b10149ded485ddd3f127a40734f5cfd0",
+      "size_bytes": 414
+    },
+    {
+      "name": "tokenizer.json",
+      "sha256": "e553af6fff7d7ad76e830608b218c5c0b0822998d5a1a96099a74cd3c1cb1a49",
+      "size_bytes": 1961548
+    },
+    {
+      "name": "tokenizer.model",
+      "sha256": "37f00374dea48658ee8f5d0f21895b9bc55cb0103939607c8185bfd1c6ca1f89",
+      "size_bytes": 587404
+    },
+    {
+      "name": "tokenizer_config.json",
+      "sha256": "e8fbcfef34d855dba2c7f1d91a2c5470cf493d00ecfd06488ce21e45325bc8ae",
+      "size_bytes": 138039
+    }
+  ],
+  "model_config": {
+    "architectures": [
+      "MistralForCausalLM"
+    ],
+    "max_position_embeddings": 32768,
+    "model_type": "mistral",
+    "quantization": {
+      "bits": 4,
+      "group_size": 64
+    }
+  },
+  "repo_id": "mlx-community/Mistral-7B-Instruct-v0.3-4bit",
+  "revision": "a4b8f870474b0eb527f466a03fbc187830d271f5",
+  "schema_version": "1.0",
+  "total_size_bytes": 4080220722
+}

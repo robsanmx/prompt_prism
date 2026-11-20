@@ -128,6 +128,23 @@ def test_optimal_prompt_finder(synthetic_factorial_dataset):
     assert "(maximize)" in opt.summary_markdown
 
 
+def test_optimizer_ignores_block_coefficients_that_contain_factor_letters(
+    synthetic_factorial_dataset,
+):
+    """A factor named C must not substring-match C(__block_var__) coefficients."""
+    anova_res = ANOVAEngine.run_anova(
+        data=synthetic_factorial_dataset,
+        factor_cols=["A", "B", "C", "D", "E"],
+        target_col="f1_score",
+        block_col="sample_id",
+    )
+
+    opt = OptimalPromptFinder.find_optimal_prompt(anova_res, maximize=True)
+
+    assert opt.expected_gain_absolute > 0.30
+    assert opt.predicted_optimal_score > opt.baseline_score
+
+
 def test_optimal_prompt_finder_minimization(synthetic_factorial_dataset):
     df = synthetic_factorial_dataset
     anova_res = ANOVAEngine.run_anova(

@@ -368,6 +368,17 @@ class ANOVAEngine:
             )
             cell_means[key_tuple] = float(val)
 
+        factor_param_names: Dict[str, str] = {}
+        for factor_id, safe_name in col_to_safe.items():
+            candidates = [
+                str(param_name)
+                for param_name in ols_model.params.index
+                if str(param_name).startswith(f"C({safe_name})[T.")
+                and ":" not in str(param_name)
+            ]
+            if len(candidates) == 1:
+                factor_param_names[factor_id] = candidates[0]
+
         return ANOVAResult(
             target_metric=target_col,
             formula=human_formula,
@@ -396,6 +407,9 @@ class ANOVAEngine:
                 "valid_factors": list(valid_factors),
                 "cell_means": cell_means,
                 "grand_mean": float(clean_df[target_col].mean()),
+                # Exact statsmodels coefficient names prevent consumers from
+                # substring-matching a factor such as ``C`` to ``C(block)``.
+                "factor_param_names": factor_param_names,
                 # The direction main_effects[*].action_recommendation was computed under,
                 # so a consumer given a different one knows to re-derive.
                 "maximize": maximize,

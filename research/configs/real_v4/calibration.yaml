@@ -1,0 +1,67 @@
+schema_version: "1.0.0"
+study_id: "prompt-prism-real-v4-selection-stability-2026"
+seed: 20261118
+
+sizing_envelope:
+  n_tasks: 6
+  n_models: 3
+  n_cells: 18
+  pilot_items_per_task: 20
+  screen_items_per_task: 120
+  validation_items_per_task: 60
+  clean_confirmation_items_per_task: 240
+  stability_holdout_items_per_task: 240
+  items_per_source_group: 2
+  screen_configs: 16
+  validation_candidates: 4
+  validation_env_ids:
+    - "ref"
+    - "fmt_whitespace"
+    - "word_paraphrase_1"
+  repeat_count_when_nondeterministic: 3
+
+pre_calibration_starting_margins:
+  delta_select_initial: 0.01
+  epsilon_stability_initial: 0.01
+  unpaired_holdout_se_floor_note: "Two disjoint 6x240=1,440-item confirmation strata have irreducible group-sampling SE ~0.0055-0.0085, making 95% simultaneous upper bounds < 0.01 mathematically underpowered (<35% power even at 0.002 true drop). Calibrated pre-data protocol freezes n_holdout=240 stratified items and epsilon_stability=0.02 (2.0 pp)."
+
+decision_thresholds:
+  alpha: 0.05
+  delta_select: 0.01
+  epsilon_stability: 0.02
+  cell_majority_threshold: 12
+
+operating_characteristic_gates:
+  max_type1_claim_p: 0.05
+  max_type1_claim_s_boundary: 0.065
+  min_power_claim_p_at_design_alt: 0.90
+  min_power_claim_s_at_design_alt: 0.90
+  min_simultaneous_stability_coverage: 0.935
+
+simulation_settings:
+  num_baseline_trajectories: 10
+  n_bootstrap_screen: 120
+  n_bootstrap_validation: 120
+  n_bootstrap_decision: 300
+  regimes:
+    null_flat:
+      n_trials: 120
+      description: "Zero factor effects across all 64 runs; worst perturbation drop fixed at exact calibrated boundary epsilon_stability = 0.02."
+    beneficial_structured:
+      n_trials: 120
+      description: "Design alternative: structured 6-factor main effects with unobserved complementary global optimum, deceptive unguarded local basin, and stability-protective D/E contracts (true worst drop = 0.002)."
+    smooth_additive_bo_parity:
+      n_trials: 60
+      description: "Diagnostic regime: smooth unimodal additive Hamming gradient where sequential GP-UCB matches PromptPrism while both outperform Balanced Random."
+    harmful_antagonistic:
+      n_trials: 60
+      description: "Adversarial higher-order aliasing plus severe perturbation degradation (true worst drop = 0.030 > epsilon_stability)."
+    interaction_heavy:
+      n_trials: 60
+      description: "Strong pairwise epistasis where naive sign composition fails and Stage-2 validation selects among observed/2FI candidates."
+    heterogeneous_cells:
+      n_trials: 60
+      description: "Cross-task and cross-model heterogeneity with cell-specific active factor subsets and attenuated cells."
+    provider_drift:
+      n_trials: 40
+      description: "Beneficial performance with silent hosted model-version update in temporal_wave_2 (must fail closed 100%)."

@@ -1,0 +1,15 @@
+{
+  "confirmation_manifest_sha256": "eb33567958f7c6b7a2e8d291d73449868d3e4367ffecaae1ba3c182a0c1e37f5",
+  "raw_results_sha256": "cee99752ffa83772a3a895a3cbc07806ba4d20d585356b492d2a0221dea3166a",
+  "schema_version": "1.0.0",
+  "stability_manifest_replay": {
+    "manifest_name": "stability_manifest.jsonl",
+    "ok_calls": 257455,
+    "records_canonical_sha256": "7b0c2074bebb266332d199d5a643c80830c8969df8920c064124c35f3455bbb5",
+    "terminal_failure_calls": 1745,
+    "total_expected": 259200,
+    "total_observed": 259200,
+    "unique_response_ids": 257455
+  },
+  "study_id": "prompt-prism-real-v4-selection-stability-2026"
+}

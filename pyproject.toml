@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "prompt_prism"
-version = "1.0.0"
-description = "Universal framework for LLM Prompt Optimization using Fractional Factorial Design of Experiments (DoE) & ANOVA"
+version = "2.0.0"
+description = "PromptPrism 2.0: Prompt Diagnostics, Token Pruning, Calibrated Attribution, and Envelope-Bounded Stability Certification using Fractional Factorial DoE"
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -14,7 +14,7 @@ authors = [
 maintainers = [
     { name = "Roberto Sanchez" },
 ]
-keywords = ["prompt-engineering", "design-of-experiments", "doe", "fractional-factorial", "anova", "llm", "prompt-optimization"]
+keywords = ["prompt-engineering", "prompt-diagnostics", "token-pruning", "design-of-experiments", "doe", "fractional-factorial", "stability-certification", "llm-evals"]
 license = {text = "MIT"}
 classifiers = [
     "Programming Language :: Python :: 3",
@@ -52,6 +52,7 @@ dev = [
     "pyflakes>=2.5.0",
     "pyyaml>=6.0",
     "requests>=2.25.0",
+    "httpx>=0.27.0",
 ]
 cloud = [
     "google-cloud-aiplatform>=1.0.0",

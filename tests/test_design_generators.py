@@ -46,6 +46,10 @@ def test_fractional_factorial_2_5_minus_1():
     expected_diag = 16 * np.eye(5)
     np.testing.assert_array_equal(XTX, expected_diag)
 
+    # The generated fraction must match the catalog's positive defining relation.
+    # With the public 0/1 representation converted as z=2x-1, ABCDE is +1.
+    assert np.all(np.prod(X, axis=1) == 1)
+
 
 def test_fractional_factorial_2_7_minus_4():
     design = FractionalFactorialGenerator.from_plan_id("2(7-4)III")
