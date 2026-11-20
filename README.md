@@ -271,16 +271,6 @@ pytest
 
 ---
 
-## 📄 Research Papers & Reproducible Benchmarks
-
-- **Technical Paper (`paper_hf/main.pdf`) & Reader-Friendly Guide (`paper_hf/reader_friendly.pdf`)**:
-  - *"Separating Attribution, Noise Floors, and Selection in Multi-Prompt LLM Benchmarks: An Empirical Design-of-Experiments and Calibration Audit Across 1,033 Benchmark Cubes"*
-  - **Retrospective Benchmark Audit (`research/hf_multi_prompt/run_experiments.py`):** Evaluates $7{,}006{,}016$ cell–item outcomes across 15 LLMs on all 57 MMLU subjects and 16 unique LLMs on the completeness-selected $6/15$ BBH and $7/10$ LMentry tasks. Shows $79\%$–$85\%$ of single-task MMLU higher-order variance is item-sampling noise; orthogonal fractions and outcome-blind A-/D-optimal subsets of the 89 observed mixed-level MMLU templates reduce contrast RMSE by **$1.40\times$–$4.11\times$** over full-rank random subsets, while equal-budget single-stage `ScreenBest` differences are $+0.013\text{ pp}$ (MMLU) and $-0.327\text{ pp}$ (BBH/LMentry), and empirical-null calibration validates item-clustered contrast $t$-tests ($4.0\%$–$5.1\%$ global BH FDR) while disqualifying pooled fixed-block RCBD ($18.4\%$ FDR).
-  - **Prospective Real-v4 Two-Stage Selection & Bounded Stability Study (`research/real_v4/`):** Evaluates $501{,}300$ cryptographically phase-locked live model calls (\$39.03 hosted spend) across 6 deterministic tasks (`re3d_entity_extraction`, `squad2_grounded_qa`, `banking77_intent`, `gsm8k_math`, `mbpp_python`, `sciq_verification`) and 3 distinct model families (`gemini-2.5-flash`, `Mistral-7B-Instruct-v0.3-4bit`, `Qwen3-8B-4bit`). Registered confirmatory verdict is **`FAIL_BOTH`**: equal-budget clean confirmation contrasts are $+0.22\text{ pp}$ vs. balanced random ($L_{95}=-0.15\text{ pp}, p=0.161$) and $+0.14\text{ pp}$ vs. Bayesian optimization ($L_{95}=-0.22\text{ pp}, p=0.244$), and full 8-environment simultaneous max-drop bound is $U_{95,\text{sim}}=0.0433 \ge 0.02$ (driven by unpaired item-holdout variance and hosted `HTTP 429` zero-scoring, whereas all 7 paired prompt/repeat/temporal environments satisfy $U_{95,\text{sim}}=0.0048 < 0.02$), while supporting 6-factor main-effect RMSE drops by **$35.38\%$** ($0.0283$ vs. $0.0437$, winning $17/18$ cells). Reproduce via `python -m research.real_v4.execution --step analyze`.
-- **Earlier Simulation & Calibration Paper (`paper/main.tex`):** *"Factorial Prompt Engineering: Testing Fractional Designs for Efficient and Interpretable Prompt Optimization"* (`research/reproduce.py`).
-
----
-
 ## 🤝 Contributing & Community
 
 - 📖 [Contributing Guide](CONTRIBUTING.md)
