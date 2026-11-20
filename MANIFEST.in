@@ -1,0 +1,8 @@
+include LICENSE
+include README.md
+include CHANGELOG.md
+include pyproject.toml
+include setup.py
+
+recursive-include prompt_prism *.py
+global-exclude __pycache__ *.py[cod] *.sqlite *.db .DS_Store

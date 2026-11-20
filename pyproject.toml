@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=42", "wheel"]
+requires = ["setuptools>=77", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "prompt_prism"
+name = "prompt-prism"
 version = "2.0.0"
-description = "PromptPrism 2.0: Prompt Diagnostics, Token Pruning, Calibrated Attribution, and Envelope-Bounded Stability Certification using Fractional Factorial DoE"
+description = "Prompt diagnostics, clause attribution, safe prompt pruning, and CI/CD release gating for LLMs."
 readme = "README.md"
 requires-python = ">=3.11"
 authors = [
@@ -15,14 +15,14 @@ maintainers = [
     { name = "Roberto Sanchez" },
 ]
 keywords = ["prompt-engineering", "prompt-diagnostics", "token-pruning", "design-of-experiments", "doe", "fractional-factorial", "stability-certification", "llm-evals"]
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Scientific/Engineering :: Information Analysis",
