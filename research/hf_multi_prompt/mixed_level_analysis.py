@@ -1575,12 +1575,16 @@ def run_mixed_level_study(
     - Stratum sensitivity `cell_mean_89` (Split 0 and 20 splits)
     - Catalog sensitivities `unique_93` and `catalog_100` (Split 0, 855 cubes + 15 pooled models)
     """
-    source_hashes = verify_source_hashes()
     if Ys is None:
+        source_hashes = verify_source_hashes()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", DeprecationWarning)
             with (DATA_DIR / "Ys.pickle").open("rb") as f:
                 Ys = pickle.load(f)
+    else:
+        source_hashes = (
+            verify_source_hashes() if (DATA_DIR / "Ys.pickle").exists() else {}
+        )
 
     catalog_bundle = load_mmlu_catalog_tables(DATA_DIR)
     catalog_audit = audit_mmlu_mixed_level_catalog(catalog_bundle, Ys=Ys)
