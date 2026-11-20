@@ -88,11 +88,9 @@ research/*.sqlite
 *.response_cache.db
 tmp/
 
-# Allow tracked paper assets
-!paper/figures/*.png
-!paper/figures/*.pdf
-!paper_hf/figures/*.png
-!paper_hf/figures/*.pdf
+# Research manuscripts & compiled PDFs (kept local)
+paper/
+paper_hf/
 
 # Agent & AI tool caches (keep skills tracked)
 .claude/
