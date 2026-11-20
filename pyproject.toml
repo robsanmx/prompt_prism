@@ -53,6 +53,7 @@ dev = [
     "pyyaml>=6.0",
     "requests>=2.25.0",
     "httpx>=0.27.0",
+    "python-dotenv>=1.0.0",
 ]
 cloud = [
     "google-cloud-aiplatform>=1.0.0",
