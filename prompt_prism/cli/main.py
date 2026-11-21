@@ -3,8 +3,9 @@ Command-Line Interface (CLI) for prompt-prism / prism (v2.0).
 
 Supports:
 - Orthogonal design discovery & generation (`list-designs`, `alias`, `design`, `list-metrics`)
+- Scored test set generation, human/agent review, freezing, and coverage stats (`tests`)
 - Legacy & epistasis-aware screening analysis (`analyze`)
-- v2.0 calibrated item-clustered attribution, noise-floor, and TOST token pruning (`diagnose`)
+- v2.0 calibrated item-clustered attribution, noise-floor, TOST pruning, and coverage gate (`diagnose`)
 - v2.0 fail-closed stability envelope certification & CI/CD verification (`certify`, `verify-cert`)
 """
 
@@ -15,14 +16,17 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, NoReturn, Optional, Sequence, Tuple
 
 import numpy as np
 import pandas as pd
 
 from .. import __version__
 from ..analysis.anova import ANOVAEngine
-from ..analysis.diagnostics import run_calibrated_attribution_audit
+from ..analysis.diagnostics import (
+    _normalize_id_collection,
+    run_calibrated_attribution_audit,
+)
 from ..analysis.optimizer import OptimalPromptFinder
 from ..analysis.selection import (
     EXPERIMENTAL_TWO_STAGE_ALGORITHM_VERSION,
@@ -34,7 +38,276 @@ from ..design.catalog import get_catalog_entry, list_available_plans
 from ..design.generators import FractionalFactorialGenerator
 from ..design.recommender import recommend_design
 from ..reporting.reporter import AnalysisReport
+from ..testgen.generator import TestSetGenerator
+from ..testgen.loaders import (
+    load_factors_file,
+    load_seed_examples_file,
+    load_template_file,
+    resolve_cli_client,
+)
+from ..testgen.models import TestSet
+from ..testgen.review import (
+    compute_testset_stats,
+    export_review,
+    format_testset_stats,
+    import_review,
+)
 from ..visualization.plots import generate_ascii_pareto
+
+
+def _exit_error(message: str, code: int = 1) -> NoReturn:
+    print(f"Error: {message}", file=sys.stderr)
+    sys.exit(code)
+
+
+def _prepare_diagnose_testset(
+    tests_dir: Path,
+    df: pd.DataFrame,
+    f_cols: List[str],
+    sample_col: str,
+    *,
+    split: str,
+    allow_unfrozen: bool,
+    require_tag_agreement: bool,
+    tok_costs: Optional[Dict[str, int]],
+) -> Tuple[TestSet, Dict[str, Any], Optional[Dict[str, int]]]:
+    """Load and validate a TestSet for `prism diagnose --tests`, resolving factor aliases."""
+    try:
+        ts = TestSet.load(tests_dir)
+    except (FileNotFoundError, ValueError) as exc:
+        _exit_error(str(exc))
+
+    if not ts.is_frozen and not allow_unfrozen:
+        _exit_error(
+            f"TestSet at '{tests_dir}' is not frozen. "
+            f"Run 'prism tests freeze {tests_dir}' first or pass --allow-unfrozen."
+        )
+
+    f_col_set = set(f_cols)
+    alias_to_col: Dict[str, str] = {col: col for col in f_cols}
+    for fid, fname in ts.manifest.factor_id_to_name.items():
+        if fid in f_col_set and fname not in f_col_set:
+            alias_to_col[fname] = fid
+        elif fname in f_col_set and fid not in f_col_set:
+            alias_to_col[fid] = fname
+
+    try:
+        raw_cov = ts.coverage(
+            split=split,  # type: ignore[arg-type]
+            require_tag_agreement=require_tag_agreement,
+        )
+        baseline_ids = ts.baseline_sample_ids(split=split)  # type: ignore[arg-type]
+        judge_frac = ts.judge_scored_fraction(split=split)  # type: ignore[arg-type]
+    except ValueError as exc:
+        _exit_error(str(exc))
+
+    resolved_cov: Dict[str, set] = {}
+    for k, sids in raw_cov.items():
+        target_key = alias_to_col.get(str(k), str(k))
+        norm_ids = _normalize_id_collection(sids, param_name=f"coverage[{k!r}]")
+        resolved_cov.setdefault(target_key, set()).update(norm_ids)
+
+    resolved_tok_costs: Optional[Dict[str, int]] = None
+    if tok_costs is not None:
+        resolved_tok_costs = {
+            alias_to_col.get(str(k), str(k)): int(v) for k, v in tok_costs.items()
+        }
+
+    # Helpful error if data only belongs to another split (e.g., confirmation data with default --split discovery)
+    if sample_col in df.columns:
+        expected_split_ids = {
+            c.id
+            for c in ts.cases_for_split(split=split, include_rejected=False)  # type: ignore[arg-type]
+        }
+        present_ids = set(df[sample_col].astype(str).unique())
+        has_expected_overlap = bool(present_ids & expected_split_ids) and (
+            baseline_ids is None or bool(present_ids & baseline_ids)
+        )
+        if expected_split_ids and not has_expected_overlap:
+            splits_seen = sorted(
+                {
+                    c.split
+                    for c in ts.cases
+                    if c.id in present_ids and c.split is not None
+                }
+            )
+            if splits_seen and split not in splits_seen:
+                _exit_error(
+                    f"No '{split}' items from '{tests_dir}' matched '{sample_col}' in data; "
+                    f"data matches split(s) {splits_seen}. Pass --split {splits_seen[0]}."
+                )
+
+    gen_model = ts.manifest.generator.get("model_id")
+    kwargs: Dict[str, Any] = {
+        "coverage": resolved_cov,
+        "baseline_sample_ids": baseline_ids,
+        "coverage_source": ts.provenance,
+        "test_set_sha256": ts.manifest.cases_sha256,
+        "judge_scored_fraction": judge_frac,
+        "generator_model_id": str(gen_model) if gen_model else None,
+    }
+    return ts, kwargs, resolved_tok_costs
+
+
+def _handle_tests_command(
+    args: argparse.Namespace,
+    tests_parser: argparse.ArgumentParser,
+    review_parser: argparse.ArgumentParser,
+) -> None:
+    """Dispatch `prism tests {generate,review,freeze,stats}`."""
+    subcmd = args.tests_command
+    if subcmd == "generate":
+        out_dir_str = args.out or args.refresh_confirmation
+        if not out_dir_str:
+            _exit_error(
+                "--out is required unless --refresh-confirmation <dir> is provided."
+            )
+        try:
+            factors = load_factors_file(args.factors)
+            template = load_template_file(args.template, factors=factors)
+            seeds = (
+                load_seed_examples_file(args.seed_examples)
+                if args.seed_examples
+                else None
+            )
+            gen_client = resolve_cli_client(
+                client_spec=args.client,
+                model=args.model,
+                role="generator",
+            )
+            tagger_client = None
+            if args.tagger_client or args.tagger_model:
+                tagger_client = resolve_cli_client(
+                    client_spec=args.tagger_client,
+                    model=args.tagger_model,
+                    role="tagger",
+                )
+
+            generator = TestSetGenerator(
+                client=gen_client,
+                tagger_client=tagger_client,
+                n_baseline_discovery=args.n_baseline_discovery,
+                n_baseline_confirmation=args.n_baseline_confirmation,
+                n_per_factor_discovery=args.n_per_factor_discovery,
+                n_per_factor_confirmation=args.n_per_factor_confirmation,
+                max_oversample_factor=args.max_oversample_factor,
+                seed=args.seed,
+                judge_fallback=not args.no_judge_fallback,
+            )
+
+            if args.refresh_confirmation:
+                existing = TestSet.load(Path(args.refresh_confirmation))
+                ts = generator.refresh_confirmation(
+                    existing,
+                    factors,
+                    template,
+                    task_description=args.task,
+                    seed_examples=seeds,
+                    seed_offset=args.seed_offset,
+                    freeze=not args.no_freeze,
+                )
+            else:
+                ts = generator.generate(
+                    factors,
+                    template,
+                    task_description=args.task,
+                    seed_examples=seeds,
+                    freeze=not args.no_freeze,
+                )
+
+            saved_dir = ts.save(Path(out_dir_str))
+        except (
+            FileNotFoundError,
+            ValueError,
+            TypeError,
+            ImportError,
+            AttributeError,
+        ) as exc:
+            _exit_error(str(exc))
+
+        action_label = (
+            "Refreshed confirmation split in"
+            if args.refresh_confirmation
+            else "Generated TestSet in"
+        )
+        print(f"\n{action_label} {saved_dir}\n")
+        print(format_testset_stats(ts))
+        print()
+
+    elif subcmd == "review":
+        rcmd = args.review_command
+        if rcmd == "export":
+            try:
+                ts = TestSet.load(Path(args.test_dir))
+                summary = export_review(
+                    ts,
+                    Path(args.out),
+                    fmt=args.format,
+                    split=args.split,
+                    only_disagreed=args.only_disagreed,
+                )
+            except (FileNotFoundError, ValueError) as exc:
+                _exit_error(str(exc))
+            print(
+                f"Exported {summary['exported']} case(s) "
+                f"({summary['disagreed']} tagger-disagreed first) "
+                f"to {summary['path']} [{summary['format']}]."
+            )
+
+        elif rcmd == "import":
+            try:
+                ts = TestSet.load(Path(args.test_dir))
+                summary = import_review(
+                    ts,
+                    Path(args.review_file),
+                    fmt=args.format,
+                    freeze=not args.no_freeze,
+                )
+                ts.save(Path(args.test_dir))
+            except (FileNotFoundError, ValueError) as exc:
+                _exit_error(str(exc))
+            state = "re-frozen" if summary["frozen"] else "saved as draft"
+            print(
+                f"Imported {summary['rows_read']} review row(s) [{summary['format']}] "
+                f"({summary['updated']} updated: {summary['accepted']} accepted, "
+                f"{summary['rejected']} rejected, {summary['pending']} pending); "
+                f"TestSet {state} at {args.test_dir}."
+            )
+            print(f"cases_sha256:        {summary['cases_sha256']}")
+            print(f"active_cases_sha256: {summary['active_cases_sha256']}")
+        else:
+            review_parser.print_help()
+
+    elif subcmd == "freeze":
+        try:
+            ts = TestSet.load(Path(args.test_dir))
+            ts.freeze(force=args.force)
+            ts.save(Path(args.test_dir))
+        except (FileNotFoundError, ValueError) as exc:
+            _exit_error(str(exc))
+        print(f"Frozen TestSet at {args.test_dir}")
+        print(f"frozen_at:           {ts.manifest.frozen_at}")
+        print(f"cases_sha256:        {ts.manifest.cases_sha256}")
+        print(f"active_cases_sha256: {ts.manifest.active_cases_sha256}")
+
+    elif subcmd == "stats":
+        try:
+            ts = TestSet.load(Path(args.test_dir))
+        except (FileNotFoundError, ValueError) as exc:
+            _exit_error(str(exc))
+        if args.as_json:
+            stats = compute_testset_stats(
+                ts, min_targeted_items=args.min_targeted_items
+            )
+            print(json.dumps(stats, indent=2))
+        else:
+            print(
+                "\n"
+                + format_testset_stats(ts, min_targeted_items=args.min_targeted_items)
+                + "\n"
+            )
+    else:
+        tests_parser.print_help()
 
 
 def _load_tabular(path: Path) -> pd.DataFrame:
@@ -115,7 +388,7 @@ def _parse_token_costs(spec: Optional[str]) -> Optional[Dict[str, int]]:
     return out or None
 
 
-def main() -> None:
+def main(argv: Optional[Sequence[str]] = None) -> None:
     parser = argparse.ArgumentParser(
         prog="prompt-prism",
         description=(
@@ -315,6 +588,35 @@ def main() -> None:
         help="Minimize target metric instead of maximizing",
     )
     diag_parser.add_argument(
+        "--tests",
+        type=str,
+        default=None,
+        help="Path to a frozen TestSet directory (cases.jsonl + manifest.json) for coverage-gated attribution",
+    )
+    diag_parser.add_argument(
+        "--split",
+        type=str,
+        choices=("discovery", "confirmation", "all"),
+        default="discovery",
+        help="TestSet split to evaluate when --tests is provided (default: discovery)",
+    )
+    diag_parser.add_argument(
+        "--allow-unfrozen",
+        action="store_true",
+        help="Allow diagnosing with an unfrozen draft TestSet when --tests is provided",
+    )
+    diag_parser.add_argument(
+        "--model-id",
+        type=str,
+        default=None,
+        help="Optional evaluated model ID (surfaces generator-equals-model warning with --tests)",
+    )
+    diag_parser.add_argument(
+        "--no-require-tag-agreement",
+        action="store_true",
+        help="Include tagger-disagreed targeted items in coverage even before human acceptance",
+    )
+    diag_parser.add_argument(
         "--output-report",
         "-o",
         type=str,
@@ -508,7 +810,231 @@ def main() -> None:
         help="Print validation verdict as machine-readable JSON",
     )
 
-    args = parser.parse_args()
+    # Command: tests (NEW in v2.1 — scored test set generation, review, freezing & stats)
+    tests_parser = subparsers.add_parser(
+        "tests",
+        help="[v2.1] Generate, review, freeze, and inspect scored TestSets for coverage-gated diagnostics",
+    )
+    tests_sub = tests_parser.add_subparsers(
+        dest="tests_command", help="TestSet commands"
+    )
+
+    # tests generate
+    tgen_parser = tests_sub.add_parser(
+        "generate",
+        help="Generate (or refresh confirmation split of) a scored, coverage-tagged TestSet",
+    )
+    tgen_parser.add_argument(
+        "--factors",
+        "-f",
+        type=str,
+        required=True,
+        help="Path to factors YAML or JSON file",
+    )
+    tgen_parser.add_argument(
+        "--template",
+        "-t",
+        type=str,
+        required=True,
+        help="Path to prompt template YAML or JSON file",
+    )
+    tgen_parser.add_argument(
+        "--task",
+        type=str,
+        default="",
+        help="Natural-language task description for test generation",
+    )
+    tgen_parser.add_argument(
+        "--seed-examples",
+        type=str,
+        default=None,
+        help="Optional seed examples file (.jsonl, .json, .yaml, or .csv)",
+    )
+    tgen_parser.add_argument(
+        "--n-baseline-discovery",
+        type=int,
+        default=100,
+        help="Target post-filter baseline items in discovery split (default: 100)",
+    )
+    tgen_parser.add_argument(
+        "--n-baseline-confirmation",
+        type=int,
+        default=40,
+        help="Target post-filter baseline items in confirmation split (default: 40)",
+    )
+    tgen_parser.add_argument(
+        "--n-per-factor-discovery",
+        type=int,
+        default=35,
+        help="Target post-filter targeted items per factor in discovery split (default: 35)",
+    )
+    tgen_parser.add_argument(
+        "--n-per-factor-confirmation",
+        type=int,
+        default=20,
+        help="Target post-filter targeted items per factor in confirmation split (default: 20)",
+    )
+    tgen_parser.add_argument(
+        "--max-oversample-factor",
+        type=float,
+        default=2.0,
+        help="Bounded oversampling multiplier for post-filter target counts (default: 2.0)",
+    )
+    tgen_parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Random seed for generation prompts and stratified splitting (default: 0)",
+    )
+    tgen_parser.add_argument(
+        "--seed-offset",
+        type=int,
+        default=1,
+        help="Seed offset used with --refresh-confirmation (default: 1)",
+    )
+    tgen_parser.add_argument(
+        "--no-judge-fallback",
+        action="store_true",
+        help="Forbid llm_judge fallback checks (deterministic checks only)",
+    )
+    tgen_parser.add_argument(
+        "--client",
+        type=str,
+        default=None,
+        help="Generator client reference 'module.path:callable' (or LLMClient instance)",
+    )
+    tgen_parser.add_argument(
+        "--model",
+        type=str,
+        default=None,
+        help="Generator model name via LiteLLM (requires prompt-prism[cloud])",
+    )
+    tgen_parser.add_argument(
+        "--tagger-client",
+        type=str,
+        default=None,
+        help="Optional separate blind tagger client 'module.path:callable'",
+    )
+    tgen_parser.add_argument(
+        "--tagger-model",
+        type=str,
+        default=None,
+        help="Optional separate blind tagger model via LiteLLM (requires prompt-prism[cloud])",
+    )
+    tgen_parser.add_argument(
+        "--no-freeze",
+        action="store_true",
+        help="Leave the generated TestSet unfrozen (draft) for human review before freezing",
+    )
+    tgen_parser.add_argument(
+        "--refresh-confirmation",
+        type=str,
+        default=None,
+        metavar="DIR",
+        help="Regenerate only the confirmation split of existing TestSet DIR while preserving discovery",
+    )
+    tgen_parser.add_argument(
+        "--out",
+        "-o",
+        type=str,
+        default=None,
+        help="Output TestSet directory (defaults to --refresh-confirmation DIR when refreshing)",
+    )
+
+    # tests review {export, import}
+    review_parser = tests_sub.add_parser(
+        "review",
+        help="Export or import human/agent review decisions (CSV or Markdown)",
+    )
+    review_sub = review_parser.add_subparsers(
+        dest="review_command", help="Review commands"
+    )
+
+    rev_exp = review_sub.add_parser(
+        "export",
+        help="Export TestSet cases for review (tagger-disagreed items sorted first)",
+    )
+    rev_exp.add_argument("test_dir", type=str, help="Path to TestSet directory")
+    rev_exp.add_argument(
+        "--format",
+        type=str,
+        choices=("csv", "md"),
+        default=None,
+        help="Export format ('csv' or 'md'; inferred from --out extension if omitted)",
+    )
+    rev_exp.add_argument(
+        "--out",
+        "-o",
+        type=str,
+        required=True,
+        help="Output review file path (e.g. review.csv or review.md)",
+    )
+    rev_exp.add_argument(
+        "--split",
+        type=str,
+        choices=("all", "discovery", "confirmation"),
+        default="all",
+        help="Which split to export (default: all)",
+    )
+    rev_exp.add_argument(
+        "--only-disagreed",
+        action="store_true",
+        help="Export only tagger-disagreed and untagged targeted items",
+    )
+
+    rev_imp = review_sub.add_parser(
+        "import",
+        help="Import accepted/rejected review decisions (auto-detects CSV/MD) and re-freeze",
+    )
+    rev_imp.add_argument("test_dir", type=str, help="Path to TestSet directory")
+    rev_imp.add_argument(
+        "review_file", type=str, help="Edited review file (.csv or .md)"
+    )
+    rev_imp.add_argument(
+        "--format",
+        type=str,
+        choices=("csv", "md"),
+        default=None,
+        help="Override review file format detection ('csv' or 'md')",
+    )
+    rev_imp.add_argument(
+        "--no-freeze",
+        action="store_true",
+        help="Save review decisions as draft without re-freezing",
+    )
+
+    # tests freeze
+    freeze_parser = tests_sub.add_parser(
+        "freeze",
+        help="Freeze a draft TestSet with canonical-JSON SHA-256 hashes",
+    )
+    freeze_parser.add_argument("test_dir", type=str, help="Path to TestSet directory")
+    freeze_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Explicitly re-freeze an already-frozen TestSet",
+    )
+
+    # tests stats
+    stats_parser = tests_sub.add_parser(
+        "stats",
+        help="Show per-split, per-factor, clause-role, and judge-share TestSet stats",
+    )
+    stats_parser.add_argument("test_dir", type=str, help="Path to TestSet directory")
+    stats_parser.add_argument(
+        "--min-targeted-items",
+        type=int,
+        default=20,
+        help="Coverage gate threshold used for thin-factor warnings (default: 20)",
+    )
+    stats_parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="as_json",
+        help="Print TestSet statistics as machine-readable JSON",
+    )
+
+    args = parser.parse_args(argv)
 
     if args.command == "list-designs":
         plans = list_available_plans(num_factors=args.factors)
@@ -583,6 +1109,9 @@ def main() -> None:
             "   • levenshtein_sim       : Normalized character-level Levenshtein similarity [0, 1]"
         )
         print("   • regex_match           : Regular expression pattern match [0, 1]")
+        print(
+            "   • check_suite           : Per-item TestSet CheckSpec suite (deterministic + optional judge)"
+        )
         print(
             "   • custom_metric         : User-defined Python callable: fn(pred, target, context)"
         )
@@ -722,20 +1251,50 @@ def main() -> None:
             sys.exit(1)
 
         tok_costs = _parse_token_costs(args.token_costs)
-        audit = run_calibrated_attribution_audit(
-            data=df,
-            factor_cols=f_cols,
-            target_col=args.target,
-            sample_col=args.sample_col,
-            alpha=args.alpha,
-            maximize=not args.minimize,
-            equivalence_margin=args.prune_margin,
-            token_costs=tok_costs,
-            n_sign_flip=args.sign_flip,
-            seed=args.seed,
-            min_targeted_items=args.min_targeted_items,
-            targeted_margin=args.targeted_margin,
-        )
+        loaded_ts: Optional[TestSet] = None
+        ts_kwargs: Dict[str, Any] = {}
+        if args.tests:
+            loaded_ts, ts_kwargs, tok_costs = _prepare_diagnose_testset(
+                Path(args.tests),
+                df,
+                f_cols,
+                args.sample_col,
+                split=args.split,
+                allow_unfrozen=args.allow_unfrozen,
+                require_tag_agreement=not args.no_require_tag_agreement,
+                tok_costs=tok_costs,
+            )
+
+        try:
+            audit = run_calibrated_attribution_audit(
+                data=df,
+                factor_cols=f_cols,
+                target_col=args.target,
+                sample_col=args.sample_col,
+                alpha=args.alpha,
+                maximize=not args.minimize,
+                equivalence_margin=args.prune_margin,
+                token_costs=tok_costs,
+                n_sign_flip=args.sign_flip,
+                seed=args.seed,
+                min_targeted_items=args.min_targeted_items,
+                targeted_margin=args.targeted_margin,
+                model_id=args.model_id,
+                **ts_kwargs,
+            )
+        except ValueError as exc:
+            _exit_error(str(exc))
+
+        if (
+            loaded_ts is not None
+            and args.sample_col in df.columns
+            and loaded_ts.detect_split_leakage(df[args.sample_col].astype(str).unique())
+        ):
+            audit.warnings.append(
+                "Split leakage detected: evaluated results mix both 'discovery' and "
+                "'confirmation' items from the TestSet."
+            )
+
         md = audit.to_markdown()
         print("\n" + md + "\n")
 
@@ -915,6 +1474,9 @@ def main() -> None:
 
         if not (res.valid and res.can_display_passing_stability_badge):
             sys.exit(1)
+
+    elif args.command == "tests":
+        _handle_tests_command(args, tests_parser, review_parser)
 
     else:
         parser.print_help()
