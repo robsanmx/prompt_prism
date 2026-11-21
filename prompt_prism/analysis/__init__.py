@@ -4,6 +4,7 @@ Statistical Analysis & ANOVA engine module.
 
 from .anova import ANOVAEngine, ANOVAResult, ANOVARow
 from .diagnostics import (
+    PRUNING_VERDICTS,
     CalibratedAttributionAudit,
     CalibratedFactorDiagnostic,
     NoiseFloorSummary,
@@ -33,6 +34,7 @@ __all__ = [
     "OptimalPromptFinder",
     "OptimalPromptRecommendation",
     "PROMOTED_TO_DEFAULT_PUBLIC_API",
+    "PRUNING_VERDICTS",
     "REAL_V4_REGISTERED_VERDICT",
     "build_selection_report_from_recommendation",
     "evaluate_simultaneous_perturbation_certificate",

@@ -17,6 +17,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import numpy as np
 import pandas as pd
 
 from .. import __version__
@@ -63,15 +64,36 @@ def _auto_detect_binary_factors(
         "error",
         "latency_ms",
         "combination",
+        "targets_factors",
+        "intended_factor",
+        "tagger_factors",
+        "tagger_agrees",
+        "kind",
+        "split",
+        "source",
+        "review",
     }
     if extra_exclude:
         exclude.update(x for x in extra_exclude if x)
-    return [
-        c
-        for c in df.columns
-        if c not in exclude
-        and set(df[c].dropna().unique()).issubset({0, 1, 0.0, 1.0, -1, -1.0})
-    ]
+    detected: List[str] = []
+    for c in df.columns:
+        if c in exclude:
+            continue
+        if pd.api.types.is_bool_dtype(df[c]):
+            continue
+        non_null = df[c].dropna()
+        if non_null.empty:
+            continue
+        try:
+            unique_vals = set(non_null.unique())
+        except TypeError:
+            # Unhashable cells (e.g. list-valued metadata columns) are never binary factors
+            continue
+        if any(isinstance(v, (bool, np.bool_)) for v in unique_vals):
+            continue
+        if unique_vals.issubset({0, 1, 0.0, 1.0, -1, -1.0}):
+            detected.append(c)
+    return detected
 
 
 def _parse_token_costs(spec: Optional[str]) -> Optional[Dict[str, int]]:
@@ -257,6 +279,18 @@ def main() -> None:
         type=float,
         default=0.01,
         help="Practical equivalence margin |delta| < margin for SAFE_TO_PRUNE TOST gate (default: 0.01)",
+    )
+    diag_parser.add_argument(
+        "--min-targeted-items",
+        type=int,
+        default=20,
+        help="Minimum paired targeted items required before SAFE_TO_PRUNE or REMOVE_HARMFUL when coverage is present (default: 20)",
+    )
+    diag_parser.add_argument(
+        "--targeted-margin",
+        type=float,
+        default=None,
+        help="One-sided non-inferiority margin on targeted items (default: max(2 * prune_margin, 0.05))",
     )
     diag_parser.add_argument(
         "--token-costs",
@@ -699,6 +733,8 @@ def main() -> None:
             token_costs=tok_costs,
             n_sign_flip=args.sign_flip,
             seed=args.seed,
+            min_targeted_items=args.min_targeted_items,
+            targeted_margin=args.targeted_margin,
         )
         md = audit.to_markdown()
         print("\n" + md + "\n")

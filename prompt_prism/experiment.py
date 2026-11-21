@@ -5,7 +5,7 @@ Top-Level Experiment Orchestrator for Prompt Optimization using Fractional Facto
 from __future__ import annotations
 
 import warnings
-from typing import Any, Callable, Dict, Optional, Sequence, Union
+from typing import Any, Callable, Collection, Dict, Mapping, Optional, Sequence, Union
 
 import pandas as pd
 
@@ -219,13 +219,28 @@ class Experiment:
         token_costs: Optional[Dict[str, int]] = None,
         n_sign_flip: int = 2000,
         seed: int = 42,
+        coverage: Optional[Mapping[str, Collection[str]]] = None,
+        baseline_sample_ids: Optional[Collection[str]] = None,
+        min_targeted_items: int = 20,
+        targeted_margin: Optional[float] = None,
+        coverage_source: Optional[str] = None,
+        test_set_sha256: Optional[str] = None,
+        judge_scored_fraction: Optional[float] = None,
+        generator_model_id: Optional[str] = None,
+        model_id: Optional[str] = None,
     ):
-        """Run PromptPrism 2.0 calibrated item-clustered attribution, noise-floor, and TOST token-pruning audit.
+        """Run PromptPrism 2.0 calibrated item-clustered attribution, noise-floor, TOST token-pruning, and coverage-gate audit.
 
         When `token_costs` is omitted, estimates incremental token count per binary factor
         (`max(0, ceil((len(lvl1) - len(lvl0)) / 4))`) from the configured Factor definitions.
+        Factor names in `coverage`, `targets_factors`, or `token_costs` are automatically
+        resolved against `self.factors` to match `design.factor_ids`.
         """
-        from .analysis.diagnostics import run_calibrated_attribution_audit
+        from .analysis.diagnostics import (
+            _normalize_id_collection,
+            _parse_targets_factors_cell,
+            run_calibrated_attribution_audit,
+        )
 
         exp_res = results or self.last_results
         if exp_res is None:
@@ -241,17 +256,59 @@ class Experiment:
                     maximize = getattr(m, "higher_is_better", True)
                     break
 
-        eff_token_costs = dict(token_costs) if token_costs is not None else {}
-        if token_costs is None:
+        factor_ids = [str(fid) for fid in exp_res.design.factor_ids]
+        factor_id_set = set(factor_ids)
+        alias_to_col: Dict[str, str] = {fid: fid for fid in factor_ids}
+        for factor in self.factors:
+            if factor.id in factor_id_set and factor.name not in factor_id_set:
+                alias_to_col[factor.name] = factor.id
+            elif factor.name in factor_id_set and factor.id not in factor_id_set:
+                alias_to_col[factor.id] = factor.name
+
+        eff_token_costs: Dict[str, int] = {}
+        if token_costs is not None:
+            for k, v in token_costs.items():
+                eff_token_costs[alias_to_col.get(str(k), str(k))] = int(v)
+        else:
             for factor in self.factors:
                 if len(factor.levels) >= 2:
                     c0 = len(str(factor.get_level(0).content))
                     c1 = len(str(factor.get_level(1).content))
-                    eff_token_costs[factor.id] = max(0, (c1 - c0 + 3) // 4)
+                    key = alias_to_col.get(factor.id, factor.id)
+                    eff_token_costs[key] = max(0, (c1 - c0 + 3) // 4)
+
+        df = exp_res.to_dataframe()
+        resolved_coverage: Optional[Dict[str, set]] = None
+        if coverage is not None:
+            resolved_coverage = {}
+            for k, sids in coverage.items():
+                target_key = alias_to_col.get(str(k), str(k))
+                norm_ids = _normalize_id_collection(sids, param_name=f"coverage[{k!r}]")
+                resolved_coverage.setdefault(target_key, set()).update(norm_ids)
+        elif "targets_factors" in df.columns:
+            df = df.copy()
+            df["targets_factors"] = [
+                [alias_to_col.get(tag, tag) for tag in _parse_targets_factors_cell(val)]
+                for val in df["targets_factors"]
+            ]
+
+        eff_model_id = (
+            model_id if model_id is not None else exp_res.metadata.get("model_id")
+        )
+        eff_test_set_sha = (
+            test_set_sha256
+            if test_set_sha256 is not None
+            else exp_res.metadata.get("test_set_sha256")
+        )
+        eff_gen_model = (
+            generator_model_id
+            if generator_model_id is not None
+            else exp_res.metadata.get("generator_model_id")
+        )
 
         return run_calibrated_attribution_audit(
-            data=exp_res.to_dataframe(),
-            factor_cols=exp_res.design.factor_ids,
+            data=df,
+            factor_cols=factor_ids,
             target_col=metric_name,
             sample_col=sample_col,
             alpha=alpha,
@@ -260,6 +317,15 @@ class Experiment:
             token_costs=eff_token_costs or None,
             n_sign_flip=n_sign_flip,
             seed=seed,
+            coverage=resolved_coverage,
+            baseline_sample_ids=baseline_sample_ids,
+            min_targeted_items=min_targeted_items,
+            targeted_margin=targeted_margin,
+            coverage_source=coverage_source,
+            test_set_sha256=eff_test_set_sha,
+            judge_scored_fraction=judge_scored_fraction,
+            generator_model_id=eff_gen_model,
+            model_id=eff_model_id,
         )
 
     def suggest_confirmation_design(

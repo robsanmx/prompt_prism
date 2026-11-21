@@ -149,6 +149,11 @@ class ExperimentRunner:
             trial_metadata: Dict[str, Any] = {"combination": run.combination_string}
             for m_name, reason in judge_reasons.items():
                 trial_metadata[f"judge_reasons.{m_name}"] = reason
+            if "targets_factors" in item:
+                tf = item["targets_factors"]
+                trial_metadata["targets_factors"] = (
+                    list(tf) if isinstance(tf, (list, tuple, set)) else tf
+                )
 
             return Trial(
                 run_id=run.run_id,

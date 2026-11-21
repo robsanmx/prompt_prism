@@ -9,6 +9,7 @@ fail-closed operating-envelope stability certificates.
 
 from .analysis.anova import ANOVAEngine, ANOVAResult, ANOVARow
 from .analysis.diagnostics import (
+    PRUNING_VERDICTS,
     CalibratedAttributionAudit,
     CalibratedFactorDiagnostic,
     NoiseFloorSummary,
@@ -131,6 +132,7 @@ __all__ = [
     "CalibratedAttributionAudit",
     "CalibratedFactorDiagnostic",
     "NoiseFloorSummary",
+    "PRUNING_VERDICTS",
     "run_calibrated_attribution_audit",
     "ExperimentalTwoStageSelector",
     "PROMOTED_TO_DEFAULT_PUBLIC_API",
