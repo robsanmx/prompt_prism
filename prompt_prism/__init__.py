@@ -62,6 +62,7 @@ from .runner.cache import ResponseCache
 from .runner.client import CallableLLM, LLMClient, LLMResponse, MockLLM
 from .runner.runner import ExperimentRunner
 from .template.composer import PromptComposer, PromptSection, PromptTemplate
+from .testgen.generator import TestSetGenerator
 from .testgen.models import (
     RESERVED_TEST_CASE_KEYS,
     CheckSpec,
@@ -148,11 +149,12 @@ __all__ = [
     "REAL_V4_REGISTERED_VERDICT",
     "build_selection_report_from_recommendation",
     "evaluate_simultaneous_perturbation_certificate",
-    # Test Set Schema & Freezing
+    # Test Set Schema, Generator & Freezing
     "RESERVED_TEST_CASE_KEYS",
     "CheckSpec",
     "TestCase",
     "TestSet",
+    "TestSetGenerator",
     "TestSetManifest",
     # Visualization & Reporting
     "plot_main_effects",
