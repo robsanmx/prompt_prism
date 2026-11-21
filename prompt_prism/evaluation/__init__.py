@@ -2,6 +2,7 @@
 Evaluation metrics and LLM judge modules.
 """
 
+from .check_suite import CheckSuiteMetric
 from .evaluator import Evaluator
 from .metrics import (
     CustomMetric,
@@ -16,6 +17,7 @@ from .metrics import (
 
 __all__ = [
     "Metric",
+    "CheckSuiteMetric",
     "ExactMatch",
     "F1Score",
     "JSONValidation",

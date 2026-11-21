@@ -105,6 +105,9 @@ class Evaluator:
                 reason = m.pop_reason()
                 if reason:
                     local_reasons[m.name] = reason
+            except (PermissionError, ImportError):
+                # Never swallow security refusals or missing optional-dependency errors into 0.0/NaN.
+                raise
             except Exception as e:
                 local_errors[m.name] = str(e)
                 mode = self.on_error

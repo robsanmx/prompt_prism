@@ -154,6 +154,9 @@ class ExperimentRunner:
                 trial_metadata["targets_factors"] = (
                     list(tf) if isinstance(tf, (list, tuple, set)) else tf
                 )
+            for passthrough_key in ("kind", "split"):
+                if passthrough_key in item and item[passthrough_key] is not None:
+                    trial_metadata[passthrough_key] = item[passthrough_key]
 
             return Trial(
                 run_id=run.run_id,
@@ -202,13 +205,18 @@ class ExperimentRunner:
         # Sort trials for consistent ordering
         trials.sort(key=lambda t: (t.run_id, str(t.sample_id)))
 
+        res_metadata: Dict[str, Any] = {
+            "num_runs": len(design.runs),
+            "num_samples": len(data_items),
+            "total_trials": len(trials),
+        }
+        client_model_id = getattr(self.client, "model_id", None)
+        if client_model_id:
+            res_metadata["model_id"] = str(client_model_id)
+
         return ExperimentResults(
             experiment_id=experiment_id,
             design=design,
             trials=trials,
-            metadata={
-                "num_runs": len(design.runs),
-                "num_samples": len(data_items),
-                "total_trials": len(trials),
-            },
+            metadata=res_metadata,
         )

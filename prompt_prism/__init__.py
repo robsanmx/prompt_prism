@@ -44,6 +44,7 @@ from .design.generators import (
     PlackettBurmanGenerator,
 )
 from .design.recommender import recommend_design
+from .evaluation.check_suite import CheckSuiteMetric
 from .evaluation.evaluator import Evaluator
 from .evaluation.metrics import (
     CustomMetric,
@@ -61,6 +62,13 @@ from .runner.cache import ResponseCache
 from .runner.client import CallableLLM, LLMClient, LLMResponse, MockLLM
 from .runner.runner import ExperimentRunner
 from .template.composer import PromptComposer, PromptSection, PromptTemplate
+from .testgen.models import (
+    RESERVED_TEST_CASE_KEYS,
+    CheckSpec,
+    TestCase,
+    TestSet,
+    TestSetManifest,
+)
 from .visualization.plots import (
     generate_ascii_pareto,
     plot_interaction_effects,
@@ -109,6 +117,7 @@ __all__ = [
     "ExperimentRunner",
     # Evaluation
     "Metric",
+    "CheckSuiteMetric",
     "ExactMatch",
     "F1Score",
     "JSONValidation",
@@ -139,6 +148,12 @@ __all__ = [
     "REAL_V4_REGISTERED_VERDICT",
     "build_selection_report_from_recommendation",
     "evaluate_simultaneous_perturbation_certificate",
+    # Test Set Schema & Freezing
+    "RESERVED_TEST_CASE_KEYS",
+    "CheckSpec",
+    "TestCase",
+    "TestSet",
+    "TestSetManifest",
     # Visualization & Reporting
     "plot_main_effects",
     "plot_pareto_effects",

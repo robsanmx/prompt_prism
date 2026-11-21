@@ -25,6 +25,8 @@ class LLMResponse(BaseModel):
 class LLMClient:
     """Abstract base class for LLM clients."""
 
+    model_id: Optional[str] = None
+
     def generate(
         self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any
     ) -> LLMResponse:
@@ -45,8 +47,16 @@ class CallableLLM(LLMClient):
     Enables instant integration with ANY project, model provider, or custom pipeline.
     """
 
-    def __init__(self, fn: Callable[..., Any]):
+    def __init__(
+        self,
+        fn: Callable[..., Any],
+        *,
+        model_id: Optional[str] = None,
+    ):
         self.fn = fn
+        self.model_id = (
+            model_id if model_id is not None else getattr(fn, "model_id", None)
+        )
 
     def generate(
         self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any
@@ -98,6 +108,7 @@ class MockLLM(LLMClient):
         response_generator: Optional[
             Callable[[Union[str, List[Dict[str, str]]], Dict[str, Any]], str]
         ] = None,
+        model_id: Optional[str] = None,
     ):
         self.default_response = default_response
         self.factor_effects = factor_effects or {}
@@ -105,6 +116,7 @@ class MockLLM(LLMClient):
         self.noise_std = noise_std
         self.latency_ms = latency_ms
         self.response_generator = response_generator
+        self.model_id = model_id
 
     def generate(
         self, prompt: Union[str, List[Dict[str, str]]], **kwargs: Any

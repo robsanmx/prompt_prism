@@ -46,6 +46,20 @@ class Metric:
         """
         return None
 
+    def estimate_judge_calls(self, dataset: Any) -> int:
+        """Estimate LLM judge calls required by this metric for one run over `dataset`.
+
+        Static judge metrics (``is_llm_judge=True``) default to ``len(dataset)``; dynamic
+        per-item metrics (such as ``CheckSuiteMetric``) override this to count only items
+        that actually invoke an LLM judge.
+        """
+        if not getattr(self, "is_llm_judge", False):
+            return 0
+        try:
+            return len(dataset)
+        except TypeError:
+            return len(list(dataset))
+
 
 class ExactMatch(Metric):
     """Exact string or value equality metric."""
@@ -143,6 +157,17 @@ class JSONValidation(Metric):
         self.required_keys = list(required_keys) if required_keys else []
         self.schema = schema
         self.extract_from_code_blocks = extract_from_code_blocks
+        self._validator = None
+        if schema is not None:
+            if not isinstance(schema, dict):
+                raise TypeError(
+                    f"JSONValidation schema must be a JSON Schema dict, got {type(schema).__name__}"
+                )
+            import jsonschema
+
+            validator_cls = jsonschema.validators.validator_for(schema)
+            validator_cls.check_schema(schema)
+            self._validator = validator_cls(schema)
 
     def _extract_json_str(self, text: str) -> str:
         s = str(text or "").strip()
@@ -174,6 +199,9 @@ class JSONValidation(Metric):
                         return 0.0
                 else:
                     return 0.0
+
+        if self._validator is not None and not self._validator.is_valid(parsed):
+            return 0.0
 
         if self.required_keys:
             if not isinstance(parsed, dict):

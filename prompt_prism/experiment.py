@@ -25,6 +25,7 @@ from .reporting.reporter import AnalysisReport
 from .runner.client import LLMClient
 from .runner.runner import ExperimentRunner
 from .template.composer import PromptComposer, PromptTemplate
+from .testgen.models import SplitSelector, TestSet
 
 
 class Experiment:
@@ -69,6 +70,8 @@ class Experiment:
 
         self.last_results: Optional[ExperimentResults] = None
         self.last_report: Optional[AnalysisReport] = None
+        self._last_test_set: Optional[TestSet] = None
+        self._last_split: Optional[SplitSelector] = None
 
     @classmethod
     def from_factors(
@@ -106,23 +109,33 @@ class Experiment:
         )
 
     def estimate_judge_calls(
-        self, dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]]]
+        self,
+        dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]], TestSet],
+        *,
+        split: SplitSelector = "discovery",
     ) -> int:
         """Estimate the total number of LLM judge calls needed for this experiment."""
-        n_samples = (
-            len(dataset)
-            if isinstance(dataset, (list, tuple, pd.DataFrame))
-            else len(list(dataset))
+        raw_items: Union[pd.DataFrame, Sequence[Dict[str, Any]]] = (
+            dataset.to_dataset(split=split) if isinstance(dataset, TestSet) else dataset
         )
+        items: Union[pd.DataFrame, Sequence[Dict[str, Any]]] = (
+            raw_items
+            if isinstance(raw_items, (list, tuple, pd.DataFrame))
+            else list(raw_items)
+        )
+        n_samples = len(items)
         n_runs = len(self.design.runs)
-        n_judge_metrics = sum(
-            1 for m in self.evaluator.metrics if getattr(m, "is_llm_judge", False)
-        )
-        return n_runs * n_samples * n_judge_metrics
+        per_run_calls = 0
+        for m in self.evaluator.metrics:
+            if hasattr(m, "estimate_judge_calls"):
+                per_run_calls += int(m.estimate_judge_calls(items))
+            elif getattr(m, "is_llm_judge", False):
+                per_run_calls += n_samples
+        return n_runs * per_run_calls
 
     def run(
         self,
-        dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]]],
+        dataset: Union[pd.DataFrame, Sequence[Dict[str, Any]], TestSet],
         client: Union[LLMClient, Callable[..., Any]],
         max_workers: int = 4,
         cache_db: Optional[str] = None,
@@ -130,17 +143,41 @@ class Experiment:
         id_col: str = "id",
         experiment_id: str = "exp_01",
         progress_callback: Optional[Callable[[int, int], None]] = None,
+        *,
+        split: SplitSelector = "discovery",
+        model_id: Optional[str] = None,
     ) -> ExperimentResults:
         """
-        Execute the experiment over the test dataset.
+        Execute the experiment over a dataset or frozen `TestSet` (defaults to `split='discovery'`).
         """
         from .runner.cache import ResponseCache
 
-        judge_calls = self.estimate_judge_calls(dataset)
+        test_set_obj: Optional[TestSet] = (
+            dataset if isinstance(dataset, TestSet) else None
+        )
+        if test_set_obj is not None and test_set_obj.is_frozen:
+            # Fail fast before spending LLM calls if a frozen TestSet was tampered in memory.
+            test_set_obj.verify_integrity()
+        run_items: Union[pd.DataFrame, Sequence[Dict[str, Any]]] = (
+            test_set_obj.to_dataset(split=split)
+            if test_set_obj is not None
+            else (
+                dataset
+                if isinstance(dataset, (list, tuple, pd.DataFrame))
+                else list(dataset)
+            )
+        )
+
+        judge_calls = self.estimate_judge_calls(run_items)
         if judge_calls > 0:
+            n_samples = (
+                len(run_items)
+                if isinstance(run_items, (list, tuple, pd.DataFrame))
+                else len(list(run_items))
+            )
             warnings.warn(
                 f"[PromptPrism] Notice: This experiment includes LLM Judge metric(s). "
-                f"Estimated judge calls: {judge_calls} ({len(self.design.runs)} runs × {len(dataset)} samples). "
+                f"Estimated judge calls: {judge_calls} ({len(self.design.runs)} runs × {n_samples} samples). "
                 "Ensure caching is enabled to minimize repeated judge costs.",
                 UserWarning,
                 stacklevel=2,
@@ -159,10 +196,35 @@ class Experiment:
 
         self.last_results = runner.run(
             design=self.design,
-            dataset=dataset,
+            dataset=run_items,
             experiment_id=experiment_id,
             progress_callback=progress_callback,
         )
+
+        eff_model_id = (
+            model_id if model_id is not None else getattr(client, "model_id", None)
+        )
+        if eff_model_id:
+            self.last_results.metadata["model_id"] = str(eff_model_id)
+
+        if test_set_obj is not None:
+            self._last_test_set = test_set_obj
+            self._last_split = split
+            self.last_results.metadata["test_set_sha256"] = (
+                test_set_obj.manifest.cases_sha256
+            )
+            self.last_results.metadata["test_set_split"] = split
+            self.last_results.metadata["coverage_source"] = test_set_obj.provenance
+            self.last_results.metadata["judge_scored_fraction"] = (
+                test_set_obj.judge_scored_fraction(split=split)
+            )
+            gen_model = test_set_obj.manifest.generator.get("model_id")
+            if gen_model:
+                self.last_results.metadata["generator_model_id"] = str(gen_model)
+        else:
+            self._last_test_set = None
+            self._last_split = None
+
         return self.last_results
 
     def analyze(
@@ -219,6 +281,9 @@ class Experiment:
         token_costs: Optional[Dict[str, int]] = None,
         n_sign_flip: int = 2000,
         seed: int = 42,
+        test_set: Optional[TestSet] = None,
+        split: Optional[SplitSelector] = None,
+        allow_unfrozen: bool = False,
         coverage: Optional[Mapping[str, Collection[str]]] = None,
         baseline_sample_ids: Optional[Collection[str]] = None,
         min_targeted_items: int = 20,
@@ -233,8 +298,10 @@ class Experiment:
 
         When `token_costs` is omitted, estimates incremental token count per binary factor
         (`max(0, ceil((len(lvl1) - len(lvl0)) / 4))`) from the configured Factor definitions.
-        Factor names in `coverage`, `targets_factors`, or `token_costs` are automatically
-        resolved against `self.factors` to match `design.factor_ids`.
+        When `test_set` is passed (or automatically retained from `exp.run(test_set, ...)`),
+        verifies frozen integrity, supplies coverage/baseline splits, checks for split leakage,
+        and attaches manifest provenance. Factor names in `coverage`, `targets_factors`, or
+        `token_costs` are automatically resolved against `self.factors` to match `design.factor_ids`.
         """
         from .analysis.diagnostics import (
             _normalize_id_collection,
@@ -247,6 +314,63 @@ class Experiment:
             raise ValueError(
                 "No experiment results provided or available. Run the experiment first."
             )
+
+        eff_test_set: Optional[TestSet] = (
+            test_set
+            if test_set is not None
+            else (self._last_test_set if results is None else None)
+        )
+        eff_split: SplitSelector = (
+            split
+            if split is not None
+            else exp_res.metadata.get("test_set_split")
+            or (self._last_split if results is None else None)
+            or "discovery"
+        )
+
+        eff_coverage = coverage
+        eff_baseline_ids = baseline_sample_ids
+        eff_coverage_source = coverage_source
+        eff_test_set_sha = (
+            test_set_sha256
+            if test_set_sha256 is not None
+            else exp_res.metadata.get("test_set_sha256")
+        )
+        eff_judge_frac = (
+            judge_scored_fraction
+            if judge_scored_fraction is not None
+            else exp_res.metadata.get("judge_scored_fraction")
+        )
+        eff_gen_model = (
+            generator_model_id
+            if generator_model_id is not None
+            else exp_res.metadata.get("generator_model_id")
+        )
+
+        if eff_test_set is not None:
+            if not eff_test_set.is_frozen and not allow_unfrozen:
+                raise ValueError(
+                    "TestSet must be frozen before running diagnose(). "
+                    "Call test_set.freeze() or pass allow_unfrozen=True."
+                )
+            if eff_test_set.is_frozen:
+                eff_test_set.verify_integrity()
+            if eff_coverage is None:
+                eff_coverage = eff_test_set.coverage(split=eff_split)
+            if eff_baseline_ids is None:
+                eff_baseline_ids = eff_test_set.baseline_sample_ids(split=eff_split)
+            if eff_coverage_source is None:
+                eff_coverage_source = eff_test_set.provenance
+            if eff_test_set_sha is None:
+                eff_test_set_sha = eff_test_set.manifest.cases_sha256
+            if eff_judge_frac is None:
+                eff_judge_frac = eff_test_set.judge_scored_fraction(split=eff_split)
+            if eff_gen_model is None:
+                gen_m = eff_test_set.manifest.generator.get("model_id")
+                if gen_m:
+                    eff_gen_model = str(gen_m)
+        elif eff_coverage_source is None:
+            eff_coverage_source = exp_res.metadata.get("coverage_source")
 
         metric_name = target_metric or self.target_metric
         if maximize is None:
@@ -279,9 +403,9 @@ class Experiment:
 
         df = exp_res.to_dataframe()
         resolved_coverage: Optional[Dict[str, set]] = None
-        if coverage is not None:
+        if eff_coverage is not None:
             resolved_coverage = {}
-            for k, sids in coverage.items():
+            for k, sids in eff_coverage.items():
                 target_key = alias_to_col.get(str(k), str(k))
                 norm_ids = _normalize_id_collection(sids, param_name=f"coverage[{k!r}]")
                 resolved_coverage.setdefault(target_key, set()).update(norm_ids)
@@ -295,18 +419,8 @@ class Experiment:
         eff_model_id = (
             model_id if model_id is not None else exp_res.metadata.get("model_id")
         )
-        eff_test_set_sha = (
-            test_set_sha256
-            if test_set_sha256 is not None
-            else exp_res.metadata.get("test_set_sha256")
-        )
-        eff_gen_model = (
-            generator_model_id
-            if generator_model_id is not None
-            else exp_res.metadata.get("generator_model_id")
-        )
 
-        return run_calibrated_attribution_audit(
+        audit = run_calibrated_attribution_audit(
             data=df,
             factor_cols=factor_ids,
             target_col=metric_name,
@@ -318,15 +432,27 @@ class Experiment:
             n_sign_flip=n_sign_flip,
             seed=seed,
             coverage=resolved_coverage,
-            baseline_sample_ids=baseline_sample_ids,
+            baseline_sample_ids=eff_baseline_ids,
             min_targeted_items=min_targeted_items,
             targeted_margin=targeted_margin,
-            coverage_source=coverage_source,
+            coverage_source=eff_coverage_source,
             test_set_sha256=eff_test_set_sha,
-            judge_scored_fraction=judge_scored_fraction,
+            judge_scored_fraction=eff_judge_frac,
             generator_model_id=eff_gen_model,
             model_id=eff_model_id,
         )
+
+        if (
+            eff_test_set is not None
+            and sample_col in df.columns
+            and eff_test_set.detect_split_leakage(df[sample_col].astype(str).unique())
+        ):
+            audit.warnings.append(
+                "Split leakage detected: evaluated results mix both 'discovery' and "
+                "'confirmation' items from the TestSet."
+            )
+
+        return audit
 
     def suggest_confirmation_design(
         self,

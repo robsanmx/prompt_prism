@@ -5,13 +5,27 @@ Modular Prompt Composition & Templating Engine for Design of Experiments.
 from __future__ import annotations
 
 import string
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Union
 
 import jinja2
+from jinja2 import meta as jinja2_meta
 from pydantic import BaseModel, Field
 
 from ..core.factors import Factor, FactorSet
-from ..core.models import RunConfig
+from ..core.models import RunConfig, _canonical_json_sha256
+
+
+def _extract_template_variables(raw_text: str) -> Set[str]:
+    """Extract undeclared placeholder variable names from Jinja2 or `string.Template` text."""
+    if not raw_text:
+        return set()
+    if "{{" in raw_text or "{%" in raw_text:
+        env = jinja2.Environment()
+        parsed = env.parse(raw_text)
+        return set(jinja2_meta.find_undeclared_variables(parsed))
+    if "$" in raw_text:
+        return set(string.Template(raw_text).get_identifiers())
+    return set()
 
 
 class PromptSection(BaseModel):
@@ -163,6 +177,74 @@ class PromptTemplate:
             template.add_section(id="data_payload", content=data_template, position=pos)
 
         return template
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize template structure to a canonical JSON-compatible dictionary."""
+        return {
+            "master_template": self.master_template,
+            "default_role": self.default_role,
+            "delimiter": self.delimiter,
+            "sections": [sec.model_dump(mode="json") for sec in self.sections],
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> PromptTemplate:
+        """Reconstruct a PromptTemplate from a dictionary produced by `to_dict()`."""
+        sections = [PromptSection(**s) for s in data.get("sections", [])]
+        return cls(
+            sections=sections,
+            master_template=data.get("master_template"),
+            default_role=data.get("default_role", "user"),
+            delimiter=data.get("delimiter", "\n\n"),
+        )
+
+    def template_sha256(self) -> str:
+        """Compute canonical-JSON SHA-256 hash of this PromptTemplate."""
+        return _canonical_json_sha256(self.to_dict())
+
+    def required_data_variables(
+        self,
+        factors: Optional[Union[FactorSet, Sequence[Factor]]] = None,
+    ) -> Set[str]:
+        """Extract all dataset variable names required to render this template.
+
+        Handles both `master_template` (Jinja2, subtracting factor context keys) and
+        section-based templates (Jinja2 and `string.Template` `$var` placeholders).
+        """
+        factor_set = (
+            factors
+            if isinstance(factors, FactorSet)
+            else (FactorSet(factors) if factors else FactorSet())
+        )
+        factor_context_keys: Set[str] = set()
+        for factor in factor_set:
+            factor_context_keys.add(factor.name)
+            factor_context_keys.add(f"{factor.name}_level")
+            factor_context_keys.add(f"{factor.name}_name")
+            if factor.id:
+                factor_context_keys.add(factor.id)
+                factor_context_keys.add(f"{factor.id}_level")
+
+        if self.master_template:
+            return (
+                _extract_template_variables(self.master_template) - factor_context_keys
+            )
+
+        required: Set[str] = set()
+        for sec in self.sections:
+            if not sec.is_active:
+                continue
+            if sec.factor_id:
+                factor = factor_set.get(sec.factor_id)
+                if factor is not None:
+                    for lvl in factor.levels:
+                        if isinstance(lvl.content, str):
+                            required.update(_extract_template_variables(lvl.content))
+                elif sec.content:
+                    required.update(_extract_template_variables(sec.content))
+            elif sec.content:
+                required.update(_extract_template_variables(sec.content))
+        return required
 
 
 class PromptComposer:
