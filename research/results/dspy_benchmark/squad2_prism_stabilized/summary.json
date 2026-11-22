@@ -1,0 +1,108 @@
+{
+  "task_id": "squad2_grounded_qa",
+  "mined_demo_ids": [
+    "squad2_v4:56e200e4cd28a01900c67c14",
+    "squad2_v4:56e1ded7cd28a01900c67bd4",
+    "squad2_v4:5737a4511c456719005744df",
+    "squad2_v4:56e1ce08e3433e14004231a4"
+  ],
+  "selected_levels": {
+    "xml_multiturn": 0,
+    "strict_contract": 1,
+    "demo_1": 1,
+    "demo_2": 0,
+    "demo_3": 0,
+    "demo_4": 0
+  },
+  "clean_verdicts": {
+    "demo_1": "INCONCLUSIVE_NEED_MORE_ITEMS",
+    "strict_contract": "INCONCLUSIVE_NEED_MORE_ITEMS",
+    "demo_4": "SAFE_TO_PRUNE",
+    "demo_2": "SAFE_TO_PRUNE",
+    "xml_multiturn": "SAFE_TO_PRUNE",
+    "demo_3": "SAFE_TO_PRUNE"
+  },
+  "stability_verdicts": {
+    "demo_1": "NEUTRAL",
+    "demo_4": "NEUTRAL",
+    "strict_contract": "NEUTRAL",
+    "demo_2": "NEUTRAL",
+    "demo_3": "NEUTRAL",
+    "xml_multiturn": "NEUTRAL"
+  },
+  "token_costs": {
+    "xml_multiturn": 1,
+    "strict_contract": 18,
+    "demo_1": 100,
+    "demo_2": 120,
+    "demo_3": 128,
+    "demo_4": 146
+  },
+  "eval_inner_perturb": {
+    "env_means": {
+      "ref": 0.9397406991156991,
+      "repeat_r2": 0.9327962546712546,
+      "fmt_whitespace": 0.914057827237175,
+      "fmt_delimiter": 0.9350152448314212,
+      "word_paraphrase_1": 0.9283408720908721,
+      "word_paraphrase_2": 0.9332116494616495
+    },
+    "mean_prompt_tokens_ref": 307.14166666666665,
+    "mean_completion_tokens_ref": 469.1625,
+    "cert": {
+      "status": "FAIL",
+      "reference_mean": 0.9397406991156991,
+      "max_drop_est": 0.02568287187852414,
+      "u95_sim": 0.047058384369160704,
+      "worst_env_id": "fmt_whitespace",
+      "repeat_noise_se": 0.006092318058277264,
+      "recommended_min_n": null,
+      "diagnostic_note": "Genuine perturbation drop: worst environment 'fmt_whitespace' dropped 2.57 pp (>= epsilon 2.00 pp)."
+    }
+  },
+  "eval_outer_perturb": {
+    "env_means": {
+      "ref": 0.9408600554936762,
+      "repeat_r2": 0.9394346382587908,
+      "fmt_whitespace": 0.9423267527679293,
+      "fmt_delimiter": 0.942821617896415,
+      "word_paraphrase_1": 0.9377587872085845,
+      "word_paraphrase_2": 0.9377902244814009
+    },
+    "mean_prompt_tokens_ref": 326.14166666666665,
+    "mean_completion_tokens_ref": 10.058333333333334,
+    "cert": {
+      "status": "FAIL",
+      "reference_mean": 0.9408600554936762,
+      "max_drop_est": 0.0031012682850917184,
+      "u95_sim": 0.026250964917954034,
+      "worst_env_id": "word_paraphrase_1",
+      "repeat_noise_se": 0.0010141998652250588,
+      "recommended_min_n": 451,
+      "diagnostic_note": "Precision-limited FAIL: worst point drop is only 0.31 pp (< epsilon 2.00 pp), but simultaneous upper bound U95_sim=0.0263 on 'word_paraphrase_1' exceeded epsilon. Repeat-pass noise SE=0.0010. Collect ~N>=451 paired items (currently N=240) to narrow the bound."
+    }
+  },
+  "vs_dspy_full_clean": {
+    "mean_a": 0.9397406991156991,
+    "mean_b": 0.9524915767103267,
+    "delta_a_minus_b": -0.012750877594627594,
+    "se": 0.01045126436885077,
+    "n_clusters": 240,
+    "t_stat": -1.2200320597219465,
+    "p_value": 0.22365520559191424,
+    "ci95_low": -0.033339235116482555,
+    "ci95_high": 0.007837479927227366
+  },
+  "vs_real_v4_prism_clean": {
+    "mean_a": 0.9397406991156991,
+    "mean_b": 0.9224256192191663,
+    "delta_a_minus_b": 0.017315079896532738,
+    "se": 0.010500993840235328,
+    "n_clusters": 240,
+    "t_stat": 1.648899157543426,
+    "p_value": 0.100482083855746,
+    "ci95_low": -0.0033712416706380838,
+    "ci95_high": 0.03800140146370356
+  },
+  "total_flash_calls": 6840
+}

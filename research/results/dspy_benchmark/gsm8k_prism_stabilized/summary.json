@@ -1,0 +1,108 @@
+{
+  "task_id": "gsm8k_math",
+  "mined_demo_ids": [
+    "gsm8k:0621",
+    "gsm8k:0234",
+    "gsm8k:0016",
+    "gsm8k:0680"
+  ],
+  "selected_levels": {
+    "xml_multiturn": 0,
+    "strict_contract": 0,
+    "demo_1": 0,
+    "demo_2": 0,
+    "demo_3": 0,
+    "demo_4": 0
+  },
+  "clean_verdicts": {
+    "demo_2": "SAFE_TO_PRUNE",
+    "demo_1": "SAFE_TO_PRUNE",
+    "demo_4": "SAFE_TO_PRUNE",
+    "xml_multiturn": "SAFE_TO_PRUNE",
+    "demo_3": "SAFE_TO_PRUNE",
+    "strict_contract": "SAFE_TO_PRUNE"
+  },
+  "stability_verdicts": {
+    "demo_1": "NEUTRAL",
+    "demo_2": "NEUTRAL",
+    "demo_3": "NEUTRAL",
+    "demo_4": "NEUTRAL",
+    "strict_contract": "NEUTRAL",
+    "xml_multiturn": "NEUTRAL"
+  },
+  "token_costs": {
+    "xml_multiturn": 0,
+    "strict_contract": 16,
+    "demo_1": 251,
+    "demo_2": 247,
+    "demo_3": 113,
+    "demo_4": 165
+  },
+  "eval_inner_perturb": {
+    "env_means": {
+      "ref": 0.875,
+      "repeat_r2": 0.8541666666666666,
+      "fmt_whitespace": 0.8666666666666667,
+      "fmt_delimiter": 0.875,
+      "word_paraphrase_1": 0.8541666666666666,
+      "word_paraphrase_2": 0.8791666666666667
+    },
+    "mean_prompt_tokens_ref": 85.73333333333333,
+    "mean_completion_tokens_ref": 204.28333333333333,
+    "cert": {
+      "status": "FAIL",
+      "reference_mean": 0.875,
+      "max_drop_est": 0.02083333333333337,
+      "u95_sim": 0.054166666666666696,
+      "worst_env_id": "repeat_r2",
+      "repeat_noise_se": 0.009155098425709347,
+      "recommended_min_n": null,
+      "diagnostic_note": "Genuine perturbation drop: worst environment 'repeat_r2' dropped 2.08 pp (>= epsilon 2.00 pp)."
+    }
+  },
+  "eval_outer_perturb": {
+    "env_means": {
+      "ref": 0.8708333333333333,
+      "repeat_r2": 0.8666666666666667,
+      "fmt_whitespace": 0.8541666666666666,
+      "fmt_delimiter": 0.8916666666666667,
+      "word_paraphrase_1": 0.8666666666666667,
+      "word_paraphrase_2": 0.8791666666666667
+    },
+    "mean_prompt_tokens_ref": 104.73333333333333,
+    "mean_completion_tokens_ref": 212.05833333333334,
+    "cert": {
+      "status": "FAIL",
+      "reference_mean": 0.8708333333333333,
+      "max_drop_est": 0.01666666666666672,
+      "u95_sim": 0.03862043092542104,
+      "worst_env_id": "fmt_whitespace",
+      "repeat_noise_se": 0.007241409199737555,
+      "recommended_min_n": 10411,
+      "diagnostic_note": "Precision-limited FAIL: worst point drop is only 1.67 pp (< epsilon 2.00 pp), but simultaneous upper bound U95_sim=0.0386 on 'fmt_whitespace' exceeded epsilon. Repeat-pass noise SE=0.0072. Collect ~N>=10411 paired items (currently N=240) to narrow the bound."
+    }
+  },
+  "vs_dspy_full_clean": {
+    "mean_a": 0.875,
+    "mean_b": 0.9458333333333333,
+    "delta_a_minus_b": -0.07083333333333333,
+    "se": 0.02036788282713903,
+    "n_clusters": 240,
+    "t_stat": -3.4776974089301023,
+    "p_value": 0.0006007156355144271,
+    "ci95_low": -0.11095682832961382,
+    "ci95_high": -0.030709838337052847
+  },
+  "vs_real_v4_prism_clean": {
+    "mean_a": 0.875,
+    "mean_b": 0.9583333333333334,
+    "delta_a_minus_b": -0.08333333333333333,
+    "se": 0.020596633036060262,
+    "n_clusters": 240,
+    "t_stat": -4.045968736124717,
+    "p_value": 7.037661382742538e-05,
+    "ci95_low": -0.12390745238027948,
+    "ci95_high": -0.042759214286387175
+  },
+  "total_flash_calls": 6840
+}

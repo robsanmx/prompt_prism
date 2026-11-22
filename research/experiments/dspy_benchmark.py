@@ -1045,11 +1045,15 @@ def evaluate_edge_case_guardrail(
         # Append explicit banking77 out_of_scope clause when E=1 (matching testgen_real_pilot)
         user_txt = inst.user_text
         if task_id == "banking77_intent" and int(levels.get("E", 0)) == 1:
-            user_txt = user_txt.replace(
-                "Rely strictly on the provided context/input and never invent unsupported facts, labels, or assumptions.",
+            e_old = "Rely strictly on the provided input and never invent unsupported facts, labels, or assumptions."
+            e_new = (
                 "Rely strictly on the provided input and never invent unsupported facts, labels, or assumptions. "
-                "If the inquiry is completely outside banking or does not match any allowed intent, reply FINAL_ANSWER: out_of_scope.",
+                "If the inquiry is completely outside banking or does not match any allowed intent, reply FINAL_ANSWER: out_of_scope."
             )
+            if e_old in user_txt:
+                user_txt = user_txt.replace(e_old, e_new, 1)
+            else:
+                user_txt = f"{e_new}\n\n{user_txt}"
         msgs = [
             {"role": "system", "content": inst.system_text},
             {"role": "user", "content": user_txt},
@@ -1396,6 +1400,7 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--skip-track-b", action="store_true")
     parser.add_argument("--no-reuse-compiled", action="store_true")
+    parser.add_argument("--guardrail-only", action="store_true")
     parser.add_argument(
         "--out",
         type=str,
@@ -1405,6 +1410,56 @@ def main() -> None:
 
     out_root = Path(args.out)
     out_root.mkdir(parents=True, exist_ok=True)
+    if args.guardrail_only:
+        api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+        if not api_key:
+            raise RuntimeError("GEMINI_API_KEY is required in environment / .env.")
+        client = GeminiMultiTurnClient(
+            "gemini-2.5-flash",
+            api_key=api_key,
+            temperature=0.0,
+            max_output_tokens=512,
+            thinking_budget=0,
+        )
+        comb_path = out_root / "combined_summary.json"
+        combined = (
+            json.loads(comb_path.read_text(encoding="utf-8"))
+            if comb_path.exists()
+            else {}
+        )
+        for task_id in args.tasks:
+            task_dir = out_root / task_id
+            compiled_path = task_dir / "dspy_compiled.json"
+            summary_path = task_dir / "benchmark_summary.json"
+            student, _ = build_dspy_student(task_id)
+            compiled_mod = copy.deepcopy(student)
+            compiled_mod.load(str(compiled_path))
+            _, prism_levels, _ = load_promptprism_v4_winner(task_id)
+            edge_res = evaluate_edge_case_guardrail(
+                task_id=task_id,
+                dspy_module=compiled_mod,
+                prism_levels=prism_levels,
+                client=client,
+                max_workers=args.max_workers,
+            )
+            print(
+                f"[{task_id}] Refreshed guardrail audit: {json.dumps(edge_res)}",
+                flush=True,
+            )
+            if summary_path.exists():
+                s_obj = json.loads(summary_path.read_text(encoding="utf-8"))
+                s_obj["edge_case_guardrail_audit"] = edge_res
+                summary_path.write_text(
+                    json.dumps(s_obj, indent=2) + "\n", encoding="utf-8"
+                )
+            if task_id in combined:
+                combined[task_id]["edge_case_guardrail_audit"] = edge_res
+        if combined:
+            comb_path.write_text(
+                json.dumps(combined, indent=2) + "\n", encoding="utf-8"
+            )
+        return
+
     all_summaries: Dict[str, Any] = {}
     for task_id in args.tasks:
         summary = run_task_benchmark(

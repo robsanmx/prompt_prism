@@ -219,7 +219,7 @@
       "dspy_compiled_pass_rate": 0.0,
       "promptprism_v4_winner_pass_rate": 0.0,
       "promptprism_v4_winner_E_level": 0,
-      "promptprism_coverage_gated_E1_pass_rate": 0.0
+      "promptprism_coverage_gated_E1_pass_rate": 0.85
     },
     "live_eval_flash_client_usage": {
       "calls": 6300,

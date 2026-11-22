@@ -1,0 +1,89 @@
+{
+  "task_id": "gsm8k_math",
+  "selected_levels": {
+    "xml_multiturn": 1,
+    "strict_contract": 1,
+    "demo_1": 0,
+    "demo_2": 0,
+    "demo_3": 0,
+    "demo_4": 0
+  },
+  "eval_inner_perturb": {
+    "env_means": {
+      "ref": 0.9583333333333334,
+      "repeat_r2": 0.9583333333333334,
+      "fmt_whitespace": 0.9625,
+      "fmt_delimiter": 0.9666666666666667,
+      "word_paraphrase_1": 0.9541666666666667,
+      "word_paraphrase_2": 0.9583333333333334
+    },
+    "mean_prompt_tokens_ref": 104.85416666666667,
+    "mean_completion_tokens_ref": 162.37916666666666,
+    "cert": {
+      "status": "FAIL",
+      "reference_mean": 0.9583333333333334,
+      "max_drop_est": 0.004166666666666652,
+      "u95_sim": 0.024162120609708623,
+      "worst_env_id": "word_paraphrase_1",
+      "repeat_noise_se": 0.0,
+      "recommended_min_n": 383,
+      "diagnostic_note": "Precision-limited FAIL: worst point drop is only 0.42 pp (< epsilon 2.00 pp), but simultaneous upper bound U95_sim=0.0242 on 'word_paraphrase_1' exceeded epsilon. Repeat-pass noise SE=0.0000. Collect ~N>=383 paired items (currently N=240) to narrow the bound."
+    }
+  },
+  "eval_outer_perturb": {
+    "env_means": {
+      "ref": 0.9416666666666667,
+      "repeat_r2": 0.9541666666666667,
+      "fmt_whitespace": 0.9541666666666667,
+      "fmt_delimiter": 0.9583333333333334,
+      "word_paraphrase_1": 0.9708333333333333,
+      "word_paraphrase_2": 0.9625
+    },
+    "mean_prompt_tokens_ref": 123.85416666666667,
+    "mean_completion_tokens_ref": 177.60833333333332,
+    "cert": {
+      "status": "PASS",
+      "reference_mean": 0.9416666666666667,
+      "max_drop_est": -0.012500000000000067,
+      "u95_sim": 0.006221360808571025,
+      "worst_env_id": "fmt_whitespace",
+      "repeat_noise_se": 0.009163690263671732,
+      "recommended_min_n": null,
+      "diagnostic_note": "Certified PASS: max drop -1.25 pp, U95_sim=0.0062 < 0.0200 (repeat-pass noise SE=0.0092)."
+    }
+  },
+  "vs_dspy_full_clean": {
+    "mean_a": 0.9583333333333334,
+    "mean_b": 0.9458333333333333,
+    "delta_a_minus_b": 0.0125,
+    "se": 0.011017372486815977,
+    "n_clusters": 240,
+    "t_stat": 1.134571787870313,
+    "p_value": 0.25769141153452074,
+    "ci95_low": -0.009203556211444107,
+    "ci95_high": 0.03420355621144411
+  },
+  "vs_real_v4_prism_clean": {
+    "mean_a": 0.9583333333333334,
+    "mean_b": 0.9583333333333334,
+    "delta_a_minus_b": 0.0,
+    "se": 0.008350748886986165,
+    "n_clusters": 240,
+    "t_stat": 0.0,
+    "p_value": 1.0,
+    "ci95_low": -0.016450469301391227,
+    "ci95_high": 0.016450469301391227
+  },
+  "vs_unconstrained_pruned_clean": {
+    "mean_a": 0.9583333333333334,
+    "mean_b": 0.875,
+    "delta_a_minus_b": 0.08333333333333333,
+    "se": 0.02059663303606027,
+    "n_clusters": 240,
+    "t_stat": 4.045968736124715,
+    "p_value": 7.037661382742573e-05,
+    "ci95_low": 0.04275921428638716,
+    "ci95_high": 0.1239074523802795
+  },
+  "total_flash_calls": 2880
+}
