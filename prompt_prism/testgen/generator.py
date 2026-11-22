@@ -41,32 +41,33 @@ Return ONLY valid JSON:
 
 _BASELINE_GEN_TEMPLATE = """[PROMPTPRISM_TASK:GENERATE_BASELINE]
 Generate {n} realistic, diverse test inputs for the task below WITHOUT referencing any optional prompt clause.
-For each item, attach deterministic checks first ("exact", "regex", "contains", "not_contains", "json_schema").
+For each item, attach 1-2 deterministic checks using ONLY these exact `kind` values: "exact", "regex", "contains", "not_contains", "json_schema" (never invent other kinds; never use "custom").
+Ensure checks reject empty strings and raw input echoes (e.g., use "exact", anchored "regex", or output-prefixed "contains" rather than bare substrings already present in the input) and avoid nested regex quantifiers.
 {judge_instruction}
-Never use "custom" checks. Include "reference_pass" (a valid output that passes every check) and "reference_fail" (a realistic wrong output that fails at least one check).
+CRITICAL: "reference_pass" MUST be a literal sample LLM output string (NOT an explanation!) that passes EVERY check; "reference_fail" MUST be a literal wrong LLM output string (NOT an explanation!) that fails at least one check.
 
 Return ONLY valid JSON:
-{{"cases": [{{"inputs": {{{vars_hint}}}, "target": "<optional reference answer>", "checks": [{{"kind": "exact|regex|contains|not_contains|json_schema{judge_kind}", "value": "...", "weight": 1.0, "description": "..."}}], "reference_pass": "...", "reference_fail": "..."}}]}}
+{{"cases": [{{"inputs": {{{vars_hint}}}, "target": "<optional reference answer>", "checks": [{{"kind": "exact|regex|contains|not_contains|json_schema{judge_kind}", "value": "...", "weight": 1.0, "description": "..."}}], "reference_pass": "<literal passing LLM response>", "reference_fail": "<literal failing LLM response>"}}]}}
 """
 
 _TARGETED_RULE_TEMPLATE = """[PROMPTPRISM_TASK:GENERATE_TARGETED_RULE]
 Generate {n} diverse targeted test inputs for conditional clause `{factor_id}` ({factor_name}) where following Level 1 instead of Level 0 changes what a correct response looks like.
 Include a spread of obvious triggers, subtle triggers, and near-misses that look relevant but should NOT change the output.
-Attach deterministic checks first encoding the clause's intended specification; {judge_instruction}
-Never use "custom" checks. Include "reference_pass" and "reference_fail".
+Attach 1-2 deterministic checks encoding the clause's intended specification using ONLY these exact `kind` values: "exact", "regex", "contains", "not_contains", "json_schema" (never invent other kinds; never use "custom"; avoid nested regex quantifiers; reject empty strings and raw input echoes); {judge_instruction}
+CRITICAL: "reference_pass" MUST be a literal sample LLM output string (NOT an explanation!) that passes EVERY check; "reference_fail" MUST be a literal wrong LLM output string (NOT an explanation!) that fails at least one check.
 
 Return ONLY valid JSON:
-{{"cases": [{{"inputs": {{{vars_hint}}}, "target": "<optional reference answer>", "checks": [{{"kind": "exact|regex|contains|not_contains|json_schema{judge_kind}", "value": "...", "weight": 1.0, "description": "..."}}], "reference_pass": "...", "reference_fail": "..."}}]}}
+{{"cases": [{{"inputs": {{{vars_hint}}}, "target": "<optional reference answer>", "checks": [{{"kind": "exact|regex|contains|not_contains|json_schema{judge_kind}", "value": "...", "weight": 1.0, "description": "..."}}], "reference_pass": "<literal passing LLM response>", "reference_fail": "<literal failing LLM response>"}}]}}
 """
 
 _TARGETED_SCAFFOLD_TEMPLATE = """[PROMPTPRISM_TASK:GENERATE_TARGETED_SCAFFOLD]
 Generate {n} hard, subtle, or ambiguous task inputs where global scaffold `{factor_id}` ({factor_name}) is hypothesized to improve task accuracy.
 CRITICAL: Score strictly on baseline TASK CORRECTNESS. Do NOT create checks that test the scaffold's surface form (never check for reasoning text, persona voice, or verification commentary).
-Attach deterministic task checks first; {judge_instruction}
-Never use "custom" checks. Include "reference_pass" and "reference_fail".
+Attach 1-2 deterministic task checks using ONLY these exact `kind` values: "exact", "regex", "contains", "not_contains", "json_schema" (never invent other kinds; never use "custom"; avoid nested regex quantifiers; reject empty strings and raw input echoes); {judge_instruction}
+CRITICAL: "reference_pass" MUST be a literal sample LLM output string (NOT an explanation!) that passes EVERY check; "reference_fail" MUST be a literal wrong LLM output string (NOT an explanation!) that fails at least one check.
 
 Return ONLY valid JSON:
-{{"cases": [{{"inputs": {{{vars_hint}}}, "target": "<optional reference answer>", "checks": [{{"kind": "exact|regex|contains|not_contains|json_schema{judge_kind}", "value": "...", "weight": 1.0, "description": "..."}}], "reference_pass": "...", "reference_fail": "..."}}]}}
+{{"cases": [{{"inputs": {{{vars_hint}}}, "target": "<optional reference answer>", "checks": [{{"kind": "exact|regex|contains|not_contains|json_schema{judge_kind}", "value": "...", "weight": 1.0, "description": "..."}}], "reference_pass": "<literal passing LLM response>", "reference_fail": "<literal failing LLM response>"}}]}}
 """
 
 _TAG_COVERAGE_TEMPLATE = """[PROMPTPRISM_TASK:TAG_COVERAGE]
@@ -139,50 +140,82 @@ def _heuristic_clause_role(factor: Factor) -> ClauseRole:
     return "conditional_rule"
 
 
+def _try_json_loads(raw: str) -> Any:
+    """Parse JSON, falling back once to escaping invalid lone backslashes (e.g. regex `\\s`, `\\.`)."""
+    try:
+        return json.loads(raw)
+    except json.JSONDecodeError:
+        repaired = re.sub(r'(?<!\\)((?:\\\\)*)\\([^"\\/bfnrtu])', r"\1\\\\\2", raw)
+        if repaired != raw:
+            return json.loads(repaired)
+        raise
+
+
 def _extract_json_payload(raw_text: str) -> Any:
     """Extract a JSON object or array from raw LLM text (handling fences and prose)."""
     text = str(raw_text or "").strip()
     if not text:
         raise ValueError("Empty LLM response")
 
-    fenced = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
-    candidate = fenced.group(1).strip() if fenced else text
-
+    # Always attempt direct JSON parsing first so literal triple-backticks inside
+    # JSON string values (e.g. `not_contains` / `reference_fail` anti-fence checks)
+    # are never misread as outer markdown fences.
     try:
-        return json.loads(candidate)
+        return _try_json_loads(text)
     except Exception:
         pass
 
-    # Find first balanced JSON object or array
-    start_positions = [idx for idx, ch in enumerate(candidate) if ch in "{["]
-    for start in start_positions:
-        opener = candidate[start]
-        closer = "}" if opener == "{" else "]"
-        depth = 0
-        in_str = False
-        escaped = False
-        for end in range(start, len(candidate)):
-            ch = candidate[end]
-            if in_str:
-                if escaped:
-                    escaped = False
-                elif ch == "\\":
-                    escaped = True
-                elif ch == '"':
-                    in_str = False
-            else:
-                if ch == '"':
-                    in_str = True
-                elif ch == opener:
-                    depth += 1
-                elif ch == closer:
-                    depth -= 1
-                    if depth == 0:
-                        snippet = candidate[start : end + 1]
-                        try:
-                            return json.loads(snippet)
-                        except Exception:
-                            break
+    candidates: List[str] = []
+    # Try greedy outer fence first so embedded triple-backticks inside JSON strings
+    # inside a fenced response do not prematurely truncate the outer block.
+    for pat in (
+        r"(?:^|\n)```(?:json)?\s*\n([\s\S]*)\n```(?:\s*$|\n)",
+        r"(?:^|\n)```(?:json)?\s*\n([\s\S]*?)\n```(?:\s*$|\n)",
+        r"```(?:json)?\s*([\s\S]*?)\s*```",
+    ):
+        fenced = re.search(pat, text)
+        if fenced:
+            cand = fenced.group(1).strip()
+            if cand and cand not in candidates:
+                candidates.append(cand)
+    candidates.append(text)
+
+    for candidate in candidates:
+        try:
+            return _try_json_loads(candidate)
+        except Exception:
+            pass
+
+        # Find first balanced JSON object or array
+        start_positions = [idx for idx, ch in enumerate(candidate) if ch in "{["]
+        for start in start_positions:
+            opener = candidate[start]
+            closer = "}" if opener == "{" else "]"
+            depth = 0
+            in_str = False
+            escaped = False
+            for end in range(start, len(candidate)):
+                ch = candidate[end]
+                if in_str:
+                    if escaped:
+                        escaped = False
+                    elif ch == "\\":
+                        escaped = True
+                    elif ch == '"':
+                        in_str = False
+                else:
+                    if ch == '"':
+                        in_str = True
+                    elif ch == opener:
+                        depth += 1
+                    elif ch == closer:
+                        depth -= 1
+                        if depth == 0:
+                            snippet = candidate[start : end + 1]
+                            try:
+                                return _try_json_loads(snippet)
+                            except Exception:
+                                break
     raise ValueError(f"Could not parse JSON payload from LLM response: {text[:200]!r}")
 
 
@@ -470,7 +503,7 @@ class TestSetGenerator:
             resp = self.client.generate(prompt)
             if resp.error or not resp.content:
                 consecutive_zero_yield += 1
-                if consecutive_zero_yield >= 2:
+                if consecutive_zero_yield >= 4:
                     break
                 continue
 
@@ -479,7 +512,7 @@ class TestSetGenerator:
                 raw_cases = _extract_cases_list(payload)
             except Exception:
                 consecutive_zero_yield += 1
-                if consecutive_zero_yield >= 2:
+                if consecutive_zero_yield >= 4:
                     break
                 continue
 
@@ -499,7 +532,7 @@ class TestSetGenerator:
 
             if accepted_in_batch == 0:
                 consecutive_zero_yield += 1
-                if consecutive_zero_yield >= 2:
+                if consecutive_zero_yield >= 4:
                     break
             else:
                 consecutive_zero_yield = 0

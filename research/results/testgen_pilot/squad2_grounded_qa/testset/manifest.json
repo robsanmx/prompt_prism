@@ -1,0 +1,104 @@
+{
+  "active_cases_sha256": "00b6280736b1bbff2fc72b08ef8864d21e44416ef481782b6887c39c45c1533f",
+  "cases_sha256": "00b6280736b1bbff2fc72b08ef8864d21e44416ef481782b6887c39c45c1533f",
+  "counts": {
+    "active": 357,
+    "by_factor": {
+      "A": 13,
+      "B": 65,
+      "C": 234,
+      "D": 234,
+      "E": 197,
+      "F": 0
+    },
+    "by_factor_split": {
+      "A": {
+        "confirmation": 3,
+        "discovery": 10,
+        "unassigned": 0
+      },
+      "B": {
+        "confirmation": 24,
+        "discovery": 41,
+        "unassigned": 0
+      },
+      "C": {
+        "confirmation": 81,
+        "discovery": 153,
+        "unassigned": 0
+      },
+      "D": {
+        "confirmation": 81,
+        "discovery": 153,
+        "unassigned": 0
+      },
+      "E": {
+        "confirmation": 68,
+        "discovery": 129,
+        "unassigned": 0
+      },
+      "F": {
+        "confirmation": 0,
+        "discovery": 0,
+        "unassigned": 0
+      }
+    },
+    "by_kind": {
+      "baseline": 27,
+      "targeted": 330
+    },
+    "by_source": {
+      "synthetic": 357
+    },
+    "by_split": {
+      "confirmation": 128,
+      "discovery": 229
+    },
+    "judge_check_items": 0,
+    "rejected": 0,
+    "total": 357
+  },
+  "factor_id_to_name": {
+    "A": "specialist_persona",
+    "B": "brief_reasoning",
+    "C": "few_shot_demos",
+    "D": "strict_output_contract",
+    "E": "grounding_guardrail",
+    "F": "self_verification"
+  },
+  "factor_roles": {
+    "A": "global_scaffold",
+    "B": "global_scaffold",
+    "C": "global_scaffold",
+    "D": "conditional_rule",
+    "E": "conditional_rule",
+    "F": "global_scaffold"
+  },
+  "factors_sha256": "b31aedbc5a48c4fe2558173de1dd6baab173cfb808bbefcb77682181cdf3eedc",
+  "frozen_at": "2026-11-21T06:38:10.432116+00:00",
+  "generator": {
+    "filter_stats": {
+      "accepted": 357,
+      "candidates_seen": 371,
+      "dropped_duplicate": 10,
+      "dropped_judge_disabled": 0,
+      "dropped_sanity": 3,
+      "dropped_schema": 1,
+      "dropped_security": 0,
+      "dropped_template_vars": 0
+    },
+    "model_id": "gemini-2.5-pro",
+    "prompt_hash": "5d81d19f825a02768c57056289dce79fe79ccc1a5e71e60af7d723a28cb93eb6",
+    "prompt_prism_version": "2.0.0",
+    "seed": 42,
+    "shortfalls": {
+      "baseline": {
+        "accepted": 27,
+        "requested": 140
+      }
+    },
+    "tagger_model_id": "gemini-2.5-pro"
+  },
+  "schema_version": "1.0.0",
+  "template_sha256": "5d0d7222b04838681cf9e7d3c51658bdea03d013c6c522e90ffed3695c58dc2c"
+}

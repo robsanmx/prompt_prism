@@ -563,7 +563,7 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         "--targeted-margin",
         type=float,
         default=None,
-        help="One-sided non-inferiority margin on targeted items (default: max(2 * prune_margin, 0.05))",
+        help="One-sided non-inferiority margin on targeted items (default: max(2 * prune_margin, 0.08))",
     )
     diag_parser.add_argument(
         "--token-costs",

@@ -215,6 +215,22 @@ def test_extract_json_payload_handles_fences_and_prose():
         "a": {"b": 1}
     }
     assert _extract_json_payload("List: [1, 2, 3] trailing") == [1, 2, 3]
+    # Embedded triple-backticks inside JSON string values (e.g. anti-fence reference_fail)
+    # must not be misread as outer markdown code fences.
+    raw_with_embedded_fence = json.dumps(
+        {"cases": [{"reference_fail": '```json\n{"status": "ok"}\n```'}]}
+    )
+    assert _extract_json_payload(raw_with_embedded_fence) == {
+        "cases": [{"reference_fail": '```json\n{"status": "ok"}\n```'}]
+    }
+    # Lone invalid regex backslashes (e.g. `\s`, `\.`) are safely repaired without altering valid escapes
+    raw_with_regex_escape = (
+        r'{"pattern": "(?i)FINAL_ANSWER:\s*1774\.?\s*$", "already": "\\s"}'
+    )
+    assert _extract_json_payload(raw_with_regex_escape) == {
+        "pattern": r"(?i)FINAL_ANSWER:\s*1774\.?\s*$",
+        "already": r"\s",
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -540,7 +540,7 @@ def run_calibrated_attribution_audit(
     eff_targeted_margin: Optional[float] = (
         float(targeted_margin)
         if targeted_margin is not None
-        else (max(2.0 * equivalence_margin, 0.05) if has_coverage else None)
+        else (max(2.0 * equivalence_margin, 0.08) if has_coverage else None)
     )
     eff_min_targeted: Optional[int] = min_targeted_items if has_coverage else None
     evidence_tier = (

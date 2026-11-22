@@ -1,18 +1,20 @@
 ---
 name: prompt_prism
 description: >-
-  PromptPrism 2.0 framework for LLM prompt diagnostics, clause attribution, safe prompt pruning
-  (item-clustered contrast t-tests + TOST equivalence), noise-floor auditing, and CI/CD release
-  gating. Use whenever the user wants to find which prompt clauses help or hurt, prune dead prompt
-  bloat safely, separate real prompt deltas from eval noise, or gate prompt releases and canary
-  drift checks in CI/CD.
+  PromptPrism 2.0/2.1 framework for LLM prompt diagnostics, clause attribution, coverage-aware safe
+  prompt pruning (item-clustered contrast t-tests + TOST equivalence + targeted non-inferiority),
+  frozen scored test set generation, noise-floor auditing, and CI/CD release gating. Use whenever
+  the user wants to generate scored test sets for prompt clauses, find which prompt clauses help or
+  hurt, prune dead prompt bloat safely without deleting untested edge-case rules, separate real
+  prompt deltas from eval noise, or gate prompt releases and canary drift checks in CI/CD.
 ---
 
-# PromptPrism 2.0: Prompt Diagnostics, Safe Pruning & Release Gating
+# PromptPrism 2.0 / 2.1: Prompt Diagnostics, Coverage-Gated Pruning, Test Generation & Release Gating
 
 Use this skill whenever you or the user need to:
+- **Generate a frozen, scored, coverage-tagged test set (`prism tests` / `TestSetGenerator`)** when the user lacks `N >= 100` hand-labelled items or their baseline eval never exercises rare conditional rules. Automatically separates `conditional_rule` vs. `global_scaffold` clauses (avoiding tautological surface-form checks), prefers deterministic checks with `(reference_pass, reference_fail)` sanity filtering, runs independent blind coverage tagging, stratifies into `discovery`/`confirmation`, and freezes with canonical-JSON SHA-256.
 - **Attribute modular prompt clauses** across 3 to 23 binary or multi-level factors (persona, few-shot examples, reasoning cues, output contracts, guardrails, delimiters) using balanced `2^(k-p)` fractional factorial or Plackett-Burman designs (35.38% lower 6-factor main-effect RMSE prospectively; 1.40x–4.11x lower contrast RMSE retrospectively).
-- **Remove harmful instructions & prune dead bloat (`SAFE_TO_PRUNE`)** — reducing instruction interference / attention dilution, latency and uncached output-token overhead, prompt maintenance debt, and uncached/dynamic input tokens (even when static system prefixes are discounted by prompt caching). Separates proven negligible clauses (`SAFE_TO_PRUNE` via paired TOST equivalence) from underpowered `INCONCLUSIVE_NEED_MORE_ITEMS` factors.
+- **Remove harmful instructions & prune dead bloat with a coverage gate (`SAFE_TO_PRUNE`, `KEEP_TARGETED`, `UNTESTED`, `CONFLICT_REVIEW`)** — reducing instruction interference / attention dilution, latency and uncached output-token overhead, prompt maintenance debt, and uncached/dynamic input tokens, while **never deleting an unexercised conditional rule**. Requires both baseline TOST equivalence (`|delta_F| < margin`) AND targeted non-inferiority (`oriented_delta_T < targeted_margin`, calibrated default `max(2 * margin, 0.08)`, `min_targeted_items = 20`) before issuing `SAFE_TO_PRUNE`.
 - **Stop chasing eval noise** by measuring the item-sampling noise floor (`RMS_obs`, `RMS_noise`, `RMS_signal_corr`, noise variance share `%`) and running calibrated contrast-specific item-clustered `t`-tests (4.0%–5.1% FDR at `N >= 100`) plus 2,000-draw Rademacher sign-flip randomization for small `N`, instead of miscalibrated pooled fixed-block RCBD ANOVA.
 - **Gate production releases & detect drift in CI/CD:**
   - **`prism verify-cert` (offline CI gate, zero LLM calls):** Fails closed whenever any **declared** `OperatingEnvelopeSpec` boundary changes (`task_id`, `model_id`, `model_version`, `dataset_partition_hash`, `parser_hash`, `decoding_config`, `perturbation_env_ids`).
@@ -100,50 +102,85 @@ factual_geval = deepeval_metric(
 faithfulness = deepeval_metric("faithfulness", cache=judge_cache)
 ```
 
-### Step 3: Execute Orthogonal Screening with Response Caching
-Keep benchmark splits cleanly partitioned: **Screen** (attribution/pruning), **Untouched Confirmation** (`confirmation-validated`), and **Perturbation/Temporal Canary Wave** (`stability-certified`).
+### Step 3: Build or Generate a Frozen, Coverage-Tagged Eval Set & Execute Screening
+Keep benchmark splits cleanly partitioned: **Discovery / Screen** (attribution/pruning), **Untouched Confirmation** (`confirmation-validated`), and **Perturbation/Temporal Canary Wave** (`stability-certified`).
+
+If the user does **not** already have `N >= 100` paired, coverage-tagged items (or wants targeted edge-case coverage for conditional rules), generate and freeze a `TestSet` before running `Experiment`:
 
 ```python
-from prompt_prism import Experiment
-
-exp = Experiment.from_factors(
-    factors=factors,
-    design="2(5-1)V",  # 16 runs instead of 32; kappa=1.0 for main + 2FI
-    system_prompt="Execute the task adhering strictly to guidelines.",
-    data_template="Context:\n{{ policy_context }}\n\nQuestion:\n{{ input }}",
-    metrics=deterministic_metrics,
-    target_metric="f1_score",
-    title="Production Prompt Attribution & Pruning Audit",
+from prompt_prism import (
+    CheckSuiteMetric,
+    Evaluator,
+    Experiment,
+    PromptTemplate,
+    TestSetGenerator,
 )
 
+template = PromptTemplate.from_factors(
+    factors,
+    system_prompt="Execute the task adhering strictly to guidelines.",
+    data_template="Context:\n{{ policy_context }}\n\nQuestion:\n{{ input }}",
+)
+
+# 1. Generate baseline + per-clause targeted items, sanity-filter, blind-tag, split & freeze
+# Label each factor's metadata={"clause_role": "conditional_rule" | "global_scaffold"}
+# (or let TestSetGenerator classify roles automatically).
+# Tip: set temperature ~0.7 on generator_llm for cross-batch diversity,
+# and keep temperature=0.0 on tagger_llm and the model under test.
+gen = TestSetGenerator(
+    client=generator_llm,           # Prefer a different model than model under test
+    tagger_client=tagger_llm,       # Independent blind coverage tagger (temperature=0.0)
+    n_baseline_discovery=100,
+    n_baseline_confirmation=40,
+    n_per_factor_discovery=35,
+    n_per_factor_confirmation=20,
+)
+test_set = gen.generate(factors, template, task_description="...", freeze=True)
+test_set.save("tests/my_suite")
+
+# 2. Execute orthogonal screen on discovery split (default; protects confirmation split)
+exp = Experiment(
+    factors=factors,
+    template=template,
+    design="2(5-1)V",  # 16 runs instead of 32; kappa=1.0 for main + 2FI
+    evaluator=Evaluator([CheckSuiteMetric()]),
+    target_metric="check_suite",
+    title="Production Prompt Attribution & Pruning Audit",
+)
 results = exp.run(
-    dataset=screen_dataset,       # Aim for N >= 100 paired items for standard-N calibration
+    test_set,                     # Defaults to split="discovery"; verifies frozen SHA-256
     client=call_llm,              # Any callable fn(prompt) -> str or LLMClient
     max_workers=4,
     cache_db="prompt_cache.db",
 )
 ```
 
-### Step 4: Run Calibrated Attribution, Noise Floor & Pruning Audit (`exp.diagnose`)
-**Do NOT gate significance on pooled fixed-block RCBD ANOVA** (empirical-null audits show pooled RCBD inflates global BH FDR to **18.4%** on MMLU and commits **27.1%** false positives on high-variance formatting factors). Use `exp.diagnose()` (or `prism diagnose`), which runs contrast-specific item-clustered `t`-tests (4.0%–5.1% FDR at `N >= 100`), reports the item-sampling noise floor, runs 2,000-draw sign-flip checks for small `N`, and classifies each clause with paired TOST equivalence:
+*(If you already have a hand-labelled `screen_dataset`, pass it directly to `exp.run(dataset=screen_dataset, ...)` and include a `targets_factors` field on each item—or pass `coverage={factor: set(sample_ids)}` to `exp.diagnose()`—so rare conditional clauses stay protected.)*
+
+### Step 4: Run Calibrated Attribution, Noise Floor & Coverage-Gated Pruning Audit (`exp.diagnose`)
+**Do NOT gate significance on pooled fixed-block RCBD ANOVA** (empirical-null audits show pooled RCBD inflates global BH FDR to **18.4%** on MMLU and commits **27.1%** false positives on high-variance formatting factors). Use `exp.diagnose()` (or `prism diagnose --tests <dir>`), which runs contrast-specific item-clustered `t`-tests (4.0%–5.1% FDR at `N >= 100`), reports the item-sampling noise floor, runs 2,000-draw sign-flip checks for small `N`, and enforces the **v2.1.0 coverage-aware pruning gate** (baseline TOST equivalence + one-sided targeted non-inferiority `oriented_delta_T < targeted_margin`, calibrated default `max(2 * margin, 0.08)` with `min_targeted_items = 20`):
 
 ```python
 audit = exp.diagnose(
     alpha=0.05,
-    equivalence_margin=0.02,  # |delta| < 2.0 pp required before SAFE_TO_PRUNE
+    equivalence_margin=0.02,  # |delta_F| < 2.0 pp on baseline + oriented_delta_T < 0.08 on targeted
+    min_targeted_items=20,    # Minimum paired targeted items before SAFE_TO_PRUNE / REMOVE_HARMFUL
     n_sign_flip=2000,         # Corroborating randomization check (critical when N < 100)
 )
 print(audit.to_markdown())
 
 for f in audit.factors:
-    print(f.factor_id, f.pruning_verdict, f"delta={f.effect_delta:+.4f}", f"q={f.q_value_bh:.4g}")
+    print(f.factor_id, f.pruning_verdict, f"delta_F={f.effect_delta:+.4f}", f"n_T={f.n_targeted}", f"delta_T={f.delta_targeted}")
 ```
 
-**How to act on each verdict:**
-1. **`KEEP`**: BH `q < alpha` and positive effect — retain this clause.
-2. **`REMOVE_HARMFUL`**: BH `q < alpha` and negative effect — remove/invert to eliminate instruction interference and unnecessary latency/output tokens.
-3. **`SAFE_TO_PRUNE`**: TOST confirms `|delta| < margin` at `alpha` — safe to delete to simplify prompt maintenance, cut latency, and save uncached tokens (`audit.estimated_prunable_tokens`).
-4. **`INCONCLUSIVE_NEED_MORE_ITEMS`**: Neither significant nor proven equivalent — do **not** claim "no effect"; collect more paired items before pruning.
+**How to act on each verdict (7 coverage-aware verdicts):**
+1. **`KEEP`**: Baseline BH `q_F < alpha` and positive effect (and does not significantly hurt targeted items) — retain this clause.
+2. **`KEEP_TARGETED`**: Neutral on baseline traffic, but targeted BH `q_T < alpha` with positive targeted effect (`n_T >= min_targeted_items`) — retain this rare conditional rule; never prune it!
+3. **`REMOVE_HARMFUL`**: Hurts baseline (`q_F < alpha`, with sufficient targeted coverage and no targeted benefit) OR hurts targeted items (`q_T < alpha`) — remove/invert to eliminate instruction interference and unnecessary latency/output tokens.
+4. **`CONFLICT_REVIEW`**: Baseline hurts while targeted coverage is missing/thin (`n_T < min_targeted_items`), OR baseline and targeted directions conflict significantly — do **not** auto-delete; review the tradeoff or add targeted items first.
+5. **`UNTESTED`**: Neutral on baseline, but `n_T == 0` in the coverage map — the clause was never exercised; add targeted tests before making any pruning decision.
+6. **`SAFE_TO_PRUNE`**: Baseline TOST proves `|delta_F| < margin` **and** (when coverage is present) `n_T >= min_targeted_items` with one-sided targeted non-inferiority `p_ni_T < alpha` — safe to delete (`audit.estimated_prunable_tokens`).
+7. **`INCONCLUSIVE_NEED_MORE_ITEMS`**: Neither significant nor proven equivalent/non-inferior (or `0 < n_T < min_targeted_items`) — do **not** claim "no effect"; collect more paired items before pruning.
 
 ### Step 5: Validate on Untouched Confirmation Data & Gate Releases (`prism certify` / `prism verify-cert`)
 To promote a pruned prompt from `predicted` to `confirmation-validated` or `stability-certified`, evaluate it on **untouched held-out items** plus registered semantic-preserving perturbations (`fmt_whitespace`, `fmt_delimiter`, `word_paraphrase_1`, `word_paraphrase_2`, `repeat_r2`, `temporal_wave_2`) pinned to an explicit SHA-256-hashed `OperatingEnvelopeSpec`:
@@ -202,17 +239,38 @@ prism alias --plan "2(6-2)IV"
 prism design --factors 6 --plan "2(6-2)IV" --output design_matrix.csv
 prism list-metrics
 
-# 2. Calibrated attribution, item-sampling noise floor & TOST pruning audit
+# 2. Scored test set generation, coverage inspection, human/agent review & freezing
+prism tests generate \
+  --factors factors.yaml \
+  --template template.yaml \
+  --task "Classify banking customer intents" \
+  --seed-examples seeds.jsonl \
+  --n-baseline-discovery 100 \
+  --n-per-factor-discovery 35 \
+  --client mypkg.clients:generator \
+  --tagger-client mypkg.clients:tagger \
+  --out tests/my_suite/
+# Or with prompt-prism[cloud]: --model gemini/gemini-2.5-flash
+
+prism tests stats tests/my_suite/
+prism tests review export tests/my_suite/ --format md --out review.md    # or --format csv
+prism tests review import tests/my_suite/ review.md                      # auto-detects CSV/MD & re-freezes
+prism tests freeze tests/my_suite/                                       # freeze a --no-freeze draft
+prism tests generate --factors factors.yaml --template template.yaml \
+  --client mypkg.clients:generator --refresh-confirmation tests/my_suite/
+
+# 3. Calibrated attribution, item-sampling noise floor & coverage-gated TOST pruning audit
 prism diagnose \
   --data screen_results.csv \
-  --target exact_match \
+  --target check_suite \
+  --tests tests/my_suite/ \
   --sample-col sample_id \
   --prune-margin 0.02 \
   --token-costs specialist_persona=8,brief_reasoning=12,few_shot_demos=63,strict_output_contract=19 \
   --output-report diagnostic_audit.md \
   --json-out diagnostic_audit.json
 
-# 3. Issue a stability certificate on confirmation + perturbation/canary data (exit 2 on FAIL/INVALID)
+# 4. Issue a stability certificate on confirmation + perturbation/canary data (exit 2 on FAIL/INVALID)
 prism certify \
   --data stability_wave.csv \
   --target score \
@@ -225,7 +283,7 @@ prism certify \
   --output stability_cert.json \
   --fail-on-error
 
-# 4. Offline CI/CD config gate — exits 0 ONLY if certificate is PASS and declared envelope matches 100%
+# 5. Offline CI/CD config gate — exits 0 ONLY if certificate is PASS and declared envelope matches 100%
 prism verify-cert \
   --cert stability_cert.json \
   --task-id banking77_intent \
@@ -241,9 +299,12 @@ prism verify-cert \
 ## Critical Methodological Guardrails for Agents
 
 1. **Never Gate Factor Significance on Pooled Fixed-Block RCBD ANOVA:** Always use `exp.diagnose()` / `prism diagnose` (contrast-specific item-clustered `t`-tests + BH FDR; plus `B >= 2,000` sign-flip randomization when `N < 100`). Pooled RCBD inflates global BH FDR to 18.4%.
-2. **Check the Noise Floor Before Interpreting Effects:** On small per-task benchmarks (~100 items), 79%–85% of apparent higher-order variance is item-sampling noise. Inspect `audit.noise_floor.noise_variance_share_pct` before chasing small swings.
-3. **Never Equate `p >= 0.05` with "Safe to Delete":** Only prune a prompt clause when `pruning_verdict == "SAFE_TO_PRUNE"` (TOST proves `|delta| < margin` at `alpha`). If `INCONCLUSIVE_NEED_MORE_ITEMS`, either keep the clause or evaluate more items.
-4. **Bundle Coupled Clauses & Scope Agent Systems to Single-Step Nodes:** Never toggle interdependent instructions or tool schemas independently if doing so breaks prompt coherence (use multi-level `Factor(levels=[...])`). For multi-turn agents, ablate isolated single-step nodes or replayed state snapshots rather than noisy end-to-end trajectories.
-5. **Distinguish Declared Config Gates from Silent Drift Checks:** `prism verify-cert` catches *declared* config/version changes offline at zero LLM cost; detecting *silent* provider weight changes requires periodic `prism certify` re-runs on fresh temporal/canary waves.
-6. **Never Deploy Unvalidated Additive Sign Extrapolation Under Interactions:** Synthesizing an unseen corner purely from main-effect signs suffers severe regret (8.74 pp on Cohort 2) when interactions are large; always validate any candidate prompt on untouched confirmation items.
-7. **Cache Everything:** Always pass `cache_db` on `exp.run(...)` and `JudgeCache` on `deepeval_metric(...)` (`temperature=0.0` on judges).
+2. **Never Delete a Clause Without Targeted Coverage:** Without a coverage map, baseline TOST mislabels rare conditional rules as `SAFE_TO_PRUNE` 18%–95% of the time at trigger fractions `p in {0.02, 0.05}`. Always pass a frozen `TestSet` (`--tests`) or per-clause `coverage` / `targets_factors`, and treat `UNTESTED` and `CONFLICT_REVIEW` as hard stops against auto-deletion.
+3. **Never Attach Tautological Surface-Form Checks to `global_scaffold` Clauses:** Only `conditional_rule` clauses define behavioral/format checks; `global_scaffold` clauses (persona, reasoning cue, few-shot demos, self-verification) must be scored strictly by baseline task correctness so harmful scaffolds cannot flip to `KEEP`.
+4. **Freeze Before Testing & Protect Confirmation Splits:** Always freeze test sets (`prism tests freeze`) before running experiments, keep `to_dataset(split="discovery")` separate from `confirmation`, watch for split-leakage and generator-equals-model warnings, and never enable `allow_custom_checks=True` on synthetic or untrusted JSONL test sets.
+5. **Check the Noise Floor Before Interpreting Effects:** On small per-task benchmarks (~100 items), 79%–85% of apparent higher-order variance is item-sampling noise. Inspect `audit.noise_floor.noise_variance_share_pct` before chasing small swings.
+6. **Never Equate `p >= 0.05` with "Safe to Delete":** Only prune a prompt clause when `pruning_verdict == "SAFE_TO_PRUNE"` (baseline TOST + targeted non-inferiority both pass at `alpha`). If `INCONCLUSIVE_NEED_MORE_ITEMS`, either keep the clause or evaluate more items.
+7. **Bundle Coupled Clauses & Scope Agent Systems to Single-Step Nodes:** Never toggle interdependent instructions or tool schemas independently if doing so breaks prompt coherence (use multi-level `Factor(levels=[...])`). For multi-turn agents, ablate isolated single-step nodes or replayed state snapshots rather than noisy end-to-end trajectories.
+8. **Distinguish Declared Config Gates from Silent Drift Checks:** `prism verify-cert` catches *declared* config/version changes offline at zero LLM cost; detecting *silent* provider weight changes requires periodic `prism certify` re-runs on fresh temporal/canary waves.
+9. **Never Deploy Unvalidated Additive Sign Extrapolation Under Interactions & Keep Evidence Tiers Honest:** Synthesizing an unseen corner purely from main-effect signs suffers severe regret (8.74 pp on Cohort 2) when interactions are large; always validate on untouched confirmation items, and preserve `"predicted (synthetic tests)"` whenever scores come from generated test sets.
+10. **Cache Everything:** Always pass `cache_db` on `exp.run(...)` and `JudgeCache` on `deepeval_metric(...)` (`temperature=0.0` on judges).

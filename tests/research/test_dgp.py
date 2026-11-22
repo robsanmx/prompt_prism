@@ -143,3 +143,72 @@ def test_dgp_deterministic_seed():
     cube2 = SyntheticDGP.generate_cube(config2)
 
     pd.testing.assert_frame_equal(cube1.dataframe, cube2.dataframe)
+
+
+def test_dgp_conditional_rule_and_targeted_items_extensions():
+    """Verify Section 8.3 conditional-rule trigger probabilities, targeted items, and heterogeneity."""
+    from prompt_prism.design.generators import FractionalFactorialGenerator
+    from research.simulation.coverage_calibration import (
+        run_dead_clause_power_grid,
+        run_false_prune_comparison,
+    )
+
+    design = FractionalFactorialGenerator.from_plan_id("2(6-2)IV")
+    combos = [
+        tuple(int(r.factor_levels[fid]) for fid in design.factor_ids)
+        for r in design.runs
+    ]
+    cfg = DGPConfig(
+        scenario_id="cond_ext_test",
+        k=6,
+        factor_ids=["A", "B", "C", "D", "E", "F"],
+        num_items=40,
+        num_replicates=1,
+        baseline_intercept=0.55,
+        main_effects={"A": 0.10},
+        conditional_effects={"C": (0.25, 0.40)},
+        num_targeted_per_factor=15,
+        item_sd=0.05,
+        noise_sd=0.0,
+        contrast_heterogeneity_sd=0.0,
+        outcome_type="continuous",
+        seed=7,
+    )
+    cube = SyntheticDGP.generate_design_dataset(cfg, combos)
+
+    # Expected marginal effect of C = 0.25 * 0.40 = 0.10; targeted effect = 0.40
+    assert np.isclose(cube.oracle_marginal_effects["C"], 0.10, atol=1e-9)
+    assert np.isclose(cube.oracle_targeted_effects["C"], 0.40, atol=1e-9)
+    assert len(cube.baseline_sample_ids) == 40
+    assert len(cube.coverage_map["C"]) >= 15
+
+    # On targeted items for C, contrast must equal exact targeted effect +0.40
+    df_c = cube.dataframe[cube.dataframe["sample_id"].str.startswith("targ_C_")]
+    obs_targeted = (
+        df_c[df_c["C"] == 1]["metric"].mean() - df_c[df_c["C"] == 0]["metric"].mean()
+    )
+    assert np.isclose(obs_targeted, 0.40, atol=1e-6)
+
+    # Fast smoke check of calibration study helpers
+    fp_rows = run_false_prune_comparison(
+        p_values=(0.05,),
+        contrast_sds=(0.10,),
+        targeted_effects=(0.25,),
+        n_baseline=40,
+        n_targeted=20,
+        reps=3,
+        seed=11,
+    )
+    assert len(fp_rows) == 1
+    assert 0.0 <= fp_rows[0]["false_prune_with_gate"] <= 1.0
+
+    pow_rows = run_dead_clause_power_grid(
+        n_targeted_grid=(20,),
+        targeted_margin_grid=(0.06,),
+        contrast_sds=(0.10,),
+        n_baseline=40,
+        reps=3,
+        seed=13,
+    )
+    assert len(pow_rows) == 1
+    assert 0.0 <= pow_rows[0]["targeted_ni_power"] <= 1.0

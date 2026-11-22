@@ -1,0 +1,102 @@
+{
+  "task_id": "squad2_grounded_qa",
+  "mode": "live",
+  "testset_sha256": "00b6280736b1bbff2fc72b08ef8864d21e44416ef481782b6887c39c45c1533f",
+  "generator_model_id": "gemini-2.5-pro",
+  "tagger_model_id": "gemini-2.5-pro",
+  "sut_model_id": "gemini-2.5-flash",
+  "discovery_items": 229,
+  "confirmation_items": 128,
+  "evidence_tier": "predicted (synthetic tests)",
+  "warnings": [
+    "Small paired item count (N=19 < 100): asymptotic item-clustered t-tests can exhibit mild discrete-skewness inflation; verify p (Flip) randomization bounds or collect >=100 items."
+  ],
+  "verdicts": {
+    "brief_reasoning": "REMOVE_HARMFUL",
+    "self_verification": "KEEP",
+    "few_shot_demos": "KEEP",
+    "strict_output_contract": "KEEP_TARGETED",
+    "grounding_guardrail": "KEEP_TARGETED",
+    "specialist_persona": "INCONCLUSIVE_NEED_MORE_ITEMS"
+  },
+  "confirmation": {
+    "pruned_levels": {
+      "A": 1,
+      "B": 0,
+      "C": 1,
+      "D": 1,
+      "E": 1,
+      "F": 1
+    },
+    "baseline_mean": 0.79296875,
+    "pruned_mean": 0.75,
+    "delta_pruned_minus_baseline": -0.04296875
+  },
+  "vs_real_v4": {
+    "zero_dangerous_prune_flips": true,
+    "dangerous_flips": [],
+    "brief_reasoning_not_tautological_keep": true,
+    "real_significant_sign_agreement": {
+      "strict_output_contract": true,
+      "few_shot_demos": true,
+      "brief_reasoning": true,
+      "specialist_persona": true
+    },
+    "comparison": [
+      {
+        "factor": "strict_output_contract",
+        "real_delta": 0.08834465464365181,
+        "real_verdict": "KEEP",
+        "synth_delta_F": 0.05263157894736842,
+        "synth_delta_T": 0.11519607843137254,
+        "synth_n_T": 153,
+        "synth_verdict": "KEEP_TARGETED"
+      },
+      {
+        "factor": "few_shot_demos",
+        "real_delta": 0.13737904920345026,
+        "real_verdict": "KEEP",
+        "synth_delta_F": 0.08552631578947369,
+        "synth_delta_T": 0.13480392156862744,
+        "synth_n_T": 153,
+        "synth_verdict": "KEEP"
+      },
+      {
+        "factor": "brief_reasoning",
+        "real_delta": -0.1012494286803763,
+        "real_verdict": "REMOVE_HARMFUL",
+        "synth_delta_F": -0.11842105263157894,
+        "synth_delta_T": -0.07926829268292683,
+        "synth_n_T": 41,
+        "synth_verdict": "REMOVE_HARMFUL"
+      },
+      {
+        "factor": "specialist_persona",
+        "real_delta": 0.013622619975690364,
+        "real_verdict": "KEEP",
+        "synth_delta_F": 0.013157894736842105,
+        "synth_delta_T": 0.05,
+        "synth_n_T": 10,
+        "synth_verdict": "INCONCLUSIVE_NEED_MORE_ITEMS"
+      },
+      {
+        "factor": "self_verification",
+        "real_delta": -0.0077997219190101535,
+        "real_verdict": "SAFE_TO_PRUNE",
+        "synth_delta_F": 0.09868421052631579,
+        "synth_delta_T": null,
+        "synth_n_T": 0,
+        "synth_verdict": "KEEP"
+      },
+      {
+        "factor": "grounding_guardrail",
+        "real_delta": -0.0029414030049773453,
+        "real_verdict": "SAFE_TO_PRUNE",
+        "synth_delta_F": 0.019736842105263157,
+        "synth_delta_T": 0.022286821705426358,
+        "synth_n_T": 129,
+        "synth_verdict": "KEEP_TARGETED"
+      }
+    ]
+  }
+}

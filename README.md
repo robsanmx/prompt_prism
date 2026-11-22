@@ -6,7 +6,7 @@
 [![Version: 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 244 Passed](https://img.shields.io/badge/tests-244%20passed-brightgreen.svg)](tests/)
+[![Tests: 304 Passed](https://img.shields.io/badge/tests-304%20passed-brightgreen.svg)](tests/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **PromptPrism** is a Python library and CLI for **prompt diagnostics, safe clause pruning, noise-floor auditing, and CI/CD release gating**.
@@ -19,8 +19,8 @@ Instead of tweaking one line at a time or guessing whether a 2% eval bump is rea
 
 ### Built for three production problems
 
-1. **Find harmful instructions & prune dead prompt bloat (`prism diagnose` / `exp.diagnose()`):**
-   Long production prompts accumulate personas, guardrails, formatting rules, and "think step by step" cues nobody dares touch. Even when static system prefixes are discounted by **prompt caching**, dead or conflicting clauses still cause **instruction interference / attention dilution**, **higher latency and uncached output-token drag**, **harder maintenance**, and extra cost on dynamic or uncached prefixes. PromptPrism tests every clause cleanly and labels each one `KEEP`, `REMOVE_HARMFUL`, `SAFE_TO_PRUNE`, or `INCONCLUSIVE_NEED_MORE_ITEMS`.
+1. **Find harmful instructions & prune dead prompt bloat safely (`prism tests` & `prism diagnose` / `exp.diagnose()`):**
+   Long production prompts accumulate personas, guardrails, formatting rules, and "think step by step" cues nobody dares touch. Even when static system prefixes are discounted by **prompt caching**, dead or conflicting clauses still cause **instruction interference / attention dilution**, **higher latency and uncached output-token drag**, **harder maintenance**, and extra cost on dynamic or uncached prefixes. PromptPrism tests every clause cleanly—and with **coverage-aware pruning** (`prism tests` + `diagnose --tests`), never deletes a conditional edge-case clause simply because no test exercised its trigger. Verdicts distinguish `KEEP`, `KEEP_TARGETED`, `REMOVE_HARMFUL`, `CONFLICT_REVIEW`, `UNTESTED`, `SAFE_TO_PRUNE`, and `INCONCLUSIVE_NEED_MORE_ITEMS`.
 2. **Stop chasing eval noise:**
    Small eval sets (50–150 items) are noisy. PromptPrism explicitly measures the **item-sampling noise floor** alongside every factor estimate so your team stops shipping prompt edits based on random benchmark jitter.
 3. **Gate prompt releases & monitor drift (`prism certify` & `prism verify-cert`):**
@@ -77,6 +77,7 @@ pip install git+https://github.com/robsanmx/prompt_prism.git
 
 # Optional extras
 pip install "prompt-prism[viz] @ git+https://github.com/robsanmx/prompt_prism.git"       # Matplotlib charts
+pip install "prompt-prism[cloud] @ git+https://github.com/robsanmx/prompt_prism.git"     # LiteLLM / cloud SDKs (for `prism tests generate --model`)
 pip install "prompt-prism[deepeval] @ git+https://github.com/robsanmx/prompt_prism.git"  # DeepEval >= 4.2.0 LLM judges
 ```
 
@@ -160,6 +161,64 @@ print(cert.status, cert.d_stability_upper_95_sim)
 
 ---
 
+## No Eval Set Yet? Generate a Frozen, Coverage-Tagged Test Set
+
+If you do not already have `N >= 100` hand-labelled items—or your baseline benchmark never exercises rare conditional rules (e.g., *"if no date is present, return `null`"* or *"if out of scope, reply `out_of_scope`"* )—use `TestSetGenerator` (or `prism tests`) to generate a **frozen, scored, split-protected test set**:
+
+- **Clause-role honesty:** `conditional_rule` clauses receive targeted edge-case checks; `global_scaffold` clauses (persona, reasoning cue, few-shot demos, self-verification) receive hard/ambiguous inputs scored strictly by the baseline task metric (preventing tautological checks).
+- **Deterministic checks first:** Prefers `exact`, `regex`, `contains`, `not_contains`, and `json_schema` (with `(reference_pass, reference_fail)` passable/failable sanity checks); `llm_judge` is an audited, prompt-isolated fallback.
+- **Blind coverage tagging & freeze:** An independent tagger verifies which clauses each case exercises (`require_tag_agreement=True` by default), stratifies cases into `discovery` / `confirmation` splits, and freezes `cases.jsonl` + `manifest.json` with a canonical-JSON SHA-256 hash.
+
+```python
+from prompt_prism import (
+    CheckSuiteMetric,
+    Evaluator,
+    Experiment,
+    Factor,
+    PromptTemplate,
+    TestSetGenerator,
+)
+
+factors = [
+    Factor.binary("specialist_persona", "", "You are a senior banking classifier.", metadata={"clause_role": "global_scaffold"}),
+    Factor.binary("null_date_rule", "", "If the input has no date, set date to null.", metadata={"clause_role": "conditional_rule"}),
+    # ... remaining modular clauses
+]
+template = PromptTemplate.from_factors(
+    factors,
+    system_prompt="Extract structured JSON from the input.",
+    data_template="Document: {{ document }}",
+)
+
+# 1. Generate, sanity-filter, blind-tag, split (discovery/confirmation), and freeze
+# Tip: use temperature ~0.7 on generator_llm to avoid cross-batch duplicates,
+# while keeping temperature=0.0 on tagger_llm and model_under_test.
+gen = TestSetGenerator(
+    client=generator_llm,           # Prefer a different model than the model under test
+    tagger_client=tagger_llm,       # Optional independent blind tagger (temperature=0.0)
+    n_baseline_discovery=100,
+    n_per_factor_discovery=35,
+)
+test_set = gen.generate(factors, template, task_description="Structured extraction", freeze=True)
+test_set.save("tests/extraction_suite")
+
+# 2. Run discovery split (default, keeps confirmation untouched) with CheckSuiteMetric
+exp = Experiment(
+    factors=factors,
+    template=template,
+    design="2(5-1)V",
+    evaluator=Evaluator([CheckSuiteMetric()]),
+    target_metric="check_suite",
+)
+results = exp.run(test_set, client=model_under_test, cache_db="prompt_cache.db")
+
+# 3. Coverage-gated audit (schema v2.1.0, evidence_tier="predicted (synthetic tests)")
+audit = exp.diagnose(equivalence_margin=0.02)
+print(audit.to_markdown())
+```
+
+---
+
 ## CLI Usage (`prompt-prism` / `prism`)
 
 ```bash
@@ -172,17 +231,39 @@ prism alias --plan "2(6-2)IV"
 prism design --factors 6 --plan "2(6-2)IV" --output design_matrix.csv
 prism list-metrics
 
-# 2. Run calibrated clause attribution, noise-floor audit & pruning verdicts (CSV or JSONL)
+# 2. Generate, inspect, human-review (CSV or Markdown), freeze, and refresh scored test sets
+prism tests generate \
+  --factors factors.yaml \
+  --template template.yaml \
+  --task "Classify banking customer intents" \
+  --seed-examples seeds.jsonl \
+  --n-baseline-discovery 100 \
+  --n-per-factor-discovery 35 \
+  --client mypkg.clients:generator \
+  --tagger-client mypkg.clients:tagger \
+  --out tests/banking77/
+# Or with optional cloud extra (`pip install "prompt-prism[cloud]"`):
+#   --model gemini/gemini-2.5-flash
+
+prism tests stats tests/banking77/
+prism tests review export tests/banking77/ --format csv --out review.csv   # or --format md
+prism tests review import tests/banking77/ review.csv                      # updates & re-freezes
+prism tests freeze tests/banking77/                                        # if generated with --no-freeze
+prism tests generate --factors factors.yaml --template template.yaml \
+  --client mypkg.clients:generator --refresh-confirmation tests/banking77/ # refreshes confirmation only
+
+# 3. Run calibrated clause attribution, noise-floor audit & coverage-gated pruning verdicts
 prism diagnose \
   --data screen_results.csv \
-  --target exact_match \
+  --target check_suite \
+  --tests tests/banking77/ \
   --sample-col sample_id \
   --prune-margin 0.02 \
   --token-costs specialist_persona=8,brief_reasoning=12,few_shot_demos=63,strict_output_contract=19 \
   --output-report diag.md \
   --json-out diag.json
 
-# 3. Certify a prompt on untouched confirmation + perturbation/temporal canary data (exit 2 on FAIL/INVALID)
+# 4. Certify a prompt on untouched confirmation + perturbation/temporal canary data (exit 2 on FAIL/INVALID)
 prism certify \
   --data stability_wave.csv \
   --target score \
@@ -195,7 +276,7 @@ prism certify \
   --output stability_cert.json \
   --fail-on-error
 
-# 4. Offline CI/CD config gate — exits 0 ONLY if cert passed and declared envelope matches 100% (exits 1 on drift)
+# 5. Offline CI/CD config gate — exits 0 ONLY if cert passed and declared envelope matches 100% (exits 1 on drift)
 prism verify-cert \
   --cert stability_cert.json \
   --task-id banking77_intent \
@@ -231,6 +312,7 @@ For teams auditing the statistical methodology behind `exp.diagnose()` and `pris
 - **Why item-clustered `t`-tests instead of pooled RCBD ANOVA?** Across 1,033 multi-prompt cubes (7,006,016 outcomes), textbook pooled fixed-block RCBD ANOVA underestimates contrast variance on high-variance formatting factors and inflates global Benjamini–Hochberg false discoveries to **18.4%**. PromptPrism computes each factor's per-item paired contrast separately (`df = N - 1`), achieving **4.0%–5.1% FDR at `N >= 100`**, corroborated by a 2,000-draw **Rademacher sign-flip randomization test** for smaller `N`.
 - **Noise-floor decomposition:** Across our benchmark suite, **79%–85%** of apparent per-task higher-order variance is item-sampling noise. `audit.noise_floor` reports `RMS_obs`, `RMS_noise`, `RMS_signal_corrected`, and the percentage of observed variance attributable to item noise.
 - **TOST practical-equivalence pruning:** Failing to reject `p >= 0.05` does not prove a clause is useless — it often just means `N` is too small. PromptPrism runs paired **Two One-Sided Tests (TOST)** against `equivalence_margin` so only clauses whose 90% CI lies strictly inside `[-margin, +margin]` are marked `SAFE_TO_PRUNE`; underpowered clauses are marked `INCONCLUSIVE_NEED_MORE_ITEMS`.
+- **Coverage-aware pruning gate (`schema_version = "2.1.0"`):** Baseline-only TOST still mislabels rare conditional rules as `SAFE_TO_PRUNE` whenever baseline traffic rarely triggers them (**18%–95% false-prune rate** at trigger fraction `p in {0.02, 0.05}` in Monte Carlo calibration). When per-clause coverage is provided (via a frozen `TestSet` / `--tests` or a `targets_factors` column), PromptPrism computes **F** on baseline items and **T** on covered items (`min_targeted_items = 20`) and requires a one-sided targeted non-inferiority test (`oriented_delta_T < targeted_margin`, calibrated default `max(2 * equivalence_margin, 0.08)`) before allowing `SAFE_TO_PRUNE`. Unexercised clauses receive `UNTESTED`, baseline-vs-targeted tradeoffs or untested baseline-harmful clauses route to `CONFLICT_REVIEW`, and clauses that only help on targeted edge cases receive `KEEP_TARGETED`. Across realistic paired contrast SDs (`0.08–0.15`), this cuts real-rule false prunes to **0.0%** (at `tau_T >= 0.12`) while maintaining **94%–100%** targeted non-inferiority pruning power on true dead clauses at `n_per_factor_discovery = 35`.
 - **Simultaneous perturbation certificates:** `evaluate_simultaneous_perturbation_certificate()` computes a paired bootstrap upper 95% simultaneous bound (`U95_sim`) on the worst-case accuracy drop across all registered perturbation environments (`U95_sim < epsilon` required for `PASS`) and binds the result to a SHA-256 hash of `OperatingEnvelopeSpec`.
 
 ---
@@ -276,13 +358,14 @@ PromptPrism ships with an Agent Skill at [`.agents/skills/prompt_prism/SKILL.md`
 prompt_prism/
 ├── core/                  # Factor, Level, DesignMatrix, Trial, OperatingEnvelopeSpec, PromptStabilityCertificate, PromptSelectionReport
 ├── design/                # 2^(k-p) FractionalFactorial, Plackett-Burman, FullFactorial, AliasStructure, Recommender
-├── template/              # Modular PromptComposer, Jinja2, chat templates
+├── template/              # Modular PromptComposer, Jinja2, chat templates, data-variable extractor
 ├── runner/                # Parallel ExperimentRunner, SQLite ResponseCache, LLMClient / CallableLLM / MockLLM
-├── evaluation/            # Deterministic metrics + DeepEval (>=4.2.0) integration & SQLite JudgeCache
-├── analysis/              # Calibrated diagnostics & TOST pruning (diagnostics.py), Envelope & two-stage selection (selection.py), Effects, ANOVA, Optimizer
+├── evaluation/            # Deterministic metrics, CheckSuiteMetric (check_suite.py), DeepEval (>=4.2.0) & SQLite JudgeCache
+├── testgen/               # Frozen scored TestSet schema (models.py), sanity/dedup filters, TestSetGenerator, YAML/JSON loaders, CSV/MD review & stats
+├── analysis/              # Calibrated diagnostics, TOST & coverage-aware pruning gate (diagnostics.py), Envelope & two-stage selection (selection.py), Effects, ANOVA, Optimizer
 ├── visualization/         # Main Effects, Pareto, Interaction plots & ASCII charts
 ├── reporting/             # Automated Markdown & HTML reports
-└── cli/                   # CLI: diagnose, certify, verify-cert, analyze, design, alias, list-designs, list-metrics
+└── cli/                   # CLI: tests (generate/review/freeze/stats), diagnose, certify, verify-cert, analyze, design, alias, list-designs, list-metrics
 ```
 
 ---
