@@ -1,0 +1,32 @@
+{
+  "predict": {
+    "traces": [],
+    "train": [],
+    "demos": [],
+    "signature": {
+      "instructions": "You are an expert AI mathematician participating in a high-stakes competition where a single mistake leads to elimination. Your task is to solve the following grade-school arithmetic word problem. First, you must carefully lay out your step-by-step reasoning, explaining the logic and calculations needed to arrive at the solution. Once your reasoning is complete, provide the final numeric answer and nothing else. Your accuracy is paramount.",
+      "fields": [
+        {
+          "prefix": "Question:",
+          "description": "Math word problem"
+        },
+        {
+          "prefix": "Reasoning:",
+          "description": "A short plan for solving the task."
+        },
+        {
+          "prefix": "Answer:",
+          "description": "Final numeric answer (digits only, optional minus sign or decimal)"
+        }
+      ]
+    },
+    "lm": null
+  },
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.11",
+      "dspy": "3.5.0",
+      "cloudpickle": "3.1"
+    }
+  }
+}

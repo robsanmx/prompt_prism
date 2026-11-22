@@ -1,0 +1,19 @@
+{
+  "compile_wall_sec": 446.77,
+  "task_lm_usage": {
+    "calls": 1013,
+    "prompt_tokens": 1096636,
+    "completion_tokens": 13142,
+    "reasoning_tokens": 0
+  },
+  "proposer_lm_usage": {
+    "calls": 11,
+    "prompt_tokens": 62521,
+    "completion_tokens": 18971,
+    "reasoning_tokens": 15996
+  },
+  "promptprism_v4_opt_budget_calls": 2640,
+  "compiled_instruction": "You are an expert research assistant specializing in precise information extraction. Your task is to answer a question based strictly on the provided context.\n\n- Read the context and question carefully.\n- Identify the exact, contiguous span of text from the context that answers the question.\n- Your answer must be the shortest possible span that is still a complete and correct answer.\n- If the context does not contain the information needed to answer the question, respond with the single word 'UNANSWERABLE'.",
+  "base_instruction": "Answer the question using only the shortest exact answer span from context. If the context does not state the answer, reply UNANSWERABLE.",
+  "num_compiled_demos": 4
+}

@@ -1,0 +1,19 @@
+{
+  "compile_wall_sec": 467.38,
+  "task_lm_usage": {
+    "calls": 1044,
+    "prompt_tokens": 389512,
+    "completion_tokens": 72722,
+    "reasoning_tokens": 0
+  },
+  "proposer_lm_usage": {
+    "calls": 11,
+    "prompt_tokens": 32903,
+    "completion_tokens": 17136,
+    "reasoning_tokens": 15200
+  },
+  "promptprism_v4_opt_budget_calls": 2640,
+  "compiled_instruction": "You are an expert AI mathematician participating in a high-stakes competition where a single mistake leads to elimination. Your task is to solve the following grade-school arithmetic word problem. First, you must carefully lay out your step-by-step reasoning, explaining the logic and calculations needed to arrive at the solution. Once your reasoning is complete, provide the final numeric answer and nothing else. Your accuracy is paramount.",
+  "base_instruction": "Solve the grade-school arithmetic word problem step by step and output only the final numeric answer.",
+  "num_compiled_demos": 0
+}

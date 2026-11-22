@@ -1,0 +1,229 @@
+{
+  "task_id": "squad2_grounded_qa",
+  "sut_model_id": "gemini-2.5-flash",
+  "proposer_model_id": "gemini-2.5-pro",
+  "promptprism_v4_winner": {
+    "run_id": 44,
+    "factor_levels": {
+      "A": 1,
+      "B": 0,
+      "C": 1,
+      "D": 1,
+      "E": 0,
+      "F": 0
+    },
+    "historical_v4_ref": {
+      "balanced_random_mean": 0.9245202745638446,
+      "bayesian_opt_mean": 0.9234072949508663,
+      "diff_vs_bayesian_opt": -0.0005543253043245808,
+      "diff_vs_random": -0.0016673049173029143,
+      "promptprism_mean": 0.9228529696465417
+    },
+    "live_eval_ref_mean": 0.9224256192191663,
+    "mean_prompt_tokens_ref": 312.14166666666665,
+    "mean_completion_tokens_ref": 10.279166666666667,
+    "mean_latency_ms_ref": 372.44716766872443,
+    "stability_cert": {
+      "status": "FAIL",
+      "reference_mean": 0.9224256192191663,
+      "max_drop_est": 0.006190476190476191,
+      "u95_sim": 0.02218392365188911,
+      "worst_env_id": "fmt_whitespace",
+      "env_means": {
+        "ref": 0.9224256192191663,
+        "repeat_r2": 0.9238145081080553,
+        "fmt_whitespace": 0.9162351430286901,
+        "fmt_delimiter": 0.9251275931711403,
+        "word_paraphrase_1": 0.9304481059916531,
+        "word_paraphrase_2": 0.9268031306330577
+      }
+    }
+  },
+  "dspy_miprov2": {
+    "compile_meta": {
+      "compile_wall_sec": 446.77,
+      "task_lm_usage": {
+        "calls": 1013,
+        "prompt_tokens": 1096636,
+        "completion_tokens": 13142,
+        "reasoning_tokens": 0
+      },
+      "proposer_lm_usage": {
+        "calls": 11,
+        "prompt_tokens": 62521,
+        "completion_tokens": 18971,
+        "reasoning_tokens": 15996
+      },
+      "promptprism_v4_opt_budget_calls": 2640,
+      "compiled_instruction": "You are an expert research assistant specializing in precise information extraction. Your task is to answer a question based strictly on the provided context.\n\n- Read the context and question carefully.\n- Identify the exact, contiguous span of text from the context that answers the question.\n- Your answer must be the shortest possible span that is still a complete and correct answer.\n- If the context does not contain the information needed to answer the question, respond with the single word 'UNANSWERABLE'.",
+      "base_instruction": "Answer the question using only the shortest exact answer span from context. If the context does not state the answer, reply UNANSWERABLE.",
+      "num_compiled_demos": 4
+    },
+    "live_eval_ref_mean": 0.9524915767103267,
+    "mean_prompt_tokens_ref": 1191.2333333333333,
+    "mean_completion_tokens_ref": 17.5375,
+    "mean_latency_ms_ref": 409.8222584541266,
+    "stability_cert": {
+      "status": "PASS",
+      "reference_mean": 0.9524915767103267,
+      "max_drop_est": 0.0005208333333333037,
+      "u95_sim": 0.004468804893396132,
+      "worst_env_id": "word_paraphrase_1",
+      "env_means": {
+        "ref": 0.9524915767103267,
+        "repeat_r2": 0.9524915767103267,
+        "fmt_whitespace": 0.955361947080697,
+        "fmt_delimiter": 0.9537206655680921,
+        "word_paraphrase_1": 0.9519707433769934,
+        "word_paraphrase_2": 0.9535679655992156
+      }
+    }
+  },
+  "track_a_head_to_head_clean": {
+    "mean_a": 0.9524915767103267,
+    "mean_b": 0.9224256192191663,
+    "delta_a_minus_b": 0.03006595749116033,
+    "se": 0.009664467477822883,
+    "n_clusters": 240,
+    "t_stat": 3.1109792195123918,
+    "p_value": 0.002091319264576878,
+    "ci95_low": 0.011027542169394153,
+    "ci95_high": 0.049104372812926504
+  },
+  "track_b_dspy_audit_and_prune": {
+    "skipped": false,
+    "design_name": "2(5-1)V",
+    "num_runs": 16,
+    "screen_calls": 1920,
+    "factor_names": [
+      "dspy_instruction",
+      "dspy_demo_1",
+      "dspy_demo_2",
+      "dspy_demo_3",
+      "dspy_demo_4"
+    ],
+    "token_costs": {
+      "dspy_instruction": 77,
+      "dspy_demo_1": 197,
+      "dspy_demo_2": 180,
+      "dspy_demo_3": 183,
+      "dspy_demo_4": 222
+    },
+    "noise_floor": {
+      "n_items": 120,
+      "rms_observed": 0.005281355273668381,
+      "rms_item_noise": 0.005279366243098455,
+      "rms_signal_corrected": 0.00014493308089363487,
+      "noise_variance_share_pct": 99.92469145062846,
+      "small_sample_warning": false
+    },
+    "estimated_prunable_tokens": 679,
+    "factors": [
+      {
+        "factor": "dspy_demo_2",
+        "delta": 0.009155572538247976,
+        "se": 0.00678349208230625,
+        "q_bh": 0.5579945121612206,
+        "p_flip": 0.19390304847576212,
+        "tost_p": 0.056275165168097774,
+        "verdict": "INCONCLUSIVE_NEED_MORE_ITEMS",
+        "token_cost": 180
+      },
+      {
+        "factor": "dspy_demo_4",
+        "delta": 0.0053001954591866875,
+        "se": 0.005292498623785364,
+        "q_bh": 0.5579945121612206,
+        "p_flip": 0.3473263368315842,
+        "tost_p": 0.003183346836565007,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 222
+      },
+      {
+        "factor": "dspy_instruction",
+        "delta": -0.003523900766225329,
+        "se": 0.003638798809050369,
+        "q_bh": 0.5579945121612206,
+        "p_flip": 0.33033483258370816,
+        "tost_p": 7.11779205488947e-06,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 77
+      },
+      {
+        "factor": "dspy_demo_1",
+        "delta": 0.0036019631359543625,
+        "se": 0.00540426632077196,
+        "q_bh": 0.6329742295230345,
+        "p_flip": 0.527736131934033,
+        "tost_p": 0.0014807078957472044,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 197
+      },
+      {
+        "factor": "dspy_demo_3",
+        "delta": -0.0014679823506577874,
+        "se": 0.004783856382854676,
+        "q_bh": 0.7594849441733132,
+        "p_flip": 0.7596201899050474,
+        "tost_p": 8.784837368799356e-05,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 183
+      }
+    ],
+    "removed_components": [
+      "dspy_instruction",
+      "dspy_demo_1",
+      "dspy_demo_3",
+      "dspy_demo_4"
+    ],
+    "pruned_levels": {
+      "dspy_instruction": 0,
+      "dspy_demo_1": 0,
+      "dspy_demo_2": 1,
+      "dspy_demo_3": 0,
+      "dspy_demo_4": 0
+    },
+    "pruned_cert": {
+      "status": "PASS",
+      "reference_mean": 0.9476681879531145,
+      "max_drop_est": 0.003912545787545851,
+      "u95_sim": 0.011565551339609896,
+      "worst_env_id": "fmt_delimiter",
+      "env_means": {
+        "ref": 0.9476681879531145,
+        "repeat_r2": 0.9476681879531145,
+        "fmt_whitespace": 0.94928974348092,
+        "fmt_delimiter": 0.9437556421655686,
+        "word_paraphrase_1": 0.954301924586851,
+        "word_paraphrase_2": 0.9489880717729983
+      }
+    },
+    "pruned_mean_prompt_tokens_ref": 512.2333333333333,
+    "pruned_mean_completion_tokens_ref": 17.804166666666667,
+    "pruned_mean_latency_ms_ref": 414.3023180755942,
+    "vs_dspy_full_clean": {
+      "mean_a": 0.9476681879531145,
+      "mean_b": 0.9524915767103267,
+      "delta_a_minus_b": -0.004823388757212286,
+      "se": 0.0056517402149188324,
+      "n_clusters": 240,
+      "t_stat": -0.8534342651631517,
+      "p_value": 0.3942730444093089,
+      "ci95_low": -0.015956974518586475,
+      "ci95_high": 0.006310197004161901
+    }
+  },
+  "edge_case_guardrail_audit": {
+    "n_edge_cases": 20,
+    "testset_sha256": "00b6280736b1bbff2fc72b08ef8864d21e44416ef481782b6887c39c45c1533f",
+    "dspy_compiled_pass_rate": 0.95,
+    "promptprism_v4_winner_pass_rate": 0.8,
+    "promptprism_v4_winner_E_level": 0,
+    "promptprism_coverage_gated_E1_pass_rate": 0.85
+  },
+  "live_eval_flash_client_usage": {
+    "calls": 6300,
+    "prompt_tokens": 4421911,
+    "completion_tokens": 99801
+  }
+}

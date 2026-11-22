@@ -1,0 +1,105 @@
+{
+  "task_id": "gsm8k_math",
+  "sut_model_id": "gemini-2.5-flash",
+  "proposer_model_id": "gemini-2.5-pro",
+  "promptprism_v4_winner": {
+    "run_id": 7,
+    "factor_levels": {
+      "A": 0,
+      "B": 0,
+      "C": 0,
+      "D": 1,
+      "E": 1,
+      "F": 1
+    },
+    "historical_v4_ref": {
+      "balanced_random_mean": 0.9491666666666667,
+      "bayesian_opt_mean": 0.9516666666666665,
+      "diff_vs_bayesian_opt": -0.0016666666666666668,
+      "diff_vs_random": 0.0008333333333333322,
+      "promptprism_mean": 0.95
+    },
+    "live_eval_ref_mean": 0.9583333333333334,
+    "mean_prompt_tokens_ref": 145.73333333333332,
+    "mean_completion_tokens_ref": 152.27916666666667,
+    "mean_latency_ms_ref": 1080.4478275609047,
+    "stability_cert": {
+      "status": "FAIL",
+      "reference_mean": 0.9583333333333334,
+      "max_drop_est": 0.008333333333333415,
+      "u95_sim": 0.035831682742262935,
+      "worst_env_id": "repeat_r2",
+      "env_means": {
+        "ref": 0.9583333333333334,
+        "repeat_r2": 0.95,
+        "fmt_whitespace": 0.9541666666666667,
+        "fmt_delimiter": 0.95,
+        "word_paraphrase_1": 0.95,
+        "word_paraphrase_2": 0.9541666666666667
+      }
+    }
+  },
+  "dspy_miprov2": {
+    "compile_meta": {
+      "compile_wall_sec": 467.38,
+      "task_lm_usage": {
+        "calls": 1044,
+        "prompt_tokens": 389512,
+        "completion_tokens": 72722,
+        "reasoning_tokens": 0
+      },
+      "proposer_lm_usage": {
+        "calls": 11,
+        "prompt_tokens": 32903,
+        "completion_tokens": 17136,
+        "reasoning_tokens": 15200
+      },
+      "promptprism_v4_opt_budget_calls": 2640,
+      "compiled_instruction": "You are an expert AI mathematician participating in a high-stakes competition where a single mistake leads to elimination. Your task is to solve the following grade-school arithmetic word problem. First, you must carefully lay out your step-by-step reasoning, explaining the logic and calculations needed to arrive at the solution. Once your reasoning is complete, provide the final numeric answer and nothing else. Your accuracy is paramount.",
+      "base_instruction": "Solve the grade-school arithmetic word problem step by step and output only the final numeric answer.",
+      "num_compiled_demos": 0
+    },
+    "live_eval_ref_mean": 0.9458333333333333,
+    "mean_prompt_tokens_ref": 316.8541666666667,
+    "mean_completion_tokens_ref": 224.84166666666667,
+    "mean_latency_ms_ref": 1265.8934347564355,
+    "stability_cert": {
+      "status": "PASS",
+      "reference_mean": 0.9458333333333333,
+      "max_drop_est": 0.004166666666666652,
+      "u95_sim": 0.01926839754000331,
+      "worst_env_id": "repeat_r2",
+      "env_means": {
+        "ref": 0.9458333333333333,
+        "repeat_r2": 0.9416666666666667,
+        "fmt_whitespace": 0.9625,
+        "fmt_delimiter": 0.9583333333333334,
+        "word_paraphrase_1": 0.9541666666666667,
+        "word_paraphrase_2": 0.9541666666666667
+      }
+    }
+  },
+  "track_a_head_to_head_clean": {
+    "mean_a": 0.9458333333333333,
+    "mean_b": 0.9583333333333334,
+    "delta_a_minus_b": -0.0125,
+    "se": 0.0125,
+    "n_clusters": 240,
+    "t_stat": -1.0,
+    "p_value": 0.31832187790784855,
+    "ci95_low": -0.03712424257396198,
+    "ci95_high": 0.012124242573961979
+  },
+  "track_b_dspy_audit_and_prune": {
+    "skipped": true,
+    "reason": "Compiled DSPy program has only 1 active toggleable component(s).",
+    "compiled_instruction": "You are an expert AI mathematician participating in a high-stakes competition where a single mistake leads to elimination. Your task is to solve the following grade-school arithmetic word problem. First, you must carefully lay out your step-by-step reasoning, explaining the logic and calculations needed to arrive at the solution. Once your reasoning is complete, provide the final numeric answer and nothing else. Your accuracy is paramount.",
+    "num_compiled_demos": 0
+  },
+  "edge_case_guardrail_audit": null,
+  "live_eval_flash_client_usage": {
+    "calls": 2880,
+    "prompt_tokens": 675966,
+    "completion_tokens": 541857
+  }
+}

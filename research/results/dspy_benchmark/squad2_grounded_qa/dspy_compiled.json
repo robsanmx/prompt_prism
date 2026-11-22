@@ -1,0 +1,94 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "context": "NASA's CALIPSO satellite has measured the amount of dust transported by wind from the Sahara to the Amazon: an average 182 million tons of dust are windblown out of the Sahara each year, at 15 degrees west longitude, across 1,600 miles (2,600 km) over the Atlantic Ocean (some dust falls into the Atlantic), then at 35 degrees West longitude at the eastern coast of South America, 27.7 million tons (15%) of dust fall over the Amazon basin, 132 million tons of dust remain in the air, 43 million tons of dust are windblown and falls on the Caribbean Sea, past 75 degrees west longitude.",
+      "question": "What is the name of the satellite that measured the amount of dust?",
+      "answer": "CALIPSO"
+    },
+    {
+      "context": "In Europe, the North American theater of the Seven Years' War usually is not given a separate name. The entire international conflict is known as the Seven Years' War. \"Seven Years\" refers to events in Europe, from the official declaration of war in 1756 to the signing of the peace treaty in 1763. These dates do not correspond with the fighting on mainland North America, where the fighting between the two colonial powers was largely concluded in six years, from the Battle of Jumonville Glen in 1754 to the capture of Montreal in 1760.",
+      "question": "What time framd does the Seven Years War cover?",
+      "answer": "1756 to the signing of the peace treaty in 1763",
+      "_raw_item": {
+        "context": "In Europe, the North American theater of the Seven Years' War usually is not given a separate name. The entire international conflict is known as the Seven Years' War. \"Seven Years\" refers to events in Europe, from the official declaration of war in 1756 to the signing of the peace treaty in 1763. These dates do not correspond with the fighting on mainland North America, where the fighting between the two colonial powers was largely concluded in six years, from the Battle of Jumonville Glen in 1754 to the capture of Montreal in 1760.",
+        "group_id": "squad2_v4:French_and_Indian_War:6:848249ede437c8e6",
+        "is_unanswerable": false,
+        "question": "What time framd does the Seven Years War cover?",
+        "sample_id": "squad2_v4:5733d4c8d058e614000b6353",
+        "source": "SQuAD2.0-dev",
+        "target": [
+          "1756 to the signing of the peace treaty in 1763",
+          "declaration of war in 1756 to the signing of the peace treaty in 1763",
+          "the official declaration of war in 1756 to the signing of the peace treaty in 1763"
+        ],
+        "task_id": "squad2_grounded_qa"
+      }
+    },
+    {
+      "context": "Evolution of the adaptive immune system occurred in an ancestor of the jawed vertebrates. Many of the classical molecules of the adaptive immune system (e.g., immunoglobulins and T cell receptors) exist only in jawed vertebrates. However, a distinct lymphocyte-derived molecule has been discovered in primitive jawless vertebrates, such as the lamprey and hagfish. These animals possess a large array of molecules called Variable lymphocyte receptors (VLRs) that, like the antigen receptors of jawed vertebrates, are produced from only a small number (one or two) of genes. These molecules are believed to bind pathogenic antigens in a similar way to antibodies, and with the same degree of specificity.",
+      "question": "What molecules of the adaptive immune system only exist in jawed vertebrates?",
+      "answer": "immunoglobulins",
+      "_raw_item": {
+        "context": "Evolution of the adaptive immune system occurred in an ancestor of the jawed vertebrates. Many of the classical molecules of the adaptive immune system (e.g., immunoglobulins and T cell receptors) exist only in jawed vertebrates. However, a distinct lymphocyte-derived molecule has been discovered in primitive jawless vertebrates, such as the lamprey and hagfish. These animals possess a large array of molecules called Variable lymphocyte receptors (VLRs) that, like the antigen receptors of jawed vertebrates, are produced from only a small number (one or two) of genes. These molecules are believed to bind pathogenic antigens in a similar way to antibodies, and with the same degree of specificity.",
+        "group_id": "squad2_v4:Immune_system:37:7e56efa7fa5e85dc",
+        "is_unanswerable": false,
+        "question": "What molecules of the adaptive immune system only exist in jawed vertebrates?",
+        "sample_id": "squad2_v4:572a07fc6aef0514001551dc",
+        "source": "SQuAD2.0-dev",
+        "target": [
+          "immunoglobulins",
+          "immunoglobulins and T cell receptors"
+        ],
+        "task_id": "squad2_grounded_qa"
+      }
+    },
+    {
+      "context": "The pound-force has a metric counterpart, less commonly used than the newton: the kilogram-force (kgf) (sometimes kilopond), is the force exerted by standard gravity on one kilogram of mass. The kilogram-force leads to an alternate, but rarely used unit of mass: the metric slug (sometimes mug or hyl) is that mass that accelerates at 1 m·s−2 when subjected to a force of 1 kgf. The kilogram-force is not a part of the modern SI system, and is generally deprecated; however it still sees use for some purposes as expressing aircraft weight, jet thrust, bicycle spoke tension, torque wrench settings and engine output torque. Other arcane units of force include the sthène, which is equivalent to 1000 N, and the kip, which is equivalent to 1000 lbf.",
+      "question": "What is the metric term less used than the Newton?",
+      "answer": "kilogram-force",
+      "_raw_item": {
+        "context": "The pound-force has a metric counterpart, less commonly used than the newton: the kilogram-force (kgf) (sometimes kilopond), is the force exerted by standard gravity on one kilogram of mass. The kilogram-force leads to an alternate, but rarely used unit of mass: the metric slug (sometimes mug or hyl) is that mass that accelerates at 1 m·s−2 when subjected to a force of 1 kgf. The kilogram-force is not a part of the modern SI system, and is generally deprecated; however it still sees use for some purposes as expressing aircraft weight, jet thrust, bicycle spoke tension, torque wrench settings and engine output torque. Other arcane units of force include the sthène, which is equivalent to 1000 N, and the kip, which is equivalent to 1000 lbf.",
+        "group_id": "squad2_v4:Force:43:d25aa4629baf5c95",
+        "is_unanswerable": false,
+        "question": "What is the metric term less used than the Newton?",
+        "sample_id": "squad2_v4:5737aafd1c456719005744fb",
+        "source": "SQuAD2.0-dev",
+        "target": [
+          "kilogram-force",
+          "kilogram-force (kgf)",
+          "pound-force",
+          "the kilogram-force ("
+        ],
+        "task_id": "squad2_grounded_qa"
+      }
+    }
+  ],
+  "signature": {
+    "instructions": "You are an expert research assistant specializing in precise information extraction. Your task is to answer a question based strictly on the provided context.\n\n- Read the context and question carefully.\n- Identify the exact, contiguous span of text from the context that answers the question.\n- Your answer must be the shortest possible span that is still a complete and correct answer.\n- If the context does not contain the information needed to answer the question, respond with the single word 'UNANSWERABLE'.",
+    "fields": [
+      {
+        "prefix": "Context:",
+        "description": "Reference passage"
+      },
+      {
+        "prefix": "Question:",
+        "description": "Question about the passage"
+      },
+      {
+        "prefix": "Answer:",
+        "description": "Shortest exact answer span from context, or UNANSWERABLE"
+      }
+    ]
+  },
+  "lm": null,
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.11",
+      "dspy": "3.5.0",
+      "cloudpickle": "3.1"
+    }
+  }
+}

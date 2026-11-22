@@ -1,0 +1,19 @@
+{
+  "compile_wall_sec": 420.67,
+  "task_lm_usage": {
+    "calls": 1012,
+    "prompt_tokens": 1078025,
+    "completion_tokens": 13623,
+    "reasoning_tokens": 0
+  },
+  "proposer_lm_usage": {
+    "calls": 11,
+    "prompt_tokens": 60937,
+    "completion_tokens": 18557,
+    "reasoning_tokens": 16254
+  },
+  "promptprism_v4_opt_budget_calls": 2640,
+  "compiled_instruction": "You are an advanced AI routing system for a major international bank, and you are the critical first step in the automated customer support pipeline. Your task is to analyze an incoming customer `Query` and classify it into exactly one of the `Allowed Intents`. A single misclassification can lead to severe consequences, such as routing a time-sensitive fraud report to the wrong department, causing significant financial loss for the customer and damaging the bank's reputation. Your accuracy is paramount.\n\nGiven the list of `Allowed Intents` and the customer `Query`, return only the single, exact intent label that best matches the query.",
+  "base_instruction": "Classify the customer banking support query into exactly one intent label from the allowed_intents list. Return only the exact intent label string.",
+  "num_compiled_demos": 4
+}

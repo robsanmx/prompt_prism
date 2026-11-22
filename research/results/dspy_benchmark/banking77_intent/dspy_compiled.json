@@ -1,0 +1,55 @@
+{
+  "traces": [],
+  "train": [],
+  "demos": [
+    {
+      "augmented": true,
+      "allowed_intents": "Refund_not_showing_up, activate_my_card, age_limit, apple_pay_or_google_pay, atm_support, automatic_top_up, balance_not_updated_after_bank_transfer, balance_not_updated_after_cheque_or_cash_deposit, beneficiary_not_allowed, cancel_transfer, card_about_to_expire, card_acceptance, card_linking, card_payment_fee_charged, card_payment_wrong_exchange_rate, card_swallowed, cash_withdrawal_charge, change_pin, compromised_card, contactless_not_working",
+      "query": "What type of ATMs accept this card?",
+      "answer": "atm_support"
+    },
+    {
+      "augmented": true,
+      "allowed_intents": "Refund_not_showing_up, activate_my_card, age_limit, apple_pay_or_google_pay, atm_support, automatic_top_up, balance_not_updated_after_bank_transfer, balance_not_updated_after_cheque_or_cash_deposit, beneficiary_not_allowed, cancel_transfer, card_about_to_expire, card_acceptance, card_linking, card_payment_fee_charged, card_payment_wrong_exchange_rate, card_swallowed, cash_withdrawal_charge, change_pin, compromised_card, contactless_not_working",
+      "query": "What's the deal with no cryptocurrency on your app?",
+      "answer": "beneficiary_not_allowed"
+    },
+    {
+      "augmented": true,
+      "allowed_intents": "Refund_not_showing_up, activate_my_card, age_limit, apple_pay_or_google_pay, atm_support, automatic_top_up, balance_not_updated_after_bank_transfer, balance_not_updated_after_cheque_or_cash_deposit, beneficiary_not_allowed, cancel_transfer, card_about_to_expire, card_acceptance, card_linking, card_payment_fee_charged, card_payment_wrong_exchange_rate, card_swallowed, cash_withdrawal_charge, change_pin, compromised_card, contactless_not_working",
+      "query": "Where can I pay with my debit or credit card?",
+      "answer": "card_acceptance"
+    },
+    {
+      "augmented": true,
+      "allowed_intents": "Refund_not_showing_up, activate_my_card, age_limit, apple_pay_or_google_pay, atm_support, automatic_top_up, balance_not_updated_after_bank_transfer, balance_not_updated_after_cheque_or_cash_deposit, beneficiary_not_allowed, cancel_transfer, card_about_to_expire, card_acceptance, card_linking, card_payment_fee_charged, card_payment_wrong_exchange_rate, card_swallowed, cash_withdrawal_charge, change_pin, compromised_card, contactless_not_working",
+      "query": "Is there any way to Auto top-up?",
+      "answer": "automatic_top_up"
+    }
+  ],
+  "signature": {
+    "instructions": "You are an advanced AI routing system for a major international bank, and you are the critical first step in the automated customer support pipeline. Your task is to analyze an incoming customer `Query` and classify it into exactly one of the `Allowed Intents`. A single misclassification can lead to severe consequences, such as routing a time-sensitive fraud report to the wrong department, causing significant financial loss for the customer and damaging the bank's reputation. Your accuracy is paramount.\n\nGiven the list of `Allowed Intents` and the customer `Query`, return only the single, exact intent label that best matches the query.",
+    "fields": [
+      {
+        "prefix": "Allowed Intents:",
+        "description": "Comma-separated list of valid banking intent labels"
+      },
+      {
+        "prefix": "Query:",
+        "description": "Customer banking support query"
+      },
+      {
+        "prefix": "Answer:",
+        "description": "Exactly one intent label from allowed_intents"
+      }
+    ]
+  },
+  "lm": null,
+  "metadata": {
+    "dependency_versions": {
+      "python": "3.11",
+      "dspy": "3.5.0",
+      "cloudpickle": "3.1"
+    }
+  }
+}

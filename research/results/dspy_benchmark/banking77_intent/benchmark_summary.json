@@ -1,0 +1,228 @@
+{
+  "task_id": "banking77_intent",
+  "sut_model_id": "gemini-2.5-flash",
+  "proposer_model_id": "gemini-2.5-pro",
+  "promptprism_v4_winner": {
+    "run_id": 44,
+    "factor_levels": {
+      "A": 1,
+      "B": 0,
+      "C": 1,
+      "D": 1,
+      "E": 0,
+      "F": 0
+    },
+    "historical_v4_ref": {
+      "balanced_random_mean": 0.9400000000000001,
+      "bayesian_opt_mean": 0.9425,
+      "diff_vs_bayesian_opt": 0.0033333333333333327,
+      "diff_vs_random": 0.005833333333333333,
+      "promptprism_mean": 0.9458333333333333
+    },
+    "live_eval_ref_mean": 0.9541666666666667,
+    "mean_prompt_tokens_ref": 289.94166666666666,
+    "mean_completion_tokens_ref": 9.479166666666666,
+    "mean_latency_ms_ref": 401.4633034841002,
+    "stability_cert": {
+      "status": "FAIL",
+      "reference_mean": 0.9541666666666667,
+      "max_drop_est": 0.029166666666666674,
+      "u95_sim": 0.054166666666666696,
+      "worst_env_id": "fmt_delimiter",
+      "env_means": {
+        "ref": 0.9541666666666667,
+        "repeat_r2": 0.95,
+        "fmt_whitespace": 0.9291666666666667,
+        "fmt_delimiter": 0.925,
+        "word_paraphrase_1": 0.9416666666666667,
+        "word_paraphrase_2": 0.9291666666666667
+      }
+    }
+  },
+  "dspy_miprov2": {
+    "compile_meta": {
+      "compile_wall_sec": 420.67,
+      "task_lm_usage": {
+        "calls": 1012,
+        "prompt_tokens": 1078025,
+        "completion_tokens": 13623,
+        "reasoning_tokens": 0
+      },
+      "proposer_lm_usage": {
+        "calls": 11,
+        "prompt_tokens": 60937,
+        "completion_tokens": 18557,
+        "reasoning_tokens": 16254
+      },
+      "promptprism_v4_opt_budget_calls": 2640,
+      "compiled_instruction": "You are an advanced AI routing system for a major international bank, and you are the critical first step in the automated customer support pipeline. Your task is to analyze an incoming customer `Query` and classify it into exactly one of the `Allowed Intents`. A single misclassification can lead to severe consequences, such as routing a time-sensitive fraud report to the wrong department, causing significant financial loss for the customer and damaging the bank's reputation. Your accuracy is paramount.\n\nGiven the list of `Allowed Intents` and the customer `Query`, return only the single, exact intent label that best matches the query.",
+      "base_instruction": "Classify the customer banking support query into exactly one intent label from the allowed_intents list. Return only the exact intent label string.",
+      "num_compiled_demos": 4
+    },
+    "live_eval_ref_mean": 0.9583333333333334,
+    "mean_prompt_tokens_ref": 1181.9416666666666,
+    "mean_completion_tokens_ref": 17.6875,
+    "mean_latency_ms_ref": 438.1302244515003,
+    "stability_cert": {
+      "status": "PASS",
+      "reference_mean": 0.9583333333333334,
+      "max_drop_est": 0.004166666666666652,
+      "u95_sim": 0.019489755997264824,
+      "worst_env_id": "fmt_delimiter",
+      "env_means": {
+        "ref": 0.9583333333333334,
+        "repeat_r2": 0.9625,
+        "fmt_whitespace": 0.9583333333333334,
+        "fmt_delimiter": 0.9541666666666667,
+        "word_paraphrase_1": 0.9583333333333334,
+        "word_paraphrase_2": 0.9541666666666667
+      }
+    }
+  },
+  "track_a_head_to_head_clean": {
+    "mean_a": 0.9583333333333334,
+    "mean_b": 0.9541666666666667,
+    "delta_a_minus_b": 0.004166666666666667,
+    "se": 0.007226936736810519,
+    "n_clusters": 240,
+    "t_stat": 0.5765467193650227,
+    "p_value": 0.5647882868375877,
+    "ci95_low": -0.010069960795245289,
+    "ci95_high": 0.01840329412857862
+  },
+  "track_b_dspy_audit_and_prune": {
+    "skipped": false,
+    "design_name": "2(5-1)V",
+    "num_runs": 16,
+    "screen_calls": 1920,
+    "factor_names": [
+      "dspy_instruction",
+      "dspy_demo_1",
+      "dspy_demo_2",
+      "dspy_demo_3",
+      "dspy_demo_4"
+    ],
+    "token_costs": {
+      "dspy_instruction": 98,
+      "dspy_demo_1": 177,
+      "dspy_demo_2": 184,
+      "dspy_demo_3": 180,
+      "dspy_demo_4": 181
+    },
+    "noise_floor": {
+      "n_items": 120,
+      "rms_observed": 0.010259226876870942,
+      "rms_item_noise": 0.005312336942079366,
+      "rms_signal_corrected": 0.008776719906943025,
+      "noise_variance_share_pct": 26.812786970458298,
+      "small_sample_warning": false
+    },
+    "estimated_prunable_tokens": 463,
+    "factors": [
+      {
+        "factor": "dspy_demo_3",
+        "delta": 0.015625,
+        "se": 0.0058358025486264205,
+        "q_bh": 0.0423333660461354,
+        "p_flip": 0.004497751124437781,
+        "tost_p": 0.2274626908786617,
+        "verdict": "KEEP",
+        "token_cost": 180
+      },
+      {
+        "factor": "dspy_demo_1",
+        "delta": 0.015625,
+        "se": 0.007766408152307945,
+        "q_bh": 0.11623113669283966,
+        "p_flip": 0.06596701649175413,
+        "tost_p": 0.28713728120392507,
+        "verdict": "INCONCLUSIVE_NEED_MORE_ITEMS",
+        "token_cost": 177
+      },
+      {
+        "factor": "dspy_instruction",
+        "delta": -0.003125,
+        "se": 0.002321394903871353,
+        "q_bh": 0.30134233394346416,
+        "p_flip": 0.383808095952024,
+        "tost_p": 2.0664010279010245e-11,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 98
+      },
+      {
+        "factor": "dspy_demo_2",
+        "delta": 0.005208333333333333,
+        "se": 0.005208333333333333,
+        "q_bh": 0.3991744969318078,
+        "p_flip": 0.4432783608195902,
+        "tost_p": 0.0026538803857501683,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 184
+      },
+      {
+        "factor": "dspy_demo_4",
+        "delta": -0.0010416666666666667,
+        "se": 0.003770321146173729,
+        "q_bh": 0.7828117937826755,
+        "p_flip": 1.0,
+        "tost_p": 8.840484092970851e-07,
+        "verdict": "SAFE_TO_PRUNE",
+        "token_cost": 181
+      }
+    ],
+    "removed_components": [
+      "dspy_instruction",
+      "dspy_demo_2",
+      "dspy_demo_4"
+    ],
+    "pruned_levels": {
+      "dspy_instruction": 0,
+      "dspy_demo_1": 1,
+      "dspy_demo_2": 0,
+      "dspy_demo_3": 1,
+      "dspy_demo_4": 0
+    },
+    "pruned_cert": {
+      "status": "PASS",
+      "reference_mean": 0.9583333333333334,
+      "max_drop_est": 0.0,
+      "u95_sim": 0.008333333333333304,
+      "worst_env_id": "repeat_r2",
+      "env_means": {
+        "ref": 0.9583333333333334,
+        "repeat_r2": 0.9583333333333334,
+        "fmt_whitespace": 0.9666666666666667,
+        "fmt_delimiter": 0.9666666666666667,
+        "word_paraphrase_1": 0.9666666666666667,
+        "word_paraphrase_2": 0.9666666666666667
+      }
+    },
+    "pruned_mean_prompt_tokens_ref": 718.9416666666667,
+    "pruned_mean_completion_tokens_ref": 17.65,
+    "pruned_mean_latency_ms_ref": 479.0914972176931,
+    "vs_dspy_full_clean": {
+      "mean_a": 0.9583333333333334,
+      "mean_b": 0.9583333333333334,
+      "delta_a_minus_b": 0.0,
+      "se": 0.008350748886986165,
+      "n_clusters": 240,
+      "t_stat": 0.0,
+      "p_value": 1.0,
+      "ci95_low": -0.016450469301391227,
+      "ci95_high": 0.016450469301391227
+    }
+  },
+  "edge_case_guardrail_audit": {
+    "n_edge_cases": 20,
+    "testset_sha256": "58b52e1fc5dc8ce7667f2bad12fdedd7294c1705fbabca34c9ad582952450ae9",
+    "dspy_compiled_pass_rate": 0.0,
+    "promptprism_v4_winner_pass_rate": 0.0,
+    "promptprism_v4_winner_E_level": 0,
+    "promptprism_coverage_gated_E1_pass_rate": 0.0
+  },
+  "live_eval_flash_client_usage": {
+    "calls": 6300,
+    "prompt_tokens": 4691583,
+    "completion_tokens": 99556
+  }
+}
