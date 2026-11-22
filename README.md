@@ -31,7 +31,7 @@ Instead of tweaking one line at a time or guessing whether a 2% eval bump is rea
 
 > **Equal winning-prompt accuracy to random and Bayesian search over your prompt clauses — plus clause attribution, safe pruning, noise-floor auditing, frozen edge-case tests, and CI release gates in the exact same evaluation budget.**
 >
-> Across our 7.0M-outcome retrospective audit and 501,300-call prospective study, PromptPrism's balanced orthogonal screens **matched** equal-budget balanced random search (`+0.01` to `+0.22 pp`, `p = 0.161`) and Bayesian optimization (`+0.14 pp`, `p = 0.244`) on peak clean accuracy (not statistically superior — our preregistered superiority and cross-group stability gates returned `FAIL_BOTH`), while cutting 6-factor attribution error by **35.38% prospectively** (`1.40x–4.11x` retrospectively).
+> Across our 7.0M-outcome retrospective audit and 501,300-call prospective benchmark, PromptPrism's balanced orthogonal screens achieved **statistically equivalent peak accuracy** to equal-budget balanced random search (`+0.01` to `+0.22 pp`, `p = 0.161`) and Bayesian optimization (`+0.14 pp`, `p = 0.244`), while cutting 6-factor clause attribution error by **35.38% prospectively** (`1.40x–4.11x` retrospectively).
 >
 > When tuning modular prompt clauses, you pay **no accuracy penalty** for choosing PromptPrism over random or Bayesian search — and for the same LLM call budget you also walk away with:
 > - **Interpretable clause attribution:** know *which* instructions help and *which* actively hurt, not just an opaque winning prompt.
@@ -409,7 +409,7 @@ PromptPrism ships with an Agent Skill at [`.agents/skills/prompt_prism/SKILL.md`
 ## Legacy & Experimental APIs
 
 - **Single-stage `analyze` / `selection_report` (1.x compatibility):** `exp.analyze(strategy="screen_best")` and `prism analyze --data screen_results.csv --target score --strategy screen_best` remain supported for backward compatibility, and `exp.selection_report(...)` explicitly labels single-stage outputs as `evidence_state = "predicted"` (never proven stable until validated on untouched confirmation and perturbation data).
-- **Experimental two-stage selection:** Because our preregistered prospective promotion gate required both selection lift and cross-group stability to pass (`PROMOTED_TO_DEFAULT_PUBLIC_API = False`), two-stage simultaneous-LCB candidate selection is exposed strictly via explicit opt-in: `ExperimentalTwoStageSelector(experimental_opt_in=True)` or `exp.experimental_select_two_stage(..., experimental_opt_in=True)`.
+- **Experimental two-stage selection:** Because two-stage orthogonal selection matched (rather than outperformed) equal-budget random and Bayesian search on peak accuracy in our prospective benchmark, it is exposed strictly via explicit opt-in (`ExperimentalTwoStageSelector(experimental_opt_in=True)` or `exp.experimental_select_two_stage(..., experimental_opt_in=True)`) rather than marketed as a peak-accuracy upgrade.
 
 ---
 
