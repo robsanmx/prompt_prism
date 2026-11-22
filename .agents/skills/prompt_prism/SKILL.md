@@ -41,7 +41,7 @@ Use this skill whenever you or the user need to:
 ## Step-by-Step v2.0 Agent Workflow
 
 ### Step 1: Decompose Modular Clauses into Factors
-Isolate modular prompt clauses so each factor can be toggled cleanly without breaking prompt coherence. If two instructions are tightly coupled or order-dependent, bundle them into coherent variants inside a multi-level `Factor(levels=[...])`:
+Isolate modular prompt clauses so each factor can be toggled cleanly without breaking prompt coherence. If two instructions are tightly coupled or order-dependent, bundle them into coherent variants inside a multi-level `Factor(levels=[...])`. For perturbation-resilient chat prompts with in-domain few-shot demos (or when auditing compiled DSPy demos), use `Factor.demo(...)` / `FactorSet.from_candidate_demos(..., field_style="xml", multi_turn=True)` paired with `PromptTemplate.structured_chat(..., field_style="xml"|"brackets")` so alternating `user`/`assistant` turns stay intact and each demo can be TOST-pruned individually:
 
 ```python
 from prompt_prism import Factor
@@ -166,6 +166,9 @@ audit = exp.diagnose(
     equivalence_margin=0.02,  # |delta_F| < 2.0 pp on baseline + oriented_delta_T < 0.08 on targeted
     min_targeted_items=20,    # Minimum paired targeted items before SAFE_TO_PRUNE / REMOVE_HARMFUL
     n_sign_flip=2000,         # Corroborating randomization check (critical when N < 100)
+    # Optional: when data includes ref + perturbed environments, protect STABILIZING clauses from pruning:
+    # env_col="env_id",
+    # ref_env="ref",
 )
 print(audit.to_markdown())
 
@@ -214,6 +217,8 @@ cert = evaluate_simultaneous_perturbation_certificate(
 )
 
 # Fail-closed check: any declared mismatch in model_version, dataset, parser, or envs fails verification.
+# Inspect cert.worst_env_id, cert.repeat_noise_se, cert.recommended_min_n, and cert.diagnostic_note
+# to distinguish genuine perturbation drops (>= epsilon) from precision-limited FAILs needing larger N.
 # To catch silent provider weight drift (same model_version), re-run certify on scheduled temporal waves.
 final_report = exp.selection_report(
     confirmation_scores=conf_ref_scores,
@@ -260,6 +265,7 @@ prism tests generate --factors factors.yaml --template template.yaml \
   --client mypkg.clients:generator --refresh-confirmation tests/my_suite/
 
 # 3. Calibrated attribution, item-sampling noise floor & coverage-gated TOST pruning audit
+#    (add `--env-col env_id --ref-env ref` when data includes perturbation envs to flag STABILIZING / FRAGILE)
 prism diagnose \
   --data screen_results.csv \
   --target check_suite \

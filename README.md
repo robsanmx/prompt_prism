@@ -6,7 +6,7 @@
 [![Version: 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 304 Passed](https://img.shields.io/badge/tests-304%20passed-brightgreen.svg)](tests/)
+[![Tests: 309 Passed](https://img.shields.io/badge/tests-309%20passed-brightgreen.svg)](tests/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **PromptPrism** is a Python library and CLI for **prompt diagnostics, safe clause pruning, noise-floor auditing, and CI/CD release gating**.
@@ -226,6 +226,58 @@ print(audit.to_markdown())
 
 ---
 
+## Perturbation-Resilient Prompting & DSPy Audit
+
+Flat single-user prompts with delimiter headers (e.g., `[QUERY]`) are more susceptible to formatting and paraphrase drops than native multi-turn chat templates with structured field tags and in-domain demos. PromptPrism includes four stability-focused primitives that work standalone **or** to audit and prune prompts compiled by optimizers like DSPy `MIPROv2`:
+
+1. **Native multi-turn chat framing (`PromptTemplate.structured_chat`):** `PromptComposer.compose_messages()` merges only consecutive same-role sections, preserving alternating `user`/`assistant` few-shot turns and wrapping fields cleanly in `xml` (`<query>...</query>`) or `brackets` (`[[ ## query ## ]]`).
+2. **In-domain demos as prunable DOE factors (`Factor.demo` / `FactorSet.from_candidate_demos`):** Turn error-mined or compiled demos into binary factors so TOST keeps only the demos that actually earn their tokens.
+3. **Stability-aware clause attribution (`diagnose(..., env_col="env_id", ref_env="ref")`):** Isolates clean effects on `ref_env`, attributes paired perturbation drops (`ref - perturbed`) per clause with BH FDR, protects `STABILIZING` clauses from `SAFE_TO_PRUNE` (routing clean-harmful + stabilizing clauses to `CONFLICT_REVIEW`), and warns on `FRAGILE` clauses.
+4. **Precision-vs-genuine certificate diagnostics (`evaluate_simultaneous_perturbation_certificate` / `prism certify`):** Reports `worst_env_id`, `per_env_drops`, `per_env_se`, `repeat_noise_se`, `recommended_min_n`, and `diagnostic_note` so you immediately know whether a `FAIL` is a genuine drop (`max_drop >= epsilon`) or a precision-limited bound that simply needs more paired items.
+
+```python
+from prompt_prism import Factor, FactorSet, PromptTemplate, Experiment, ExactMatch
+
+# Turn candidate in-domain demos + structural clauses into binary DOE factors
+fset = FactorSet.from_candidate_demos(
+    demos=[
+        {"query": "My card is stuck in the ATM", "target": "card_swallowed"},
+        {"query": "Transfer still not showing up", "target": "balance_not_updated_after_bank_transfer"},
+    ],
+    input_fields=["query"],
+    output_key="target",
+    field_style="xml",
+    output_prefix="FINAL_ANSWER: ",
+    multi_turn=True,
+    extra_factors=[
+        Factor.binary("strict_contract", "Answer briefly.", "Return ONLY FINAL_ANSWER: <label>."),
+    ],
+)
+template = PromptTemplate.structured_chat(
+    fset,
+    system_prompt="Classify the banking support query.",
+    input_fields=["query"],
+    field_style="xml",
+)
+
+# When evaluating across ref + perturbed environments, pass env_col to protect STABILIZING clauses:
+# audit = exp.diagnose(equivalence_margin=0.02, env_col="env_id", ref_env="ref")
+```
+
+### Live Benchmark (`banking77_intent`, `N = 240` Confirmation, `gemini-2.5-flash`)
+
+| Variant | Clean (`ref`) | Max Perturb. Drop | `U95_sim` (`< 0.02`) | Cert | Prompt / Out Tok | Pro Proposer Calls |
+|:---|:---:|:---:|:---:|:---:|:---:|:---:|
+| Flat single-user PromptPrism *(generic demos)* | `95.42%` | `2.92 pp` (`fmt_delimiter`) | `0.0542` | `FAIL` | `290` / `9.5` | `0` |
+| DSPy `MIPROv2` Full *(inner-field pert)* | `95.83%` | `0.42 pp` (`fmt_delimiter`) | `0.0195` | `PASS` | `1,182` / `17.7` | `11` |
+| DSPy → PromptPrism Pruned *(TOST `2(5-1)V`)* | `95.83%` | `0.00 pp` (`repeat_r2`) | `0.0083` | `PASS` | `719` / `17.7` | `11` |
+| **PromptPrism-Native Stabilized *(Zero DSPy, inner pert)*** | **`96.25%`** | **`0.00 pp`** *(all 6 envs)* | **`0.0178`** | **`PASS`** | **`717` / `9.5`** | **`0`** |
+| **PromptPrism-Native Stabilized *(Zero DSPy, harsh outer pert)*** | **`95.42%`** | **`0.00 pp`** | **`0.0018`** | **`PASS`** | **`729` / `9.5`** | **`0`** |
+
+*(Clean accuracy across DSPy Full and PromptPrism-Native Stabilized is a statistical tie: `+0.42 pp`, paired `p = 0.656`. When auditing compiled DSPy programs directly, PromptPrism TOST safely pruned **-39.2%** of prompt tokens on `banking77_intent` and **-57.0%** on `squad2_grounded_qa` with `p >= 0.39` clean parity and passing `U95_sim` certificates.)*
+
+---
+
 ## CLI Usage (`prompt-prism` / `prism`)
 
 ```bash
@@ -260,6 +312,7 @@ prism tests generate --factors factors.yaml --template template.yaml \
   --client mypkg.clients:generator --refresh-confirmation tests/banking77/ # refreshes confirmation only
 
 # 3. Run calibrated clause attribution, noise-floor audit & coverage-gated pruning verdicts
+#    (add `--env-col env_id --ref-env ref` when data includes perturbation envs to flag STABILIZING / FRAGILE clauses)
 prism diagnose \
   --data screen_results.csv \
   --target check_suite \
@@ -320,7 +373,8 @@ For teams auditing the statistical methodology behind `exp.diagnose()` and `pris
 - **Noise-floor decomposition:** Across our benchmark suite, **79%–85%** of apparent per-task higher-order variance is item-sampling noise. `audit.noise_floor` reports `RMS_obs`, `RMS_noise`, `RMS_signal_corrected`, and the percentage of observed variance attributable to item noise.
 - **TOST practical-equivalence pruning:** Failing to reject `p >= 0.05` does not prove a clause is useless — it often just means `N` is too small. PromptPrism runs paired **Two One-Sided Tests (TOST)** against `equivalence_margin` so only clauses whose 90% CI lies strictly inside `[-margin, +margin]` are marked `SAFE_TO_PRUNE`; underpowered clauses are marked `INCONCLUSIVE_NEED_MORE_ITEMS`.
 - **Coverage-aware pruning gate (`schema_version = "2.1.0"`):** Baseline-only TOST still mislabels rare conditional rules as `SAFE_TO_PRUNE` whenever baseline traffic rarely triggers them (**18%–95% false-prune rate** at trigger fraction `p in {0.02, 0.05}` in Monte Carlo calibration). When per-clause coverage is provided (via a frozen `TestSet` / `--tests` or a `targets_factors` column), PromptPrism computes **F** on baseline items and **T** on covered items (`min_targeted_items = 20`) and requires a one-sided targeted non-inferiority test (`oriented_delta_T < targeted_margin`, calibrated default `max(2 * equivalence_margin, 0.08)`) before allowing `SAFE_TO_PRUNE`. Unexercised clauses receive `UNTESTED`, baseline-vs-targeted tradeoffs or untested baseline-harmful clauses route to `CONFLICT_REVIEW`, and clauses that only help on targeted edge cases receive `KEEP_TARGETED`. Across realistic paired contrast SDs (`0.08–0.15`), this cuts real-rule false prunes to **0.0%** (at `tau_T >= 0.12`) while maintaining **94%–100%** targeted non-inferiority pruning power on true dead clauses at `n_per_factor_discovery = 35`.
-- **Simultaneous perturbation certificates:** `evaluate_simultaneous_perturbation_certificate()` computes a paired bootstrap upper 95% simultaneous bound (`U95_sim`) on the worst-case accuracy drop across all registered perturbation environments (`U95_sim < epsilon` required for `PASS`) and binds the result to a SHA-256 hash of `OperatingEnvelopeSpec`.
+- **Stability-aware clause attribution (`env_col` / `ref_env`):** When screening across both clean (`ref_env`) and perturbed environments, PromptPrism isolates clean accuracy contrasts on `ref_env` and runs a paired item-clustered BH-corrected test on perturbation drops (`ref - perturbed`) per factor, labeling clauses `STABILIZING`, `FRAGILE`, or `NEUTRAL` and blocking `STABILIZING` clauses from being marked `SAFE_TO_PRUNE`.
+- **Simultaneous perturbation certificates:** `evaluate_simultaneous_perturbation_certificate()` computes a paired bootstrap upper 95% simultaneous bound (`U95_sim`) on the worst-case accuracy drop across all registered perturbation environments (`U95_sim < epsilon` required for `PASS`), binds the result to a SHA-256 hash of `OperatingEnvelopeSpec`, and reports `worst_env_id`, `per_env_drops`, `per_env_se`, `repeat_noise_se`, `recommended_min_n`, and a precision-vs-genuine `diagnostic_note`.
 
 ---
 
