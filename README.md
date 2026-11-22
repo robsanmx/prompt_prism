@@ -27,12 +27,19 @@ Instead of tweaking one line at a time or guessing whether a 2% eval bump is rea
    - **`prism verify-cert` (offline CI gate, zero LLM calls):** Verifies a saved SHA-256-hashed `OperatingEnvelopeSpec` certificate against your live deployment settings (`task_id`, `model_id`, `model_version`, `dataset_partition_hash`, `parser_hash`, `decoding_config`, `perturbation_env_ids`). It fails closed whenever any **declared** boundary changes.
    - **Scheduled `prism certify` canary runs (behavioral drift check):** Providers can rotate weights silently without changing `model_version`, which a static hash check cannot detect. Re-running `prism certify` on a scheduled temporal/canary batch measures real accuracy drop across registered formatting, paraphrase, repeat, and temporal perturbations and fails when the worst-case drop exceeds your tolerance (`epsilon`).
 
-### What PromptPrism is NOT
+### Why PromptPrism Instead of Black-Box Prompt Search?
 
-> **PromptPrism is not a black-box prompt optimizer.**
-> Across our own 7.0M-outcome retrospective benchmarks and 501,300-call prospective study, equal-budget prompt selection (`ScreenBest`) tied random search and Bayesian optimization on raw peak accuracy (`+0.01` to `+0.3 pp`; our prospective study failed both its selection-lift and cross-group stability promotion gates).
+> **Equal winning-prompt accuracy to random and Bayesian search over your prompt clauses — plus clause attribution, safe pruning, noise-floor auditing, frozen edge-case tests, and CI release gates in the exact same evaluation budget.**
 >
-> If you want automated prompt search, use DSPy/MIPRO or random/Bayesian search. Use PromptPrism when you want **interpretable clause attribution, safe pruning, calibrated eval diagnostics, and fail-closed CI release gates**.
+> Across our 7.0M-outcome retrospective audit and 501,300-call prospective study, PromptPrism's balanced orthogonal screens **matched** equal-budget balanced random search (`+0.01` to `+0.22 pp`, `p = 0.161`) and Bayesian optimization (`+0.14 pp`, `p = 0.244`) on peak clean accuracy (not statistically superior — our preregistered superiority and cross-group stability gates returned `FAIL_BOTH`), while cutting 6-factor attribution error by **35.38% prospectively** (`1.40x–4.11x` retrospectively).
+>
+> When tuning modular prompt clauses, you pay **no accuracy penalty** for choosing PromptPrism over random or Bayesian search — and for the same LLM call budget you also walk away with:
+> - **Interpretable clause attribution:** know *which* instructions help and *which* actively hurt, not just an opaque winning prompt.
+> - **Coverage-aware safe pruning & frozen synthetic tests:** delete dead bloat (`SAFE_TO_PRUNE`) without accidentally deleting rare guardrails (`KEEP_TARGETED`, `UNTESTED`, `CONFLICT_REVIEW`).
+> - **Calibrated inference & noise-floor diagnostics:** separate real deltas from item-sampling jitter (`4.0%–5.1%` FDR vs. `18.4%` pooled ANOVA).
+> - **Fail-closed CI/CD release gating:** pin deployments to hashed operating envelopes (`prism verify-cert`) and run scheduled canary drift checks (`prism certify`).
+>
+> *(Scope boundary: PromptPrism optimizes and audits **modular discrete prompt clauses** you define — it does not synthesize free-form wording rewrites. If you want automated wording generation, pair a rewriter like DSPy/MIPROv2 with PromptPrism to audit, prune, and gate the resulting prompt.)*
 
 ---
 
