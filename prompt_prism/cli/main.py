@@ -617,6 +617,18 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
         help="Include tagger-disagreed targeted items in coverage even before human acceptance",
     )
     diag_parser.add_argument(
+        "--env-col",
+        type=str,
+        default=None,
+        help="Optional perturbation environment column for stability-aware drop attribution",
+    )
+    diag_parser.add_argument(
+        "--ref-env",
+        type=str,
+        default="ref",
+        help="Clean reference environment label when --env-col is set (default: ref)",
+    )
+    diag_parser.add_argument(
         "--output-report",
         "-o",
         type=str,
@@ -1240,8 +1252,11 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             )
             sys.exit(1)
 
+        extra_excl = [args.sample_col]
+        if args.env_col:
+            extra_excl.append(args.env_col)
         f_cols = args.factors or _auto_detect_binary_factors(
-            df, args.target, extra_exclude=[args.sample_col]
+            df, args.target, extra_exclude=extra_excl
         )
         if not f_cols:
             print(
@@ -1280,6 +1295,8 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
                 min_targeted_items=args.min_targeted_items,
                 targeted_margin=args.targeted_margin,
                 model_id=args.model_id,
+                env_col=args.env_col,
+                ref_env=args.ref_env,
                 **ts_kwargs,
             )
         except ValueError as exc:
@@ -1417,10 +1434,15 @@ def main(argv: Optional[Sequence[str]] = None) -> None:
             cert.d_stability_estimate is not None
             and cert.d_stability_upper_95_sim is not None
         ):
+            worst_str = f" [{cert.worst_env_id}]" if cert.worst_env_id else ""
             print(
-                f"Max Drop / U95_sim:  {cert.d_stability_estimate:+.4f} / "
+                f"Max Drop / U95_sim:  {cert.d_stability_estimate:+.4f}{worst_str} / "
                 f"{cert.d_stability_upper_95_sim:.4f} (margin < {cert.epsilon_stability:.4f})"
             )
+        if cert.repeat_noise_se is not None:
+            print(f"Repeat Noise SE:     {cert.repeat_noise_se:.4f}")
+        if cert.diagnostic_note:
+            print(f"Diagnostic:          {cert.diagnostic_note}")
         if cert.drift_events:
             print(f"Drift / Integrity:   {'; '.join(cert.drift_events)}")
         print(f"Envelope SHA-256:    {envelope.envelope_sha256()}")

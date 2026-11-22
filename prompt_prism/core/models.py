@@ -290,6 +290,12 @@ class PromptStabilityCertificate(BaseModel):
     epsilon_stability: float = 0.02
     missing_cells_count: int = 0
     drift_events: List[str] = Field(default_factory=list)
+    worst_env_id: Optional[str] = None
+    per_env_drops: Dict[str, float] = Field(default_factory=dict)
+    per_env_se: Dict[str, float] = Field(default_factory=dict)
+    repeat_noise_se: Optional[float] = None
+    recommended_min_n: Optional[int] = None
+    diagnostic_note: Optional[str] = None
 
     def certificate_sha256(self) -> str:
         return _canonical_json_sha256(self.model_dump(mode="json"))

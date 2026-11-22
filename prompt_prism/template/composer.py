@@ -5,7 +5,7 @@ Modular Prompt Composition & Templating Engine for Design of Experiments.
 from __future__ import annotations
 
 import string
-from typing import Any, Dict, List, Optional, Sequence, Set, Union
+from typing import Any, Dict, List, Optional, Sequence, Set, Tuple, Union
 
 import jinja2
 from jinja2 import meta as jinja2_meta
@@ -178,6 +178,90 @@ class PromptTemplate:
 
         return template
 
+    @classmethod
+    def structured_chat(
+        cls,
+        factors: Union[FactorSet, Sequence[Factor]],
+        *,
+        system_prompt: Optional[str] = None,
+        input_fields: Optional[Sequence[str]] = None,
+        data_template: Optional[str] = None,
+        field_style: str = "xml",
+    ) -> PromptTemplate:
+        """Build a perturbation-resilient structured chat PromptTemplate.
+
+        Places `system_prompt` and non-demo instruction factors in `role='system'`,
+        emits demo factors (`metadata['is_demo']=True` or list-of-turns content) as
+        native alternating `user`/`assistant` chat turns, and frames task inputs in
+        explicit XML (`<field>{{ field }}</field>`) or bracket (`[[ ## field ## ]]`)
+        delimiters in the final `role='user'` turn.
+        """
+        if field_style not in {"xml", "brackets"}:
+            raise ValueError(
+                f"field_style must be 'xml' or 'brackets', got {field_style!r}"
+            )
+        template = cls(default_role="user")
+        pos = 0
+        if system_prompt:
+            template.add_section(
+                id="system_static", content=system_prompt, role="system", position=pos
+            )
+            pos += 1
+
+        demo_factors: List[Factor] = []
+        inst_factors: List[Factor] = []
+        for factor in factors:
+            is_demo = bool(factor.metadata.get("is_demo")) or any(
+                isinstance(lvl.content, list) for lvl in factor.levels
+            )
+            if is_demo:
+                demo_factors.append(factor)
+            else:
+                inst_factors.append(factor)
+
+        for factor in inst_factors:
+            sec_role = str(factor.metadata.get("role") or "system")
+            template.add_section(
+                id=factor.name,
+                factor_id=factor.id or factor.name,
+                role=sec_role,
+                position=pos,
+            )
+            pos += 1
+
+        for factor in demo_factors:
+            template.add_section(
+                id=factor.name,
+                factor_id=factor.id or factor.name,
+                role="user",
+                position=pos,
+            )
+            pos += 1
+
+        if data_template is not None:
+            payload_tmpl = data_template
+        elif input_fields:
+            if field_style == "xml":
+                payload_tmpl = "\n".join(
+                    f"<{fld}>{{{{ {fld} }}}}</{fld}>" for fld in input_fields
+                )
+            else:
+                payload_tmpl = "\n\n".join(
+                    f"[[ ## {fld} ## ]]\n{{{{ {fld} }}}}" for fld in input_fields
+                )
+        else:
+            payload_tmpl = None
+
+        if payload_tmpl:
+            template.add_section(
+                id="data_payload",
+                content=payload_tmpl,
+                role="user",
+                position=pos,
+            )
+
+        return template
+
     def to_dict(self) -> Dict[str, Any]:
         """Serialize template structure to a canonical JSON-compatible dictionary."""
         return {
@@ -311,7 +395,19 @@ class PromptComposer:
                     level = factor.get_level(lvl_code)
                     level_content = level.content
 
-            rendered = sec.render(factor_level_content=level_content, data=data)
+            if isinstance(level_content, list):
+                turn_lines = []
+                for turn in level_content:
+                    if isinstance(turn, dict) and str(turn.get("content", "")).strip():
+                        r_lbl = str(turn.get("role", "user")).capitalize()
+                        t_txt = sec.render(
+                            factor_level_content=str(turn["content"]), data=data
+                        )
+                        if t_txt:
+                            turn_lines.append(f"{r_lbl}: {t_txt}")
+                rendered = "\n".join(turn_lines)
+            else:
+                rendered = sec.render(factor_level_content=level_content, data=data)
             if rendered:
                 rendered_parts.append(rendered)
 
@@ -323,15 +419,16 @@ class PromptComposer:
         data: Optional[Dict[str, Any]] = None,
     ) -> List[Dict[str, str]]:
         """
-        Compose structured chat messages: [{'role': 'system', 'content': '...'}, {'role': 'user', 'content': '...'}]
+        Compose structured chat messages preserving multi-turn ordering:
+        e.g. [{'role': 'system', ...}, {'role': 'user', ...}, {'role': 'assistant', ...}, {'role': 'user', ...}].
+
+        Consecutive sections sharing the same role are merged with `template.delimiter`;
+        alternating `user`/`assistant` turns (including list-of-turn demo factors) are preserved intact.
         """
         data = data or {}
         sorted_sections = sorted(self.template.sections, key=lambda s: s.position)
 
-        # Group rendered sections by role
-        roles_order = []
-        messages_by_role: Dict[str, List[str]] = {}
-
+        raw_turns: List[Tuple[str, str]] = []
         for sec in sorted_sections:
             if not sec.is_active:
                 continue
@@ -346,20 +443,35 @@ class PromptComposer:
                     level = factor.get_level(lvl_code)
                     level_content = level.content
 
+            # Support multi-turn chat payloads (e.g. Factor.demo(..., multi_turn=True))
+            if isinstance(level_content, list):
+                for turn in level_content:
+                    if not isinstance(turn, dict):
+                        continue
+                    t_role = str(
+                        turn.get("role") or sec.role or self.template.default_role
+                    )
+                    t_rendered = sec.render(
+                        factor_level_content=str(turn.get("content", "")), data=data
+                    )
+                    if t_rendered:
+                        raw_turns.append((t_role, t_rendered))
+                continue
+
             rendered = sec.render(factor_level_content=level_content, data=data)
             if rendered:
                 role = sec.role or self.template.default_role
-                if role not in messages_by_role:
-                    messages_by_role[role] = []
-                    roles_order.append(role)
-                messages_by_role[role].append(rendered)
+                raw_turns.append((role, rendered))
 
-        # Build messages
-        messages = []
-        for role in roles_order:
-            content = self.template.delimiter.join(messages_by_role[role]).strip()
-            if content:
-                messages.append({"role": role, "content": content})
+        # Merge ONLY consecutive same-role turns so alternating user/assistant turns stay intact
+        messages: List[Dict[str, str]] = []
+        for role, text in raw_turns:
+            if messages and messages[-1]["role"] == role:
+                messages[-1][
+                    "content"
+                ] = f"{messages[-1]['content']}{self.template.delimiter}{text}".strip()
+            else:
+                messages.append({"role": role, "content": text.strip()})
 
         if not messages:
             # Fallback

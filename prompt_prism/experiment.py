@@ -293,6 +293,8 @@ class Experiment:
         judge_scored_fraction: Optional[float] = None,
         generator_model_id: Optional[str] = None,
         model_id: Optional[str] = None,
+        env_col: Optional[str] = None,
+        ref_env: str = "ref",
     ):
         """Run PromptPrism 2.0 calibrated item-clustered attribution, noise-floor, TOST token-pruning, and coverage-gate audit.
 
@@ -440,6 +442,8 @@ class Experiment:
             judge_scored_fraction=eff_judge_frac,
             generator_model_id=eff_gen_model,
             model_id=eff_model_id,
+            env_col=env_col,
+            ref_env=ref_env,
         )
 
         if (

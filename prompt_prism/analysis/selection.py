@@ -220,6 +220,7 @@ def evaluate_simultaneous_perturbation_certificate(
             boot_drops[b, e_i] = r_b - float(np.mean(aligned_pert[e_id][picks]))
 
     se_vec = np.std(boot_drops, axis=0, ddof=1)
+    q_alpha: float = 1.96
     if np.all(se_vec < 1e-12):
         u95_sim = d_est
     else:
@@ -229,7 +230,60 @@ def evaluate_simultaneous_perturbation_certificate(
         q_alpha = float(np.percentile(t_max, 100.0 * (1.0 - alpha)))
         u95_sim = float(np.max(d_vec + q_alpha * se_vec))
 
+    per_env_drops = {e: float(drops[e]) for e in expected_envs}
+    per_env_se = {e: float(se_vec[i]) for i, e in enumerate(expected_envs)}
+    worst_env_id = max(expected_envs, key=lambda e: drops[e])
+    repeat_envs = [e for e in expected_envs if "repeat" in e.lower()]
+    repeat_noise_se: Optional[float] = (
+        float(max(per_env_se[e] for e in repeat_envs)) if repeat_envs else None
+    )
+
     passes = bool(u95_sim < epsilon_stability - 1e-12)
+    recommended_min_n: Optional[int] = None
+    diagnostic_note: Optional[str] = None
+    if not passes:
+        if d_est >= epsilon_stability:
+            diagnostic_note = (
+                f"Genuine perturbation drop: worst environment {worst_env_id!r} dropped "
+                f"{d_est * 100.0:.2f} pp (>= epsilon {epsilon_stability * 100.0:.2f} pp)."
+            )
+        else:
+            # Point drop is below epsilon, but simultaneous CI width crossed epsilon
+            binding_idx = int(
+                np.argmax(
+                    np.array([drops[e] for e in expected_envs], dtype=float)
+                    + q_alpha * se_vec
+                )
+            )
+            binding_env = expected_envs[binding_idx]
+            binding_se = float(se_vec[binding_idx])
+            headroom = max(
+                1e-4, epsilon_stability - max(0.0, float(drops[binding_env]))
+            )
+            if binding_se > 1e-9:
+                est_n = int(np.ceil(n_items * ((q_alpha * binding_se) / headroom) ** 2))
+                recommended_min_n = min(max(n_items + 1, est_n), 50_000)
+            rep_note = (
+                f" Repeat-pass noise SE={repeat_noise_se:.4f}."
+                if repeat_noise_se is not None
+                else ""
+            )
+            n_note = (
+                f" Collect ~N>={recommended_min_n} paired items (currently N={n_items}) to narrow the bound."
+                if recommended_min_n is not None
+                else ""
+            )
+            diagnostic_note = (
+                f"Precision-limited FAIL: worst point drop is only {d_est * 100.0:.2f} pp "
+                f"(< epsilon {epsilon_stability * 100.0:.2f} pp), but simultaneous upper bound "
+                f"U95_sim={u95_sim:.4f} on {binding_env!r} exceeded epsilon.{rep_note}{n_note}"
+            )
+    elif repeat_noise_se is not None:
+        diagnostic_note = (
+            f"Certified PASS: max drop {d_est * 100.0:.2f} pp, U95_sim={u95_sim:.4f} < "
+            f"{epsilon_stability:.4f} (repeat-pass noise SE={repeat_noise_se:.4f})."
+        )
+
     return PromptStabilityCertificate(
         experimental=True,
         envelope=envelope,
@@ -240,6 +294,12 @@ def evaluate_simultaneous_perturbation_certificate(
         epsilon_stability=epsilon_stability,
         missing_cells_count=0,
         drift_events=[],
+        worst_env_id=worst_env_id,
+        per_env_drops=per_env_drops,
+        per_env_se=per_env_se,
+        repeat_noise_se=repeat_noise_se,
+        recommended_min_n=recommended_min_n,
+        diagnostic_note=diagnostic_note,
     )
 
 

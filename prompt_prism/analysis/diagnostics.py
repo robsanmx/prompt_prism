@@ -76,6 +76,11 @@ class CalibratedFactorDiagnostic(BaseModel):
     p_value_sign_flip_targeted: Optional[float] = None
     p_noninferiority_targeted: Optional[float] = None
     coverage_source: str = "none"
+    stability_drop_delta: Optional[float] = None
+    se_stability_drop: Optional[float] = None
+    p_value_stability_drop: Optional[float] = None
+    q_value_bh_stability_drop: Optional[float] = None
+    stability_verdict: Optional[str] = None  # STABILIZING | FRAGILE | NEUTRAL | None
 
 
 class NoiseFloorSummary(BaseModel):
@@ -118,6 +123,9 @@ class CalibratedAttributionAudit(BaseModel):
         direction = "maximize" if self.maximize else "minimize"
         has_coverage_cols = self.coverage_source != "none" or any(
             f.n_targeted is not None for f in self.factors
+        )
+        has_stability_cols = any(
+            f.stability_drop_delta is not None for f in self.factors
         )
         items_note = (
             " (baseline items only; targeted items evaluated separately)"
@@ -162,20 +170,22 @@ class CalibratedAttributionAudit(BaseModel):
         for w in self.warnings:
             lines.append(f"- **Warning:** {w}")
 
+        extra_hdr = " Δ Drop | Stab. Verdict |" if has_stability_cols else ""
+        extra_sep = ":---:|:---|" if has_stability_cols else ""
         if has_coverage_cols:
             lines.extend(
                 [
                     "",
-                    "| Factor | Lvl 0 | Lvl 1 | Delta (L1-L0) | SE (Clust.) | 95% Interval | p (Clust.) | q (BH) | p (Flip) | TOST p | Covered N | Δ targeted | NI p (T) | Verdict | Tokens |",
-                    "|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---:|",
+                    f"| Factor | Lvl 0 | Lvl 1 | Delta (L1-L0) | SE (Clust.) | 95% Interval | p (Clust.) | q (BH) | p (Flip) | TOST p | Covered N | Δ targeted | NI p (T) |{extra_hdr} Verdict | Tokens |",
+                    f"|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|{extra_sep}:---|:---:|",
                 ]
             )
         else:
             lines.extend(
                 [
                     "",
-                    "| Factor | Lvl 0 | Lvl 1 | Delta (L1-L0) | SE (Clust.) | 95% Interval | p (Clust.) | q (BH) | p (Flip) | TOST p | Verdict | Tokens |",
-                    "|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---|:---:|",
+                    f"| Factor | Lvl 0 | Lvl 1 | Delta (L1-L0) | SE (Clust.) | 95% Interval | p (Clust.) | q (BH) | p (Flip) | TOST p |{extra_hdr} Verdict | Tokens |",
+                    f"|:---|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|:---:|{extra_sep}:---|:---:|",
                 ]
             )
 
@@ -184,6 +194,15 @@ class CalibratedAttributionAudit(BaseModel):
                 f"{f.p_value_sign_flip:.4g}" if f.p_value_sign_flip is not None else "-"
             )
             tok_str = str(f.token_cost) if f.token_cost is not None else "-"
+            stab_cells = ""
+            if has_stability_cols:
+                sd_str = (
+                    f"{f.stability_drop_delta:+.4f}"
+                    if f.stability_drop_delta is not None
+                    else "-"
+                )
+                sv_str = f"`{f.stability_verdict}`" if f.stability_verdict else "-"
+                stab_cells = f" {sd_str} | {sv_str} |"
             if has_coverage_cols:
                 cov_n_str = str(f.n_targeted) if f.n_targeted is not None else "0"
                 delta_t_str = (
@@ -199,7 +218,7 @@ class CalibratedAttributionAudit(BaseModel):
                     f"{f.effect_delta:+.4f} | {f.se_item_clustered:.4f} | "
                     f"[{f.ci95_low:+.4f}, {f.ci95_high:+.4f}] | "
                     f"{f.p_value_clustered:.4g} | {f.q_value_bh:.4g} | {flip_str} | "
-                    f"{f.tost_p_value:.4g} | {cov_n_str} | {delta_t_str} | {ni_t_str} | "
+                    f"{f.tost_p_value:.4g} | {cov_n_str} | {delta_t_str} | {ni_t_str} |{stab_cells} "
                     f"`{f.pruning_verdict}` | {tok_str} |"
                 )
             else:
@@ -208,7 +227,7 @@ class CalibratedAttributionAudit(BaseModel):
                     f"{f.effect_delta:+.4f} | {f.se_item_clustered:.4f} | "
                     f"[{f.ci95_low:+.4f}, {f.ci95_high:+.4f}] | "
                     f"{f.p_value_clustered:.4g} | {f.q_value_bh:.4g} | {flip_str} | "
-                    f"{f.tost_p_value:.4g} | `{f.pruning_verdict}` | {tok_str} |"
+                    f"{f.tost_p_value:.4g} |{stab_cells} `{f.pruning_verdict}` | {tok_str} |"
                 )
 
         lines.extend(
@@ -447,6 +466,8 @@ def run_calibrated_attribution_audit(
     judge_scored_fraction: Optional[float] = None,
     generator_model_id: Optional[str] = None,
     model_id: Optional[str] = None,
+    env_col: Optional[str] = None,
+    ref_env: str = "ref",
 ) -> CalibratedAttributionAudit:
     """Run PromptPrism 2.0 calibrated item-clustered attribution, noise-floor, TOST pruning, and coverage-gate audit."""
     if not factor_cols:
@@ -563,6 +584,47 @@ def run_calibrated_attribution_audit(
             f"Generator model ({generator_model_id!r}) equals model under test ({model_id!r}): "
             "synthetic checks may share model-specific blind spots."
         )
+
+    # Optional stability-aware perturbation decomposition when `env_col` is supplied
+    df_all_envs = df
+    pert_drop_df: Optional[pd.DataFrame] = None
+    if env_col is not None:
+        if env_col not in df.columns:
+            raise ValueError(f"env_col {env_col!r} not found in dataframe")
+        env_series = df[env_col].astype(str)
+        ref_mask = env_series == str(ref_env)
+        if not ref_mask.any():
+            raise ValueError(
+                f"ref_env {ref_env!r} not found in column {env_col!r}; "
+                f"available={sorted(env_series.unique().tolist())}"
+            )
+        pert_mask = ~ref_mask
+        df = df[ref_mask].copy()
+        if pert_mask.any():
+            sign_s = 1.0 if maximize else -1.0
+            key_cols = (
+                ["run_id", "_prism_item_id"] + factor_cols_str
+                if "run_id" in df_all_envs.columns
+                else ["_prism_item_id"] + factor_cols_str
+            )
+            ref_agg = (
+                df_all_envs.loc[ref_mask]
+                .groupby(key_cols, as_index=False)[target_col]
+                .mean()
+                .rename(columns={target_col: "_ref_score"})
+            )
+            pert_agg = (
+                df_all_envs.loc[pert_mask]
+                .groupby(key_cols, as_index=False)[target_col]
+                .mean()
+                .rename(columns={target_col: "_pert_score"})
+            )
+            merged_env = pd.merge(ref_agg, pert_agg, on=key_cols, how="inner")
+            if not merged_env.empty:
+                merged_env["_stab_drop"] = sign_s * (
+                    merged_env["_ref_score"] - merged_env["_pert_score"]
+                )
+                pert_drop_df = merged_env
 
     # Separate baseline-only primary estimand F when baseline_sample_ids is provided
     if baseline_sample_ids is not None:
@@ -755,12 +817,60 @@ def run_calibrated_attribution_audit(
         small_sample_warning=small_n_warn,
     )
 
+    # Optional stability-drop attribution across paired perturbation environments
+    stab_stats_list: List[Optional[Dict[str, Any]]] = [None for _ in factor_cols_str]
+    if pert_drop_df is not None:
+        raw_stab: List[Optional[Dict[str, Any]]] = []
+        valid_stab_indices: List[int] = []
+        for idx, fid in enumerate(factor_cols_str):
+            piv_s = pert_drop_df.pivot_table(
+                index="_prism_item_id", columns=fid, values="_stab_drop", aggfunc="mean"
+            )
+            if 0 not in piv_s.columns or 1 not in piv_s.columns:
+                raw_stab.append(None)
+                continue
+            paired_s = piv_s[[0, 1]].dropna()
+            n_s = int(len(paired_s))
+            if n_s < 2:
+                raw_stab.append(None)
+                continue
+            c_s = (paired_s[1] - paired_s[0]).to_numpy(dtype=float)
+            d_s = float(np.mean(c_s))
+            se_s = float(np.std(c_s, ddof=1) / np.sqrt(n_s))
+            if se_s <= 1e-12:
+                p_s = 1.0 if abs(d_s) <= 1e-12 else _exact_unanimous_sign_flip_p(n_s)
+            else:
+                p_s = float(2.0 * stats.t.sf(abs(d_s / se_s), df=n_s - 1))
+            raw_stab.append(
+                {
+                    "stability_drop_delta": d_s,
+                    "se_stability_drop": se_s,
+                    "p_value_stability_drop": p_s,
+                }
+            )
+            valid_stab_indices.append(idx)
+
+        if valid_stab_indices:
+            bh_s = _benjamini_hochberg(
+                [float(raw_stab[i]["p_value_stability_drop"]) for i in valid_stab_indices]  # type: ignore[index]
+            )
+            for idx, q_s in zip(valid_stab_indices, bh_s):
+                entry = dict(raw_stab[idx])  # type: ignore[arg-type]
+                entry["q_value_bh_stability_drop"] = q_s
+                if q_s < alpha and entry["stability_drop_delta"] < 0.0:
+                    entry["stability_verdict"] = "STABILIZING"
+                elif q_s < alpha and entry["stability_drop_delta"] > 0.0:
+                    entry["stability_verdict"] = "FRAGILE"
+                else:
+                    entry["stability_verdict"] = "NEUTRAL"
+                stab_stats_list[idx] = entry
+
     factor_diags: List[CalibratedFactorDiagnostic] = []
     prunable_tokens = 0
     has_any_token_cost = token_costs is not None and len(token_costs) > 0
 
-    for row, q_bh, t_stats, q_bh_t in zip(
-        raw_stats, q_vals, targeted_stats_list, q_vals_t
+    for row, q_bh, t_stats, q_bh_t, s_stats in zip(
+        raw_stats, q_vals, targeted_stats_list, q_vals_t, stab_stats_list
     ):
         fid = row["factor_id"]
         oriented = row["oriented_effect"]
@@ -773,6 +883,7 @@ def run_calibrated_attribution_audit(
         p_ni_t: Optional[float] = (
             t_stats["p_noninferiority_targeted"] if t_stats is not None else None
         )
+        stab_verdict = s_stats["stability_verdict"] if s_stats is not None else None
 
         f_sig = q_bh < alpha
         f_helps = f_sig and oriented > 0.0
@@ -795,6 +906,11 @@ def run_calibrated_attribution_audit(
             )
         elif f_hurts and t_helps:
             verdict = "CONFLICT_REVIEW"
+        elif f_hurts and stab_verdict == "STABILIZING":
+            verdict = "CONFLICT_REVIEW"
+            warnings_list.append(
+                f"Factor {fid!r} hurts clean accuracy but significantly stabilizes perturbation drops; routed to CONFLICT_REVIEW."
+            )
         elif f_hurts:
             verdict = "REMOVE_HARMFUL"
         elif has_coverage and (n_t is None or n_t == 0):
@@ -805,6 +921,8 @@ def run_calibrated_attribution_audit(
             verdict = "KEEP_TARGETED"
         elif t_hurts:
             verdict = "REMOVE_HARMFUL"
+        elif stab_verdict == "STABILIZING":
+            verdict = "KEEP"
         elif row["tost_p_value"] < alpha and (
             not has_coverage or (p_ni_t is not None and p_ni_t < alpha)
         ):
@@ -814,7 +932,15 @@ def run_calibrated_attribution_audit(
         else:
             verdict = "INCONCLUSIVE_NEED_MORE_ITEMS"
 
+        if stab_verdict == "FRAGILE":
+            warnings_list.append(
+                f"Factor {fid!r} significantly increases perturbation drop "
+                f"(delta_drop={s_stats['stability_drop_delta']:+.4f}, q={s_stats['q_value_bh_stability_drop']:.4g}): "
+                "flagged FRAGILE."
+            )
+
         t_fields = t_stats if t_stats is not None else {}
+        s_fields = s_stats if s_stats is not None else {}
         factor_diags.append(
             CalibratedFactorDiagnostic(
                 **row,
@@ -824,6 +950,7 @@ def run_calibrated_attribution_audit(
                 q_value_bh_targeted=q_bh_t,
                 coverage_source=eff_coverage_source,
                 **t_fields,
+                **s_fields,
             )
         )
 
