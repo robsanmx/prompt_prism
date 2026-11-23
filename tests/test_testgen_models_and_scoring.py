@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import json
 import math
+import sys
+import types
 import warnings
 from pathlib import Path
 
@@ -471,6 +473,16 @@ def test_check_suite_metric_deepeval_path_strips_prompt_and_isolates_input(monke
 
     import prompt_prism.evaluation.check_suite as cs_mod
 
+    # Provide a minimal `deepeval.test_case` stub so this isolation test runs in CI
+    # environments where the optional `[deepeval]` extra is not installed.
+    fake_deepeval = types.ModuleType("deepeval")
+    fake_tc = types.ModuleType("deepeval.test_case")
+    fake_tc.SingleTurnParams = types.SimpleNamespace(  # type: ignore[attr-defined]
+        INPUT="INPUT", ACTUAL_OUTPUT="ACTUAL_OUTPUT"
+    )
+    fake_deepeval.test_case = fake_tc  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "deepeval", fake_deepeval)
+    monkeypatch.setitem(sys.modules, "deepeval.test_case", fake_tc)
     monkeypatch.setattr(cs_mod, "deepeval_metric", _fake_deepeval_factory)
 
     metric = CheckSuiteMetric(judge_model="gpt-4o-mini", judge_mode="score")
