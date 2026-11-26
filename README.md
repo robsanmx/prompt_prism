@@ -3,10 +3,11 @@
 > *Find out which clauses in your prompt actually help, which ones hurt, and which ones you can safely delete — without getting fooled by eval noise.*
 
 [![CI](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml/badge.svg)](https://github.com/robsanmx/prompt_prism/actions/workflows/ci.yml)
+[![Paper PDF](https://img.shields.io/badge/Paper-PDF%20(12%20pages)-b31b1b.svg)](docs/paper/Auditing_Pruning_and_Stabilizing_Compiled_Prompts.pdf)
 [![Version: 2.0.0](https://img.shields.io/badge/version-2.0.0-blue.svg)](CHANGELOG.md)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests: 309 Passed](https://img.shields.io/badge/tests-309%20passed-brightgreen.svg)](tests/)
+[![Tests: 310 Passed](https://img.shields.io/badge/tests-310%20passed-brightgreen.svg)](tests/)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 **PromptPrism** is a Python library and CLI for **prompt diagnostics, safe clause pruning, noise-floor auditing, and CI/CD release gating**.
@@ -427,6 +428,26 @@ prompt_prism/
 ├── visualization/         # Main Effects, Pareto, Interaction plots & ASCII charts
 ├── reporting/             # Automated Markdown & HTML reports
 └── cli/                   # CLI: tests (generate/review/freeze/stats), diagnose, certify, verify-cert, analyze, design, alias, list-designs, list-metrics
+```
+
+---
+
+## Research Paper
+
+- **[Auditing, Pruning, and Stabilizing Compiled Prompts: Coverage-Aware Equivalence Testing and Perturbation Stability Certification for LLMs (PDF)](docs/paper/Auditing_Pruning_and_Stabilizing_Compiled_Prompts.pdf)** — full 12-page paper, LaTeX source, figures, and arXiv bundle in [`docs/paper/`](docs/paper/).
+  - **Safe bloat removal on DSPy `MIPROv2`:** Auditing compiled DSPy prompts shows DSPy's generated instructions are statistically dead weight on Banking77 and SQuAD 2.0, cutting **39%–57%** of prompt tokens at matched accuracy with passing stability bounds.
+  - **Rare guardrail protection:** Coverage-aware TOST + targeted non-inferiority drops false deletions of rare conditional rules from **18%–95% to 0.0%** in Monte Carlo calibration and catches **85%** of out-of-scope Banking77 queries where DSPy scores **0%**.
+  - **Compact, stable standalone prompts:** Holding structural scaffolds (`xml_multiturn` + `strict_contract`) fixed while pruning only demos matches or edges DSPy on Banking77 (**96.3% vs. 95.8%**, −39% tokens) and GSM8K (**95.8% vs. 94.6%**, −67% tokens) with zero DSPy or Pro proposer calls, passing harsh outer-shell stability on 3/3 tasks.
+
+```bibtex
+@misc{sanchez2026auditing,
+  title={Auditing, Pruning, and Stabilizing Compiled Prompts: Coverage-Aware Equivalence Testing and Perturbation Stability Certification for {LLMs}},
+  author={Sanchez, Roberto},
+  year={2026},
+  month={November},
+  howpublished={PromptPrism Research Group Technical Report},
+  url={https://github.com/robsanmx/prompt_prism/blob/main/docs/paper/Auditing_Pruning_and_Stabilizing_Compiled_Prompts.pdf}
+}
 ```
 
 ---

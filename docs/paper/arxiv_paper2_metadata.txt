@@ -1,0 +1,26 @@
+arXiv Submission Metadata for Paper 2
+=====================================
+
+Title:
+Auditing, Pruning, and Stabilizing Compiled Prompts: Coverage-Aware Equivalence Testing and Perturbation Stability Certification for LLMs
+
+Authors:
+Roberto Sanchez
+
+Primary Category:
+cs.CL (Computation and Language)
+
+Recommended Cross-List Categories:
+cs.LG (Machine Learning), cs.SE (Software Engineering)
+
+Comments:
+12 pages, 2 figures, 6 tables. Open-source code, 310 automated tests, and benchmark artifacts available at https://github.com/robsanmx/prompt_prism
+
+Abstract (1,638 characters -- verified under arXiv's 1,920-character hard limit):
+Prompts for Large Language Models (LLMs) often grow long, costly, and fragile as instructions, few-shot examples, and safety rules accumulate by trial and error. Automatic prompt optimizers such as DSPy MIPROv2 automate prompt writing, but they typically produce opaque 1,100+ token prompts without proving which pieces actually improve accuracy, whether rare safety rules survive, or whether small formatting changes break performance. We present PromptPrism 2.1, an open-source statistical auditing framework that tests prompt components in balanced experiments and certifies prompt stability. Compared directly against DSPy MIPROv2 on gemini-2.5-flash across three benchmarks (Banking77, SQuAD 2.0, and GSM8K; N=240 held-out items), PromptPrism delivers three practical benefits: (1) safe bloat removal -- auditing compiled DSPy prompts reveals that DSPy's generated instructions are statistically dead weight on Banking77 and SQuAD 2.0, cutting prompt length by 39%-57% with matched accuracy and passing stability bounds; (2) rare guardrail protection -- a coverage-aware pruning gate cuts accidental deletion of rare safety rules from 18%-95% down to 0% in calibration and catches 85% of out-of-scope Banking77 queries where DSPy scores 0%; and (3) compact, stable standalone prompts -- using structured multi-turn XML framing without DSPy or an expensive proposer model, PromptPrism matches or edges DSPy on Banking77 (96.3% vs. 95.8%, -39% tokens) and GSM8K (95.8% vs. 94.6%, -67% tokens), passes strict perturbation stability across all three tasks, and shows why structural scaffolds must stay fixed when pruning redundant pieces.
+
+Upload Checklist:
+1. Upload paper_hf/arxiv_paper2.tar.gz to https://arxiv.org/submit (contains main.tex with \pdfoutput=1, pre-compiled main.bbl, and both vector PDF figures in a flat root directory).
+2. Paste Title, Authors, Abstract, and Comments from above into arXiv's metadata form (update page count in Comments if edited).
+3. Select Primary: cs.CL (Cross-list: cs.LG, cs.SE) and verify arXiv's generated PDF preview before clicking Submit.
+4. Note on Companion Paper 1: If you later submit paper_hf/main.tex separately to arXiv, remove Section 6 from paper_hf/main.tex first (or disclose overlap in Comments) so arXiv's automated text-overlap detector does not flag Tables 1-2.

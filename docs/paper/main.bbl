@@ -1,0 +1,143 @@
+\begin{thebibliography}{19}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Baptista and Poloczek(2018)]{baptista2018bayesian}
+Ricardo Baptista and Matthias Poloczek.
+\newblock {B}ayesian optimization of combinatorial structures.
+\newblock In \emph{International Conference on Machine Learning (ICML)}, pages
+  462--471, 2018.
+
+\bibitem[Benjamini and Hochberg(1995)]{benjamini1995controlling}
+Yoav Benjamini and Yosef Hochberg.
+\newblock Controlling the false discovery rate: A practical and powerful
+  approach to multiple testing.
+\newblock \emph{Journal of the Royal Statistical Society: Series B
+  (Methodological)}, 57\penalty0 (1):\penalty0 289--300, 1995.
+
+\bibitem[Box et~al.(2005)Box, Hunter, and Hunter]{box2005statistics}
+George E.~P. Box, J.~Stuart Hunter, and William~G. Hunter.
+\newblock \emph{Statistics for Experimenters: Design, Innovation, and
+  Discovery}.
+\newblock Wiley-Interscience, 2nd edition, 2005.
+
+\bibitem[Habba et~al.(2025{\natexlab{a}})Habba, Arviv, Itzhak, Perlitz, Bandel,
+  Choshen, Shmueli-Scheuer, and Stanovsky]{habba2025dove}
+Eliya Habba, Ofir Arviv, Itay Itzhak, Yotam Perlitz, Elron Bandel, Leshem
+  Choshen, Michal Shmueli-Scheuer, and Gabriel Stanovsky.
+\newblock {DOVE}: A large-scale multi-dimensional predictions dataset towards
+  meaningful {LLM} evaluation.
+\newblock \emph{arXiv preprint arXiv:2503.01622}, 2025{\natexlab{a}}.
+
+\bibitem[Habba et~al.(2025{\natexlab{b}})Habba, Dahan, Lior, and
+  Stanovsky]{habba2025promptsuite}
+Eliya Habba, Noam Dahan, Gili Lior, and Gabriel Stanovsky.
+\newblock {PromptSuite}: A task-agnostic framework for multi-prompt generation.
+\newblock \emph{arXiv preprint arXiv:2507.14913}, 2025{\natexlab{b}}.
+
+\bibitem[Khattab et~al.(2024)Khattab, Singhvi, Maheshwari, Zhang, Santhanam,
+  Vardham, Haq, Sharma, Joshi, Lakkaraju, and Zaharia]{khattab2024dspy}
+Omar Khattab, Arnav Singhvi, Paridhi Maheshwari, Zhiyuan Zhang, Keshav
+  Santhanam, Sri Vardham, Saiful Haq, Ashutosh Sharma, Thomas~T. Joshi,
+  Himabindu Lakkaraju, and Matei Zaharia.
+\newblock {DSPy}: Compiling declarative language model calls into self-refining
+  pipelines.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2024.
+
+\bibitem[Maia~Polo et~al.(2024{\natexlab{a}})Maia~Polo, Weber, Choshen, Sun,
+  Xu, and Yurochkin]{polo2024tinybenchmarks}
+Felipe Maia~Polo, Lucas Weber, Leshem Choshen, Yuekai Sun, Gongjun Xu, and
+  Mikhail Yurochkin.
+\newblock tinybenchmarks: evaluating {LLMs} with fewer examples.
+\newblock In \emph{International Conference on Machine Learning (ICML)}, pages
+  34303--34326, 2024{\natexlab{a}}.
+
+\bibitem[Maia~Polo et~al.(2024{\natexlab{b}})Maia~Polo, Xu, Weber, Silva,
+  Bhardwaj, Choshen, de~Oliveira, Sun, and Yurochkin]{polo2024efficient}
+Felipe Maia~Polo, Ronald Xu, Lucas Weber, M{\'\i}rian Silva, Onkar Bhardwaj,
+  Leshem Choshen, Allysson Flavio~Melo de~Oliveira, Yuekai Sun, and Mikhail
+  Yurochkin.
+\newblock Efficient multi-prompt evaluation of {LLMs}.
+\newblock \emph{Advances in Neural Information Processing Systems (NeurIPS)},
+  37, 2024{\natexlab{b}}.
+
+\bibitem[Miller(2024)]{miller2024adding}
+Evan Miller.
+\newblock Adding error bars to evals: A statistical approach to language model
+  evaluations.
+\newblock \emph{arXiv preprint arXiv:2411.00640}, 2024.
+
+\bibitem[Mizrahi et~al.(2024)Mizrahi, Kaplan, Malkin, Dror, Shahaf, and
+  Stanovsky]{mizrahi2024state}
+Moran Mizrahi, Guy Kaplan, Dan Malkin, Rotem Dror, Dafna Shahaf, and Gabriel
+  Stanovsky.
+\newblock State of what art? {A} call for multi-prompt {LLM} evaluation.
+\newblock \emph{Transactions of the Association for Computational Linguistics
+  (TACL)}, 12:\penalty0 933--949, 2024.
+
+\bibitem[Montgomery(2017)]{montgomery2017design}
+Douglas~C. Montgomery.
+\newblock \emph{Design and Analysis of Experiments}.
+\newblock John Wiley \& Sons, 10th edition, 2017.
+
+\bibitem[Opsahl-Ong et~al.(2024)Opsahl-Ong, Ryan, Purtell, Broman, Potts,
+  Zaharia, and Khattab]{opsahl2024optimizing}
+Krista Opsahl-Ong, Michael~J. Ryan, Josh Purtell, David Broman, Christopher
+  Potts, Matei Zaharia, and Omar Khattab.
+\newblock Optimizing instructions and demonstrations for multi-stage language
+  model programs.
+\newblock In \emph{Conference on Empirical Methods in Natural Language
+  Processing (EMNLP)}, pages 9340--9366, 2024.
+
+\bibitem[Plackett and Burman(1946)]{plackett1946design}
+R.~L. Plackett and J.~P. Burman.
+\newblock The design of optimum multifactorial experiments.
+\newblock \emph{Biometrika}, 33\penalty0 (4):\penalty0 305--325, 1946.
+
+\bibitem[Schuirmann(1987)]{schuirmann1987comparison}
+Donald~J. Schuirmann.
+\newblock A comparison of the two one-sided tests procedure and the power
+  approach for assessing the equivalence of average bioavailability.
+\newblock \emph{Journal of Pharmacokinetics and Biopharmaceutics}, 15\penalty0
+  (6):\penalty0 657--680, 1987.
+
+\bibitem[Sclar et~al.(2024)Sclar, Choi, Tsvetkov, and
+  Suhr]{sclar2024quantifying}
+Melanie Sclar, Yejin Choi, Yulia Tsvetkov, and Alane Suhr.
+\newblock Quantifying language models' sensitivity to spurious features in
+  prompt design or: How {I} learned to start worrying about prompt formatting.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2024.
+
+\bibitem[Shi et~al.(2024)Shi, Yang, Yang, and Shen]{shi2024efficient}
+Chengshuai Shi, Kun Yang, Jing Yang, and Cong Shen.
+\newblock Efficient prompt optimization through the lens of best arm
+  identification.
+\newblock In \emph{Advances in Neural Information Processing Systems
+  (NeurIPS)}, volume~37, 2024.
+
+\bibitem[Wu and Hamada(2011)]{wu2011experiments}
+C.~F.~Jeff Wu and Michael~S. Hamada.
+\newblock \emph{Experiments: Planning, Analysis, and Optimization}.
+\newblock John Wiley \& Sons, 2nd edition, 2011.
+
+\bibitem[Yang et~al.(2023)Yang, Wang, Lu, Liu, Le, Zhou, and
+  Chen]{yang2023large}
+Chengrun Yang, Xuezhi Wang, Yifeng Lu, Hanxiao Liu, Quoc~V. Le, Denny Zhou, and
+  Xinyun Chen.
+\newblock Large language models as optimizers.
+\newblock \emph{arXiv preprint arXiv:2309.03409}, 2023.
+
+\bibitem[Zhou et~al.(2023)Zhou, Muresanu, Han, Paster, Pitis, Chan, and
+  Ba]{zhou2023large}
+Yongchao Zhou, Andrei~Ioan Muresanu, Ziwen Han, Keiran Paster, Silviu Pitis,
+  Harris Chan, and Jimmy Ba.
+\newblock Large language models are human-level prompt engineers.
+\newblock In \emph{International Conference on Learning Representations
+  (ICLR)}, 2023.
+
+\end{thebibliography}

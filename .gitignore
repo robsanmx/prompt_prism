@@ -90,9 +90,9 @@ research/*.sqlite
 *.response_cache.db
 tmp/
 
-# Research manuscripts & compiled PDFs (kept local)
-paper/
-paper_hf/
+# Local draft manuscripts & intermediate builds (published paper lives in docs/paper/)
+/paper/
+/paper_hf/
 
 # Agent & AI tool caches (keep skills tracked)
 .claude/
